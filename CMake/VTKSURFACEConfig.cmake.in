@@ -1,0 +1,21 @@
+#
+# VTKSURFACEConfig.cmake - VTKSURFACE CMake configuration file for external
+# projects.
+#
+
+# --------------------------------------------------------------------------
+# The vtkSurface include file directories.
+SET(VTKSURFACE_INCLUDE_DIR "@VTKSURFACE_INCLUDE_DIR@")
+SET(VTKCGAL_INCLUDE_DIR "@VTKCGAL_INCLUDE_DIR@")
+SET(VTKDISCRETEREMESHING_INCLUDE_DIR "@VTKDISCRETEREMESHING_INCLUDE_DIR@")
+
+# --------------------------------------------------------------------------
+# The ImageToImplicit library directories.
+SET(VTKSURFACE_LIBRARY_DIRS  "@VTKSURFACE_BINARY_DIR@/bin")
+LINK_DIRECTORIES(${VTKSURFACE_LIBRARY_DIRS})
+
+# --------------------------------------------------------------------------
+# The ImageToImplicit libraries.
+SET(VTKSURFACE_LIBRARIES "vtkSurface")
+SET(VTKCGAL_LIBRARIES "vtkcgal")
+## eof

@@ -1,0 +1,105 @@
+# - Find a library installation or build tree.
+# 
+# The following variables are set if @LIBRARY_NAME@ is found.  If @LIBRARY_NAME@ is not
+# found, @LIBRARY_NAME@_FOUND is set to false.
+#  @LIBRARY_NAME@_FOUND         - Set to true when @LIBRARY_NAME@ is found.
+#  @LIBRARY_NAME@_USE_FILE      - CMake file to use @LIBRARY_NAME@.
+#  @LIBRARY_NAME@_MAJOR_VERSION - The @LIBRARY_NAME@ major version number.
+#  @LIBRARY_NAME@_MINOR_VERSION - The @LIBRARY_NAME@ minor version number 
+#                       (odd non-release).
+#  @LIBRARY_NAME@_BUILD_VERSION - The @LIBRARY_NAME@ patch level 
+#                       (meaningless for odd minor).
+#  @LIBRARY_NAME@_INCLUDE_DIRS  - Include directories for @LIBRARY_NAME@
+#  @LIBRARY_NAME@_LIBRARY_DIRS  - Link directories for @LIBRARY_NAME@ libraries
+#  @LIBRARY_NAME@_KITS          - List of @LIBRARY_NAME@ kits, in CAPS 
+#                      (COMMON,IO,) etc.
+#  @LIBRARY_NAME@_LANGUAGES     - List of wrapped languages, in CAPS
+#                      (TCL, PYHTON,) etc.
+# The following cache entries must be set by the user to locate @LIBRARY_NAME@:
+#  @LIBRARY_NAME@_DIR  - The directory containing @LIBRARY_NAME@Config.cmake.  
+#             This is either the root of the build tree,
+#             or the lib/vtk directory.  This is the 
+#             only cache entry.
+
+
+# Construct consitent error messages for use below.
+SET(@LIBRARY_NAME@_DIR_DESCRIPTION "directory containing @LIBRARY_NAME@Config.cmake.  This is either the root of the build tree, or PREFIX/lib/@LIBRARY_NAME@ for an installation.")
+SET(@LIBRARY_NAME@_DIR_MESSAGE "@LIBRARY_NAME@ not found.  Set the @LIBRARY_NAME@_DIR cmake cache entry to the ${@LIBRARY_NAME@_DIR_DESCRIPTION}")
+
+# Search only if the location is not already known.
+IF(NOT @LIBRARY_NAME@_DIR)
+  # Get the system search path as a list.
+  IF(UNIX)
+    STRING(REGEX MATCHALL "[^:]+" @LIBRARY_NAME@_DIR_SEARCH1 "$ENV{PATH}")
+  ELSE(UNIX)
+    STRING(REGEX REPLACE "\\\\" "/" @LIBRARY_NAME@_DIR_SEARCH1 "$ENV{PATH}")
+  ENDIF(UNIX)
+  STRING(REGEX REPLACE "/;" ";" @LIBRARY_NAME@_DIR_SEARCH2 "${@LIBRARY_NAME@_DIR_SEARCH1}")
+
+  # Construct a set of paths relative to the system search path.
+  SET(@LIBRARY_NAME@_DIR_SEARCH "")
+  FOREACH(dir ${@LIBRARY_NAME@_DIR_SEARCH2})
+    SET(@LIBRARY_NAME@_DIR_SEARCH ${@LIBRARY_NAME@_DIR_SEARCH}
+      ${dir}/../lib/@LIBRARY_NAME@
+      )
+  ENDFOREACH(dir)
+
+  #
+  # Look for an installation or build tree.
+  #
+  FIND_PATH(@LIBRARY_NAME@_DIR Use@LIBRARY_NAME@.cmake
+    # Look for an environment variable @LIBRARY_NAME@_DIR.
+    $ENV{@LIBRARY_NAME@_DIR}
+
+    # Look in places relative to the system executable search path.
+    ${@LIBRARY_NAME@_DIR_SEARCH}
+
+    # Look in standard UNIX install locations.
+    /usr/local/lib/@LIBRARY_NAME@
+    /usr/lib/@LIBRARY_NAME@
+
+    # Read from the CMakeSetup registry entries.  It is likely that
+    # @LIBRARY_NAME@ will have been recently built.
+    [HKEY_CURRENT_USER\\Software\\Kitware\\CMakeSetup\\Settings\\StartPath;WhereBuild1]
+    [HKEY_CURRENT_USER\\Software\\Kitware\\CMakeSetup\\Settings\\StartPath;WhereBuild2]
+    [HKEY_CURRENT_USER\\Software\\Kitware\\CMakeSetup\\Settings\\StartPath;WhereBuild3]
+    [HKEY_CURRENT_USER\\Software\\Kitware\\CMakeSetup\\Settings\\StartPath;WhereBuild4]
+    [HKEY_CURRENT_USER\\Software\\Kitware\\CMakeSetup\\Settings\\StartPath;WhereBuild5]
+    [HKEY_CURRENT_USER\\Software\\Kitware\\CMakeSetup\\Settings\\StartPath;WhereBuild6]
+    [HKEY_CURRENT_USER\\Software\\Kitware\\CMakeSetup\\Settings\\StartPath;WhereBuild7]
+    [HKEY_CURRENT_USER\\Software\\Kitware\\CMakeSetup\\Settings\\StartPath;WhereBuild8]
+    [HKEY_CURRENT_USER\\Software\\Kitware\\CMakeSetup\\Settings\\StartPath;WhereBuild9]
+    [HKEY_CURRENT_USER\\Software\\Kitware\\CMakeSetup\\Settings\\StartPath;WhereBuild10]
+
+    # Help the user find it if we cannot.
+    DOC "The ${@LIBRARY_NAME@_DIR_DESCRIPTION}"
+  )
+ENDIF(NOT @LIBRARY_NAME@_DIR)
+
+# If @LIBRARY_NAME@ was found, load the configuration file to get the rest of the
+# settings.
+IF(@LIBRARY_NAME@_DIR)
+  # Make sure the @LIBRARY_NAME@Config.cmake file exists in the directory provided.
+  IF(EXISTS ${@LIBRARY_NAME@_DIR}/@LIBRARY_NAME@Config.cmake)
+
+    # We found @LIBRARY_NAME@.  Load the settings.
+    SET(@LIBRARY_NAME@_FOUND 1)
+    INCLUDE(${@LIBRARY_NAME@_DIR}/@LIBRARY_NAME@Config.cmake)
+
+  ENDIF(EXISTS ${@LIBRARY_NAME@_DIR}/@LIBRARY_NAME@Config.cmake)
+ELSE(@LIBRARY_NAME@_DIR)
+  # We did not find @LIBRARY_NAME@.
+  SET(@LIBRARY_NAME@_FOUND 0)
+ENDIF(@LIBRARY_NAME@_DIR)
+
+#-----------------------------------------------------------------------------
+IF(NOT @LIBRARY_NAME@_FOUND)
+  # @LIBRARY_NAME@ not found, explain to the user how to specify its location.
+  IF(NOT @LIBRARY_NAME@_FIND_QUIETLY)
+    MESSAGE(FATAL_ERROR ${@LIBRARY_NAME@_DIR_MESSAGE})
+  ELSE(NOT @LIBRARY_NAME@_FIND_QUIETLY)
+    IF(@LIBRARY_NAME@_FIND_REQUIRED)
+      MESSAGE(FATAL_ERROR ${@LIBRARY_NAME@_DIR_MESSAGE})
+    ENDIF(@LIBRARY_NAME@_FIND_REQUIRED)
+  ENDIF(NOT @LIBRARY_NAME@_FIND_QUIETLY)
+ENDIF(NOT @LIBRARY_NAME@_FOUND)

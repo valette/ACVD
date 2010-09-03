@@ -1,0 +1,33 @@
+This code is the implementation deriving from those papers:
+
+S. Valette,J.-M. Chassery and R. Prost, Generic remeshing of 3D triangular meshes with metric-dependent discrete Voronoi Diagrams, IEEE Transactions on Visualization and Computer Graphics, Volume 14, no. 2, pages 369-381, 2008.
+
+Sebastien Valette and Jean-Marc Chassery, Approximated Centroidal Voronoi Diagrams for Uniform Polygonal Mesh Coarsening, Computer Graphics Forum (Eurographics 2004 proceedings), Vol. 23, No. 3, September 2004, pp. 381-389. 
+
+This code is cross-platform and should compile under Linux and Window$ OS.
+
+**************************************************************************
+Dependencies:
+VTK (version >5) www.vtk.org
+CMAKE www.cmake.org
+**************************************************************************
+
+Simple compilation HowTo under Linux:
+
+- extract the archive and launch a terminal under the extracted directory
+- type "cmake . -DCMAKE_BUILD_TYPE=Release -DUSE_MULTITHREADING=true"
+- then "make"
+
+the executables (ACVD, ACVDQ and AnisotropicRemeshingQ should be found under the "bin" subdirectory)
+
+*************************************************************************
+execute ACVD.exe and ACVDQ.exe without arguments to see the available options.
+(respectively ACVD and ACVDQ for linux)
+
+the output of the program is written in the file simplification.ply
+
+additionnally, when running ACVD, a file output_1.ply is also written. It is the output mesh before post-processing using quadrics.
+
+comments, suggestions : sebastien.valette@creatis.insa-lyon.fr
+
+

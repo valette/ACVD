@@ -1,0 +1,23 @@
+# This is an implementation detail for using @LIBRARY_NAME@ with the
+# Find@LIBRARY_NAME@.cmake module.  Do not include directly by name.  
+# This should be included only when Find@LIBRARY_NAME@.cmake sets 
+# the @LIBRARY_NAME@_USE_FILE variable to point here.
+
+# Load the compiler settings used for @LIBRARY_NAME@.
+IF(@LIBRARY_NAME@_BUILD_SETTINGS_FILE)
+  INCLUDE(CMakeImportBuildSettings)
+  CMAKE_IMPORT_BUILD_SETTINGS(${@LIBRARY_NAME@_BUILD_SETTINGS_FILE})
+ENDIF(@LIBRARY_NAME@_BUILD_SETTINGS_FILE)
+
+# Add compiler flags needed to use @LIBRARY_NAME@.
+SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${@LIBRARY_NAME@_REQUIRED_C_FLAGS}")
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${@LIBRARY_NAME@_REQUIRED_CXX_FLAGS}")
+
+# Add include directories needed to use @LIBRARY_NAME@.
+INCLUDE_DIRECTORIES(${@LIBRARY_NAME@_INCLUDE_DIRS})
+
+# Add link directories needed to use @LIBRARY_NAME@.
+LINK_DIRECTORIES(${@LIBRARY_NAME@_LIBRARY_DIRS})
+
+# Set the version 
+ADD_DEFINITIONS( -D@LIBRARY_NAME@_VERSION="${@LIBRARY_NAME@_VERSION}" )

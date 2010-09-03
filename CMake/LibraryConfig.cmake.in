@@ -1,0 +1,36 @@
+#-----------------------------------------------------------------------------
+#
+# @LIBRARY_NAME@Config.cmake - CMake configuration file for external projects.
+#
+# This file is configured by cmake and used by the
+# Use@LIBRARY_NAME@.cmake module to load the lib settings 
+# for an external project.
+
+# The @LIBRARY_NAME@ include file directories.
+SET(@LIBRARY_NAME@_INCLUDE_DIRS "@LIB_INCLUDE_DIRS_CONFIG@")
+
+# The @LIBRARY_NAME@ library directories.
+SET(@LIBRARY_NAME@_LIBRARY_DIRS "@LIB_LIBRARY_DIRS_CONFIG@")
+
+# The C and C++ flags added by @LIBRARY_NAME@ to the cmake-configured flags.
+SET(@LIBRARY_NAME@_REQUIRED_C_FLAGS "@LIB_REQUIRED_C_FLAGS_CONFIG@")
+SET(@LIBRARY_NAME@_REQUIRED_CXX_FLAGS "@LIB_REQUIRED_CXX_FLAGS_CONFIG@")
+SET(@LIBRARY_NAME@_REQUIRED_LINK_FLAGS "@LIB_REQUIRED_LINK_FLAGS_CONFIG@")
+
+# The @LIBRARY_NAME@ version 
+SET(@LIBRARY_NAME@_MAJOR_VERSION @LIB_MAJOR_VERSION_CONFIG@)
+SET(@LIBRARY_NAME@_MINOR_VERSION @LIB_MINOR_VERSION_CONFIG@)
+SET(@LIBRARY_NAME@_BUILD_VERSION @LIB_BUILD_VERSION_CONFIG@)
+SET(@LIBRARY_NAME@_VERSION @LIB_VERSION_CONFIG@)
+
+
+# The location of the Use@LIBRARY_NAME@.cmake file.
+SET(@LIBRARY_NAME@_USE_FILE "@LIB_USE_FILE_CONFIG@")
+
+# The build settings file.
+SET(@LIBRARY_NAME@_BUILD_SETTINGS_FILE "@LIB_BUILD_SETTINGS_FILE_CONFIG@")
+
+# A list of all libraries for @LIBRARY_NAME@.  Those listed here should
+# automatically pull in their dependencies.
+SET(@LIBRARY_NAME@_LIBRARIES @LIBRARY_NAME@ @LIB_LINK_LIBRARIES_CONFIG@)
+
