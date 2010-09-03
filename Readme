@@ -6,6 +6,8 @@ Sebastien Valette and Jean-Marc Chassery, Approximated Centroidal Voronoi Diagra
 
 This code is cross-platform and should compile under Linux and Window$ OS.
 
+This code is distributed under the CeCILL-B license (BSD-compatible)
+
 **************************************************************************
 Dependencies:
 VTK (version >5) www.vtk.org
