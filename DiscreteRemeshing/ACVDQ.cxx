@@ -103,7 +103,9 @@ int main( int argc, char *argv[] )
 		cout<<"-s threshold : defines the subsampling threshold i.e. the input mesh will be subdivided until its number ";
 		cout<<" of vertices is above nvertices*threshold (default=10)"<<endl;
 		cout<<"-d 0/1/2 : enables display (default : 0)"<<endl;
-		cout<<"-q 0/1/2 : sets the maximum number of eigenvalues for quadric-based vertices placement"<<endl;
+		cout<<"-cd file : set custom imagedata file containing density information"<<endl;
+		cout<<"-cmin value : set minimum custom indicator value"<<endl;
+		cout<<"-cmax value : set maximum custom indicator value"<<endl;
 		return (0);
 	}
 
@@ -193,6 +195,24 @@ int main( int argc, char *argv[] )
 		{
 			cout<<"Setting number of eigenvalues for quadrics to "<<atoi(argv[ArgumentsIndex+1])<<endl;
 			Remesh->GetMetric()->SetQuadricsOptimizationLevel(atoi(argv[ArgumentsIndex+1]));
+		}
+
+		if (strcmp(argv[ArgumentsIndex],"-cd")==0)
+		{
+			cout<<"Setting number custom file for density info : "<<argv[ArgumentsIndex+1]<<endl;
+			Remesh->SetInputDensityFile(argv[ArgumentsIndex+1]);
+		}
+
+		if (strcmp(argv[ArgumentsIndex],"-cmax")==0)
+		{
+			cout<<"Setting maximum custom density to : "<<argv[ArgumentsIndex+1]<<endl;
+			Remesh->SetMaxCustomDensity(atof(argv[ArgumentsIndex+1]));
+		}
+
+		if (strcmp(argv[ArgumentsIndex],"-cmin")==0)
+		{
+			cout<<"Setting minimum custom density to : "<<argv[ArgumentsIndex+1]<<endl;
+			Remesh->SetMinCustomDensity(atof(argv[ArgumentsIndex+1]));
 		}
 
 		ArgumentsIndex+=2;
