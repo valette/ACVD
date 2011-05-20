@@ -89,6 +89,7 @@ template < class Metric > class vtkDiscreteRemeshing:public vtkSurfaceClustering
 	vtkSetMacro(InputDensityFile, char*)
 	vtkSetMacro(MaxCustomDensity, double)
 	vtkSetMacro(MinCustomDensity, double)
+	vtkSetMacro(CustomDensityMultiplicationFactor, double)
 
 protected:
 
@@ -162,6 +163,7 @@ protected:
 
 	double MaxCustomDensity;
 	double MinCustomDensity;
+	double CustomDensityMultiplicationFactor;
 };
 template < class Metric >
 	void vtkDiscreteRemeshing < Metric >::FixClusteringToVoronoi ()
@@ -411,7 +413,7 @@ template < class Metric >
 					this->GetItemCoordinates(i,Coord);
 					Density->ComputeStructuredCoordinates(Coord,ijk,pcoords);
 					double Value=Density->GetScalarComponentAsDouble(ijk[0],ijk[1],ijk[2],0);
-					Value=this->MaxCustomDensity-Value;
+					Value=this->MaxCustomDensity-Value*this->CustomDensityMultiplicationFactor;
 					if (Value<this->MinCustomDensity)
 						Value=this->MinCustomDensity;
 					CellsIndicators->SetValue(i,Value);
@@ -1046,6 +1048,7 @@ template < class Metric >
 	this->InputDensityFile=0;
 	this->MaxCustomDensity=1;
 	this->MinCustomDensity=0.1;
+	this->CustomDensityMultiplicationFactor=0.001;
 }
 
 

@@ -106,6 +106,7 @@ int main( int argc, char *argv[] )
 		cout<<"-cd file : set custom imagedata file containing density information"<<endl;
 		cout<<"-cmin value : set minimum custom indicator value"<<endl;
 		cout<<"-cmax value : set maximum custom indicator value"<<endl;
+		cout<<"-cf value : set custom indicator multiplication factor"<<endl;
 		return (0);
 	}
 
@@ -213,6 +214,12 @@ int main( int argc, char *argv[] )
 		{
 			cout<<"Setting minimum custom density to : "<<argv[ArgumentsIndex+1]<<endl;
 			Remesh->SetMinCustomDensity(atof(argv[ArgumentsIndex+1]));
+		}
+
+		if (strcmp(argv[ArgumentsIndex],"-cf")==0)
+		{
+			cout<<"Setting custom density multiplication factor to : "<<argv[ArgumentsIndex+1]<<endl;
+			Remesh->SetCustomDensityMultiplicationFactor(atof(argv[ArgumentsIndex+1]));
 		}
 
 		ArgumentsIndex+=2;

@@ -19,6 +19,7 @@ Auteur:   Sebastien Valette,
 #include "vtkIsotropicMetricForClustering.h"
 #include "vtkQuadricAnisotropicMetricForClustering.h"
 #include "vtkQEMetricForClustering.h"
+#include "vtkL21MetricForClustering.h"
 
 
 #include "vtkTrianglesProcessing.h"
@@ -74,6 +75,7 @@ int main( int argc, char *argv[] )
 
 	typedef vtkDiscreteRemeshing<vtkQEMetricForClustering> QEMRemeshing;
 
+	typedef vtkDiscreteRemeshing<vtkL21MetricForClustering> L21Remeshing;
 
 	typedef vtkDiscreteRemeshing<vtkQuadricAnisotropicMetricForClustering> QuadricAnisotropicRemeshing;
 
