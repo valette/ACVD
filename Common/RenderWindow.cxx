@@ -56,7 +56,7 @@
 #include <vtkTubeFilter.h>
 #include <vtkTextProperty.h>
 #include <vtkVRMLExporter.h>
-
+#include <vtkXMLPolyDataWriter.h>
 
 #include "RenderWindow.h"
 #include "vtkSurfaceIterators.h"
@@ -214,13 +214,14 @@ public:
 		}
 		case '_':
 		{
-			vtkVRMLExporter * Writer = vtkVRMLExporter::New ();
-			Writer->SetInput (this->Window->GetvtkRenderWindow());
-			Writer->SetFileName ("mesh.wrl");
+			vtkXMLPolyDataWriter * Writer = vtkXMLPolyDataWriter::New ();
+			Writer->SetDataModeToAscii ();
+			Writer->SetInput (this->Window->GetInput());
+			Writer->SetFileName ("mesh.xml");
 			Writer->Write ();
 			Writer->Delete ();
 			return;
-		}		
+		}
 		case '+':
 		{
 			if (this->Window->GetEdgesActor())
@@ -473,7 +474,8 @@ vtkActor* RenderWindow::SetInput (vtkPolyData * Input)
 	{
 		Mapper=vtkPolyDataMapper::New();		
 		Mapper->SetResolveCoincidentTopologyToPolygonOffset ();
-		Mapper->ImmediateModeRenderingOn ();
+		if (this->ImmediateMode)
+			Mapper->ImmediateModeRenderingOn ();
 		this->MeshActor->SetMapper(Mapper);
 		Mapper->Delete();
 	}
@@ -483,6 +485,7 @@ vtkActor* RenderWindow::SetInput (vtkPolyData * Input)
 		Mapper->SetLookupTable (this->lut);
 	
 	this->Input = Input;
+	this->SInput=0;
 
 //	this->MeshActor->GetProperty()->SetDiffuse(0.5);
 //	this->MeshActor->GetProperty()->SetSpecular(0.5);
@@ -812,7 +815,8 @@ vtkActor *RenderWindow::AddPolyData (vtkPolyData * Input)
 {
 
 	vtkPolyDataMapper *mapper = vtkPolyDataMapper::New ();
-	mapper->ImmediateModeRenderingOn ();
+	if (this->ImmediateMode)
+		mapper->ImmediateModeRenderingOn ();
 	mapper->SetResolveCoincidentTopologyToPolygonOffset ();
 //	mapper->SetResolveCoincidentTopologyToShiftZBuffer();
 
@@ -902,7 +906,8 @@ RenderWindow::SetInputEdges (vtkPolyData * Edges)
 	
 		vtkPolyDataMapper *EdgesMapper = vtkPolyDataMapper::New ();
 		EdgesMapper->SetResolveCoincidentTopologyToPolygonOffset ();
-		EdgesMapper->ImmediateModeRenderingOn ();
+		if (this->ImmediateMode)
+			EdgesMapper->ImmediateModeRenderingOn ();
 
 		this->EdgesActor = vtkActor::New ();
 		vtkIntArray *EdgesColor = vtkIntArray::New ();
@@ -1012,6 +1017,12 @@ RenderWindow::SetDisplayIdsOff ()
 	cellLabels->Delete();
 
 	this->Render ();
+}
+
+
+void RenderWindow::SetImmediateMode(bool Used)
+{
+	this->ImmediateMode=Used;
 }
 
 void
@@ -1178,6 +1189,7 @@ RenderWindow::RenderWindow () : HighlightedVerticesActor( 0 ),HighlightedEdgesAc
 	this->cellLabels = 0;
 	this->NumberOfInteractionsToSkip=0;
 	this->TextActor=0;
+	this->ImmediateMode=true;
 }
 
 RenderWindow::~RenderWindow ()	//Destructeur

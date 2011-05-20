@@ -112,6 +112,9 @@ public:
 	/// Pure virtual method to be implemented in derived classes
 	virtual int GetNumberOfItems()=0;
 
+	/// Returns the number of items inside a cluster
+	int GetClusterSize(int Cluster){ return (this->ClustersSizes->GetValue(Cluster));};
+
 protected:
 
 	/// virtual function derived in the threaded version.
@@ -344,6 +347,8 @@ void vtkUniformClustering<Metric,EdgeType>::ReComputeStatistics()
 	
 		this->MetricContext.ComputeClusterCentroid(Clusters+i);
 		this->MetricContext.ComputeClusterEnergy(Clusters+i);
+		if (this->ClustersSizes->GetValue(i)==0)
+			cout<<"Cluster "<<i<<" is empty!"<<endl;
 	}
 }
 
@@ -1066,31 +1071,56 @@ void vtkUniformClustering<Metric,EdgeType>::ComputeInitialRandomSampling(vtkIdLi
 			}
 		}
 	}
-	delete [] Items;
-	IList->Delete();
 
 	if (NumberOfRemainingRegions==0)
+	{
+		delete [] Items;
+		IList->Delete();
 		return;
+	}
 
-	vtkMath	*CRan=vtkMath::New();
-	CRan->RandomSeed(5000);
-	CRan->Random();
+	for (vtkIdType Cluster=0;Cluster<NumberOfClusters;Cluster++)
+		this->ClustersSizes->SetValue(Cluster,0);
+
+	int NumberOfItems=this->GetNumberOfItems();
+	// shuffle the Ids ordering
+	for	(int i=0;i<NumberOfItems;i++)
+	{
+		vtkIdType Cluster=Sampling->GetValue(i);
+		if (Cluster!=NumberOfClusters)
+			this->ClustersSizes->SetValue(Cluster,this->ClustersSizes->GetValue(Cluster)+1);
+		Items[i]=i;
+	}
+
+	std::random_shuffle(Items, Items+NumberOfItems);
+	FirstItem=0;
 	while(NumberOfRemainingRegions>0)
 	{
 		Found=false;
+		vtkIdType Item;
 		while (!Found)
 		{
-			float test=CRan->Random(0.0,(float)this->GetNumberOfItems()-1);
-			int number=(int) floor(((double)test)+0.5);
-			if (this->ClustersSizes->GetValue(this->Clustering->GetValue(number))>1)
+			Item=Items[FirstItem];
+			FirstItem++;
+			vtkIdType Cluster=Sampling->GetValue(Item);
+			if (Cluster==NumberOfClusters)
 			{
-				NumberOfRemainingRegions--;
 				Found=true;
-				Sampling->SetValue(number,NumberOfRemainingRegions);					
+
+			}
+			else
+			{
+				if (this->ClustersSizes->GetValue(Cluster)>1)
+				{
+					Found=true;
+					Sampling->SetValue(Item,NumberOfRemainingRegions);
+					this->ClustersSizes->SetValue(Cluster,this->ClustersSizes->GetValue(Cluster)-1);
+				}
 			}
 		}
+		NumberOfRemainingRegions--;
+		Sampling->SetValue(Item,NumberOfRemainingRegions);
 	}
-	CRan->Delete();
 }
 
 template <class Metric, class EdgeType>

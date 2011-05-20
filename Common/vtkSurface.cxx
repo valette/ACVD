@@ -63,7 +63,7 @@ vtkSurface* vtkSurface::CleanMemory()
 	// Clean the Points
 	for (vtkIdType Id=0;Id<NumberOfPoints;Id++)
 	{
-		if (this->IsVertexActive(Id)==1)
+		if (this->GetValence(Id)!=0)
 		{
 			double Point[3];
 			this->GetPoint(Id,Point);
@@ -1773,6 +1773,7 @@ void vtkSurface::QuantizeCoordinates(int q)
 		p[2] = floor( (p[2]-zmin) * factor + 0.5 );
 		this->Points->SetPoint(i,p);
 	}
+	this->Modified();
 }
 // ****************************************************************
 // ****************************************************************

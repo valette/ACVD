@@ -210,6 +210,9 @@ public:
 	// method to set the interactor style to allow additionnal function keys
 	virtual void SetCustomInteractorStyle();
 
+	// sets/unsets immediate mode (default : on)
+	void SetImmediateMode(bool Used);
+
 protected:
 
 	// The window
@@ -245,6 +248,8 @@ protected:
 	vtkActor2D *cellLabels;
 
 	vtkTextActor *TextActor;
+
+	bool ImmediateMode;
 
 	RenderWindow(); 
 	virtual ~RenderWindow();
