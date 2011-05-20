@@ -75,7 +75,7 @@ int main( int argc, char *argv[] )
 
 	typedef vtkDiscreteRemeshing<vtkQEMetricForClustering> QEMRemeshing;
 
-	typedef vtkDiscreteRemeshing<vtkL21MetricForClustering> L21Remeshing;
+//	typedef vtkDiscreteRemeshing<vtkL21MetricForClustering> L21Remeshing;
 
 	typedef vtkDiscreteRemeshing<vtkQuadricAnisotropicMetricForClustering> QuadricAnisotropicRemeshing;
 
