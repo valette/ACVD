@@ -19,7 +19,7 @@ Auteur:   Sebastien Valette,
 #include "vtkIsotropicMetricForClustering.h"
 #include "vtkQuadricAnisotropicMetricForClustering.h"
 #include "vtkQEMetricForClustering.h"
-#include "vtkL21MetricForClustering.h"
+
 
 
 #include "vtkTrianglesProcessing.h"
