@@ -88,6 +88,8 @@ template < class Metric > class vtkDiscreteRemeshing:public vtkSurfaceClustering
 		this->BoundaryFixingFlag=B;
 	}
 
+	vtkSetMacro(ForceManifold, bool)
+
 	vtkSetMacro(InputDensityFile, char*)
 	vtkSetMacro(MaxCustomDensity, double)
 	vtkSetMacro(MinCustomDensity, double)
@@ -172,6 +174,8 @@ protected:
 	double MaxCustomDensity;
 	double MinCustomDensity;
 	double CustomDensityMultiplicationFactor;
+
+	bool ForceManifold;
 };
 
 template < class Metric >
@@ -220,12 +224,13 @@ template < class Metric >
 			//unfreeze this cluster and its neighbours
 			this->IsClusterFreezed->SetValue(Cluster,0);
 			this->Output->GetVertexNeighbours(Cluster,CList);
-			for (int i=0;i<CList->GetNumberOfIds();i++)
+			for (int i=0;i!=CList->GetNumberOfIds();i++)
 				this->IsClusterFreezed->SetValue(CList->GetId(i),0);
 		}
 	}
 	CList->Delete();
 
+	vtkIdList *FList=vtkIdList::New();
 	vtkIdList *IList=vtkIdList::New();
 	for (int i=0;i!=ClustersWithIssues->GetNumberOfIds();i++)
 	{
@@ -251,6 +256,16 @@ template < class Metric >
 		{
 			// the cluster has only one item. Pick a neighbour item
 			vtkIdType Item=Items->GetId(0);
+			cout<<"Cluster "<<Cluster<<" contains only vertex "<<Item<<" of valence "
+			<<this->Input->GetValence(Item)<<endl;
+			this->Input->GetVertexNeighbourFaces(Item,FList);
+			cout<<"Neighbour faces: "<<endl;
+			for (int j=0;j!=FList->GetNumberOfIds();j++)
+			{
+				vtkIdType v1,v2,v3;
+				this->Input->GetFaceVertices(FList->GetId(j),v1,v2,v3);
+				cout<<FList->GetId(j)<<" : vertices "<<v1<<" "<<v2<<" "<<v3<<endl;			
+			}
 			this->GetItemNeighbours(Item,IList);
 			bool found=false;
 			for (int j=0;j<IList->GetNumberOfIds();j++)
@@ -859,14 +874,17 @@ template < class Metric > void vtkDiscreteRemeshing < Metric >::Remesh ()
 
 	this->BuildDelaunayTriangulation ();
 	double Factor=2;
-	int NumberOfIssues=this->DetectNonManifoldOutputVertices(Factor);
-	while (NumberOfIssues!=0)
+	if (this->ForceManifold)
 	{
-		cout<<NumberOfIssues<<" topology issues, restarting minimization"<<endl;
-		this->ConnexityConstraint=0;
-		this->MinimizeEnergy();
-		this->BuildDelaunayTriangulation ();
-		NumberOfIssues=this->DetectNonManifoldOutputVertices(Factor);
+		int NumberOfIssues=this->DetectNonManifoldOutputVertices(Factor);
+		while (NumberOfIssues!=0)
+		{
+			cout<<NumberOfIssues<<" topology issues, restarting minimization"<<endl;
+			this->ConnexityConstraint=0;
+			this->MinimizeEnergy();
+			this->BuildDelaunayTriangulation ();
+			NumberOfIssues=this->DetectNonManifoldOutputVertices(Factor);
+		}
 	}
 }
 template < class Metric >
@@ -1176,6 +1194,7 @@ template < class Metric >
 	this->MinCustomDensity=0.1;
 	this->CustomDensityMultiplicationFactor=0.001;
 	this->Output=0;
+	this->ForceManifold=false;
 }
 
 
