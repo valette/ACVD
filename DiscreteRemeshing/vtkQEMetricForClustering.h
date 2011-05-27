@@ -48,6 +48,13 @@ class  vtkQEMetricForClustering
 {
 public:
 
+	void MultiplyItemWeight(vtkIdType ItemId, double Factor)
+	{
+		for (int i=0;i<3;i++)
+			this->Items[ItemId].Value[i]*=Factor;
+		this->Items[ItemId].Weight*=Factor;
+	}
+
 	void SetQuadricsOptimizationLevel(int L)
 	{
 		this->QuadricsOptimizationLevel=L;

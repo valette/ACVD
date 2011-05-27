@@ -43,6 +43,13 @@ class  vtkAnisotropicMetricForClustering
 {
 public:
 
+	void MultiplyItemWeight(vtkIdType ItemId, double Factor)
+	{
+		for (int i=0;i<3;i++)
+			this->Items[ItemId].Value[i]*=Factor;
+		this->Items[ItemId].Weight*=Factor;
+	}
+
 	// this method is empty as there is no constraint for this metric
 	void SetConstrainedClustering(int C){}
 	

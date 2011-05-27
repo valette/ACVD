@@ -329,7 +329,7 @@ template < class Metric > void
 	for (int CurrentQueue=0;CurrentQueue<this->PoolSize;CurrentQueue++)
 	{
 		Queue = &this->ProcessesPopQueues[Process][CurrentQueue];
-		while (Queue->size())
+		while (!Queue->empty())
 		{
 			// the queue is not empty : let's use it
 			Edge = Queue->front ();
@@ -397,131 +397,128 @@ template < class Metric > void
 						this->Clustering->SetValue (I1,Val2);
 						this->NumberOfModifications[Thread]++;
 					}
+					else if (Val2 ==this->NumberOfClusters)
+					{
+						// I2 is not associated. Give it to the same cluster as I1
+						this->MetricContext.AddItemToCluster(I2,this->Clusters+Val1);
+						this->MetricContext.ComputeClusterCentroid(this->Clusters+Val1);
+						this->MetricContext.ComputeClusterEnergy(this->Clusters+Val1);
+						(*this->ClustersSizes->GetPointer (Val1))++;
+						this->AddItemRingToProcess (I2,Process,Thread);
+						this->Clustering->SetValue (I2,Val1);
+						this->NumberOfModifications[Thread]++;
+					}
 					else
 					{
-						if (Val2 ==this->NumberOfClusters)
+						int Result;
+
+						// determine whether one of	the	two	adjacent clusters was modified,
+						// or whether any of the clusters is freezed
+						//	If not,	the	test is	useless, and the speed improved	:)
+						if (((this->ClustersLastModification[Val1] >=this->NumberOfLoops-1)
+						    || (this->ClustersLastModification[Val2]>=this->NumberOfLoops-1))
+						    &&((this->IsClusterFreezed->GetValue(Val1)==0)
+								&&(this->IsClusterFreezed->GetValue(Val2)==0)))
 						{
-							// I2 is not associated. Give it to the same cluster as I1
-							this->MetricContext.AddItemToCluster(I2,this->Clusters+Val1);
-							this->MetricContext.ComputeClusterCentroid(this->Clusters+Val1);
-							this->MetricContext.ComputeClusterEnergy(this->Clusters+Val1);
-							(*this->ClustersSizes->GetPointer (Val1))++;
-							this->AddItemRingToProcess (I2,Process,Thread);
-							this->Clustering->SetValue (I2,Val1);
-							this->NumberOfModifications[Thread]++;
+							Cluster1 = this->Clusters + Val1;
+							Cluster2 = this->Clusters + Val2;
+
+							Size1 = this->ClustersSizes->GetPointer (Val1);
+							Size2 = this->ClustersSizes->GetPointer (Val2);
+
+							// Compute the initial energy
+							Try11=this->MetricContext.GetClusterEnergy (Cluster1);
+							Try12=this->MetricContext.GetClusterEnergy (Cluster2);
+							Try1=Try11+Try12;
+
+							// Compute the energy when setting
+							// I1 to the same cluster as I2;
+							if ((*Size1 == 1)||(this->ThreadedConnexityConstraintProblem(I1,Edge,Val1,Val2,Thread)==1))
+								Try2 = 100000000.0;
+							else
+							{
+								this->MetricContext.DeepCopy (Cluster1, Cluster21);
+								this->MetricContext.DeepCopy (Cluster2, Cluster22);
+								this->MetricContext.SubstractItemFromCluster (I1, Cluster21);
+								this->MetricContext.AddItemToCluster (I1, Cluster22);
+								this->MetricContext.ComputeClusterCentroid (Cluster21);
+								this->MetricContext.ComputeClusterCentroid (Cluster22);
+								this->MetricContext.ComputeClusterEnergy (Cluster21);
+								this->MetricContext.ComputeClusterEnergy (Cluster22);
+
+								Try21=this->MetricContext.GetClusterEnergy(Cluster21);
+								Try22=this->MetricContext.GetClusterEnergy(Cluster22);
+								Try2=Try21+Try22;
+							}
+
+							// Compute the energy when setting
+							// I2 to the same cluster as I1;
+							if ((*Size2 == 1) || (this->ThreadedConnexityConstraintProblem (I2, Edge, Val2, Val1, Thread) == 1))
+								Try3 = 1000000000.0;
+							else
+							{
+								this->MetricContext.DeepCopy (Cluster1, Cluster31);
+								this->MetricContext.DeepCopy (Cluster2, Cluster32);
+								this->MetricContext.SubstractItemFromCluster (I2, Cluster32);
+								this->MetricContext.AddItemToCluster (I2, Cluster31);
+								this->MetricContext.ComputeClusterCentroid (Cluster31);
+								this->MetricContext.ComputeClusterCentroid (Cluster32);
+								this->MetricContext.ComputeClusterEnergy (Cluster31);
+								this->MetricContext.ComputeClusterEnergy (Cluster32);
+
+								Try31=this->MetricContext.GetClusterEnergy (Cluster31);
+								Try32=this->MetricContext.GetClusterEnergy (Cluster32);
+								Try3=Try31+Try32;
+							}
+							if ((Try1 <= Try2) && (Try1 <= Try3))
+								Result = 1;
+							else if ((Try2 < Try1) && (Try2 < Try3))
+								Result = 2;
+							else
+								Result = 3;
 						}
 						else
 						{
+							Result = 1;
+						}
 
-							int Result;
+						switch (Result)
+						{
+						case (1):
+							// Don't do anything!
+							this->AddEdgeToProcess (Edge, Process);
+							break;
 
-							// determine whether one of the two
-							// adjacent clusters was modified. If not, 
-							// the test is useless, and the speed
-							// improved :)
-							if ((this->ClustersLastModification[Val1] >=this->NumberOfLoops-1)
-							    || (this->ClustersLastModification[Val2]>=this->NumberOfLoops-1))
-							{
-								Cluster1 = this->Clusters + Val1;
-								Cluster2 = this->Clusters + Val2;
+						case (2):
+							// Set I1 in the same cluster as I2
+							this->Clustering->SetValue (I1, Val2);
+							(*Size2)++;
+							(*Size1)--;
+							this->MetricContext.DeepCopy (Cluster21, Cluster1);
+							this->MetricContext.DeepCopy (Cluster22, Cluster2);
+							this->AddItemRingToProcess (I1, Process, Thread);
+							this->NumberOfModifications[Thread]++;
+							this->ClustersLastModification[Val1] = this->NumberOfLoops;
+							this->ClustersLastModification[Val2] = this->NumberOfLoops;
+							break;
 
-								Size1 = this->ClustersSizes->GetPointer (Val1);
-								Size2 = this->ClustersSizes->GetPointer (Val2);
-
-								// Compute the initial energy
-								Try11=this->MetricContext.GetClusterEnergy (Cluster1);
-								Try12=this->MetricContext.GetClusterEnergy (Cluster2);
-								Try1=Try11+Try12;
-
-								// Compute the energy when setting 
-								// I1 to the same cluster as I2;
-								if ((*Size1 == 1)||(this->ThreadedConnexityConstraintProblem(I1,Edge,Val1,Val2,Thread)==1))
-									Try2 = 100000000.0;
-								else
-								{
-									this->MetricContext.DeepCopy (Cluster1, Cluster21);
-									this->MetricContext.DeepCopy (Cluster2, Cluster22);
-									this->MetricContext.SubstractItemFromCluster (I1, Cluster21);
-									this->MetricContext.AddItemToCluster (I1, Cluster22);
-									this->MetricContext.ComputeClusterCentroid (Cluster21);
-									this->MetricContext.ComputeClusterCentroid (Cluster22);
-									this->MetricContext.ComputeClusterEnergy (Cluster21);
-									this->MetricContext.ComputeClusterEnergy (Cluster22);
-
-									Try21=this->MetricContext.GetClusterEnergy(Cluster21);
-									Try22=this->MetricContext.GetClusterEnergy(Cluster22);
-									Try2=Try21+Try22;
-								}
-
-								// Compute the energy when setting 
-								// I2 to the same cluster as I1;
-								if ((*Size2 == 1) || (this->ThreadedConnexityConstraintProblem (I2, Edge, Val2, Val1, Thread) == 1))
-									Try3 = 1000000000.0;
-								else
-								{
-									this->MetricContext.DeepCopy (Cluster1, Cluster31);
-									this->MetricContext.DeepCopy (Cluster2, Cluster32);
-									this->MetricContext.SubstractItemFromCluster (I2, Cluster32);
-									this->MetricContext.AddItemToCluster (I2, Cluster31);
-									this->MetricContext.ComputeClusterCentroid (Cluster31);
-									this->MetricContext.ComputeClusterCentroid (Cluster32);
-									this->MetricContext.ComputeClusterEnergy (Cluster31);
-									this->MetricContext.ComputeClusterEnergy (Cluster32);
-
-									Try31=this->MetricContext.GetClusterEnergy (Cluster31);
-									Try32=this->MetricContext.GetClusterEnergy (Cluster32);
-									Try3=Try31+Try32;
-								}
-								if ((Try1 <= Try2) && (Try1 <= Try3))
-									Result = 1;
-								else if ((Try2 < Try1) && (Try2 < Try3))
-									Result = 2;
-								else
-									Result = 3;
-							}
-							else
-							{
-								Result = 1;
-							}
-
-							switch (Result)
-							{
-							case (1):
-								// Don't do anything!
-								this->AddEdgeToProcess (Edge, Process);
-								break;
-
-							case (2):
-								// Set I1 in the same cluster as I2
-								this->Clustering->SetValue (I1, Val2);
-								(*Size2)++;
-								(*Size1)--;
-								this->MetricContext.DeepCopy (Cluster21, Cluster1);
-								this->MetricContext.DeepCopy (Cluster22, Cluster2);
-								this->AddItemRingToProcess (I1, Process, Thread);
-								this->NumberOfModifications[Thread]++;
-								this->ClustersLastModification[Val1] = this->NumberOfLoops;
-								this->ClustersLastModification[Val2] = this->NumberOfLoops;
-								break;
-
-							case (3):
-								// Set I2 in the same cluster as I1
-								this->Clustering->SetValue (I2, Val1);
-								(*Size1)++;
-								(*Size2)--;
-								this->MetricContext.DeepCopy (Cluster31, Cluster1);
-								this->MetricContext.DeepCopy (Cluster32, Cluster2);
-								this->AddItemRingToProcess (I2, Process, Thread);
-								this->NumberOfModifications[Thread]++;
-								this->ClustersLastModification[Val1] = this->NumberOfLoops;
-								this->ClustersLastModification[Val2] = this->NumberOfLoops;
-							}
+						case (3):
+							// Set I2 in the same cluster as I1
+							this->Clustering->SetValue (I2, Val1);
+							(*Size1)++;
+							(*Size2)--;
+							this->MetricContext.DeepCopy (Cluster31, Cluster1);
+							this->MetricContext.DeepCopy (Cluster32, Cluster2);
+							this->AddItemRingToProcess (I2, Process, Thread);
+							this->NumberOfModifications[Thread]++;
+							this->ClustersLastModification[Val1] = this->NumberOfLoops;
+							this->ClustersLastModification[Val2] = this->NumberOfLoops;
 						}
 					}
 #ifdef THREADSAFECLUSTERING
-					// release the lock on the clusters
-					this->ClustersLocks[Val1]->Unlock();
-					this->ClustersLocks[Val2]->Unlock();
+				// release the lock on the clusters
+				this->ClustersLocks[Val1]->Unlock();
+				this->ClustersLocks[Val2]->Unlock();
 #endif	
 				}
 			}

@@ -52,8 +52,17 @@ public vtkObject
 public:
 	
 	/// Sets the number of clusters to create
-	void SetNumberOfClusters(int N){this->NumberOfClusters=N;};
-	
+	void SetNumberOfClusters(int N)
+	{
+		this->NumberOfClusters=N+N*this->SpareFactor;
+		this->NumberOfSpareClusters=this->NumberOfClusters-N;
+	};
+
+	void SetSpareFactor(double Factor)
+	{
+		this->SpareFactor=Factor;
+	}
+
 	/// Main class call: processes the clustering. List is the list of items to cluster. If you want to process
 	/// all the items (which is the case in 99.99% of the cases), leave this parameter empty
 	vtkIntArray *ProcessClustering(vtkIdList *List=0);
@@ -192,9 +201,12 @@ protected:
 	
 	/// initialize the arrays (accumulators etc)
 	virtual void Init();
-	
-	/// re-coputes the statistics of the clustering
-	void ReComputeStatistics();	
+
+	/// re-computes the number of items in each cluster
+	void ReComputeClustersSize();
+
+	/// re-computes the statistics of the clustering
+	void ReComputeStatistics();
 
 	/// the maximum number of convergences. 
 	/// When the number max of convergences is reached, the clustering is considered to be finished
@@ -220,6 +232,13 @@ protected:
 	
 	/// the number of wanted clusters
 	int NumberOfClusters;
+
+	/// the number of clusters that will not be used in the clustering
+	int NumberOfSpareClusters;
+
+	/// when setting the number of clusters, a proportion of clusters will be allocated in supplement
+	/// the spare factor determines this proportion.
+	double SpareFactor;
 
 	/// detects the clusters made of several disconnected components
 	/// their number is the returned integer. for each of these clusters
@@ -264,6 +283,9 @@ protected:
 	/// the number of times the edges queue has been processed (defines the "time")
 	int NumberOfLoops;
 
+	/// the number of times convergence was reached
+	int NumberOfConvergences;
+
 	/// the frame number when Display=3
 	int FrameNumber;
 
@@ -297,6 +319,9 @@ protected:
 
 	// a buffer List for the method AddItemRingToProcess 
 	vtkIdList *EdgeList;
+
+	// an array to define freezed clusters
+	vtkBitArray *IsClusterFreezed;
 };
 
 
@@ -323,26 +348,46 @@ void vtkUniformClustering<Metric,EdgeType>::AddItemRingToProcess(vtkIdType Item)
 }
 
 template <class Metric, class EdgeType>
-void vtkUniformClustering<Metric,EdgeType>::ReComputeStatistics()
+void vtkUniformClustering<Metric,EdgeType>::ReComputeClustersSize()
 {
-	int	i,Value;
-	int	*Size=this->ClustersSizes->GetPointer(0);
-	for	(i=0;i<this->NumberOfClusters;i++)
+	for	(vtkIdType i=0;i!=this->NumberOfClusters;i++)
 	{
-		this->MetricContext.ResetCluster(Clusters+i);
-		*Size=0;
-		Size++;
+		this->ClustersSizes->SetValue(i,0);
 	}
-	for	(i=0;i<this->GetNumberOfItems();i++)
+	for	(vtkIdType i=0;i!=this->GetNumberOfItems();i++)
 	{
-		Value=this->Clustering->GetValue(i);
-		if ((Value>=0)&&(Value<this->NumberOfClusters))
+		vtkIdType Cluster=this->Clustering->GetValue(i);
+		if ((Cluster>=0)&&(Cluster<this->NumberOfClusters))
 		{
-			this->MetricContext.AddItemToCluster(i,this->Clusters+Value);
-			(*this->ClustersSizes->GetPointer(Value))++;
+			this->ClustersSizes->SetValue(Cluster,this->ClustersSizes->GetValue(Cluster)+1);
+		}
+		else
+		{
+			if (Cluster!=this->NumberOfClusters)
+				cout<<"Warning! : item "<<i<<" belongs to cluster "<<Cluster<<endl;
 		}
 	}
-	for	(i=0;i<this->NumberOfClusters;i++)
+}
+
+template <class Metric, class EdgeType>
+void vtkUniformClustering<Metric,EdgeType>::ReComputeStatistics()
+{
+	this->ReComputeClustersSize();
+	for	(vtkIdType i=0;i!=this->NumberOfClusters;i++)
+		this->MetricContext.ResetCluster(Clusters+i);
+
+	for	(vtkIdType i=0;i!=this->GetNumberOfItems();i++)
+	{
+		vtkIdType Cluster=this->Clustering->GetValue(i);
+		if ((Cluster>=0)&&(Cluster<this->NumberOfClusters))
+			this->MetricContext.AddItemToCluster(i,this->Clusters+Cluster);
+		else
+		{
+			if (Cluster!=this->NumberOfClusters)
+				cout<<"Warning! : item "<<i<<" belongs to cluster "<<Cluster<<endl;
+		}
+	}
+	for	(vtkIdType i=0;i!=this->NumberOfClusters-this->NumberOfSpareClusters;i++)
 	{
 	
 		this->MetricContext.ComputeClusterCentroid(Clusters+i);
@@ -650,6 +695,7 @@ vtkIntArray* vtkUniformClustering<Metric,EdgeType>::ProcessClustering(vtkIdList 
 	
 	this->StartTime=Timer->GetUniversalTime();
 	Timer->StartTimer();
+	this->NumberOfConvergences=0;
 	this->MinimizeEnergy();
 	Timer->StopTimer();
 	
@@ -681,7 +727,6 @@ void vtkUniformClustering<Metric,EdgeType>::SetAllClustersToModified()
 template <class Metric, class EdgeType>
 void vtkUniformClustering<Metric,EdgeType>::MinimizeEnergy()
 {
-	int NumberOfConvergences=0;
 	int NumberOfModifications;
 	int NumberOfDisconnectedClusters;
 
@@ -725,9 +770,9 @@ void vtkUniformClustering<Metric,EdgeType>::MinimizeEnergy()
 		else
 			this->RelativeNumberOfLoops++;
 		
-		if ((NumberOfModifications<1)||(this->NumberOfLoops>this->MaxNumberOfLoops)
-		||(((NumberOfModifications<this->GetNumberOfItems()/1000)||(this->NumberOfLoops*2>this->MaxNumberOfLoops))
-				&&(NumberOfConvergences==0)))
+		if ((NumberOfModifications==0)
+			||(this->NumberOfLoops>this->MaxNumberOfLoops)
+			||((NumberOfModifications<this->GetNumberOfItems()/1000)&&(NumberOfConvergences==0)))
 		{
 			if ((this->UnconstrainedInitializationFlag)&&(NumberOfConvergences==0))
 			{
@@ -744,6 +789,7 @@ void vtkUniformClustering<Metric,EdgeType>::MinimizeEnergy()
 
 			NumberOfDisconnectedClusters=this->CleanClustering();
 			this->FillHolesInClustering(this->Clustering);
+			this->ReComputeClustersSize();
 
 			if (this->ConsoleOutput)
 				cout<<endl<<"Convergence: "<<NumberOfDisconnectedClusters<<" disconnected classes	  "<<endl;
@@ -825,121 +871,117 @@ int vtkUniformClustering<Metric,EdgeType>::ProcessOneLoop()
 						this->Clustering->SetValue(I1,Val2);
 						this->ClustersLastModification[Val2]=this->NumberOfLoops;
 					}
-					else
+					else if (Val2==NumberOfClusters)
 					{
-						if (Val2==NumberOfClusters)
-						{
-							// I2 is not associated. Give it to the same cluster as I1
-							this->MetricContext.AddItemToCluster(I2,this->Clusters+Val1);
-							this->MetricContext.ComputeClusterCentroid(this->Clusters+Val1);
-							this->MetricContext.ComputeClusterEnergy(this->Clusters+Val1);
-							(*this->ClustersSizes->GetPointer(Val1))++;
-							this->AddItemRingToProcess(I2);
-							NumberOfModifications++;
-							this->Clustering->SetValue(I2,Val1);
-							this->ClustersLastModification[Val1]=this->NumberOfLoops;
-						}
+						// I2 is not associated. Give it to the same cluster as I1
+						this->MetricContext.AddItemToCluster(I2,this->Clusters+Val1);
+						this->MetricContext.ComputeClusterCentroid(this->Clusters+Val1);
+						this->MetricContext.ComputeClusterEnergy(this->Clusters+Val1);
+						(*this->ClustersSizes->GetPointer(Val1))++;
+						this->AddItemRingToProcess(I2);
+						NumberOfModifications++;
+						this->Clustering->SetValue(I2,Val1);
+						this->ClustersLastModification[Val1]=this->NumberOfLoops;
+					}
+
+					// determine whether one of	the	two	adjacent clusters was modified,
+					// or whether any of the clusters is freezed
+					//	If not,	the	test is	useless, and the speed improved	:)
+					else if (((this->ClustersLastModification[Val1]>=this->NumberOfLoops-1)
+							||(this->ClustersLastModification[Val2]>=this->NumberOfLoops-1))
+								&&((this->IsClusterFreezed->GetValue(Val1)==0)
+									&&(this->IsClusterFreezed->GetValue(Val2)==0)))
+					{
+						int Result=1;
+						Cluster1=this->Clusters+Val1;
+						Cluster2=this->Clusters+Val2;
+
+						Size1=this->ClustersSizes->GetPointer(Val1);
+						Size2=this->ClustersSizes->GetPointer(Val2);
+
+						// Compute the initial energy
+						Try11=this->MetricContext.GetClusterEnergy(Cluster1);
+						Try12=this->MetricContext.GetClusterEnergy(Cluster2);
+						Try1=Try11+Try12;
+
+						// Compute the energy when setting I1 to the same cluster as I2;
+						if ((*Size1==1)||(this->ConnexityConstraintProblem(I1,Edge,Val1,Val2)==1))
+							Try2=100000000.0;
 						else
 						{
-							int Result=1;
-
-							// determine whether one of	the	two	adjacent clusters was modified.
-							//	If not,	the	test is	useless, and the speed improved	:)
-							if ((this->ClustersLastModification[Val1]>=this->NumberOfLoops-1)
-								||(this->ClustersLastModification[Val2]>=this->NumberOfLoops-1))
-							{
-								Cluster1=this->Clusters+Val1;
-								Cluster2=this->Clusters+Val2;
-
-								Size1=this->ClustersSizes->GetPointer(Val1);
-								Size2=this->ClustersSizes->GetPointer(Val2);
-
-								// Compute the initial energy
-								Try11=this->MetricContext.GetClusterEnergy(Cluster1);
-								Try12=this->MetricContext.GetClusterEnergy(Cluster2);
-								Try1=Try11+Try12;
-
-								// Compute the energy when setting I1 to the same cluster as I2;
-								if ((*Size1==1)||(this->ConnexityConstraintProblem(I1,Edge,Val1,Val2)==1))
-									Try2=100000000.0;
-								else
-								{
-									this->MetricContext.Sub(Cluster1,I1,Cluster21);
-									this->MetricContext.Add(Cluster2,I1,Cluster22);
-									this->MetricContext.ComputeClusterCentroid(Cluster21);
-									this->MetricContext.ComputeClusterCentroid(Cluster22);
-									this->MetricContext.ComputeClusterEnergy(Cluster21);
-									this->MetricContext.ComputeClusterEnergy(Cluster22);
-									Try21=this->MetricContext.GetClusterEnergy(Cluster21);
-									Try22=this->MetricContext.GetClusterEnergy(Cluster22);
-									Try2=Try21+Try22;
-								}
-
-								// Compute the energy when setting I2 to the same cluster as I1;
-								if ((*Size2==1)||(this->ConnexityConstraintProblem(I2,Edge,Val2,Val1)==1))
-									Try3=1000000000.0;
-								else
-								{
-									this->MetricContext.Sub(Cluster2,I2,Cluster32);
-									this->MetricContext.Add(Cluster1,I2,Cluster31);
-									this->MetricContext.ComputeClusterCentroid(Cluster31);
-									this->MetricContext.ComputeClusterCentroid(Cluster32);										
-									this->MetricContext.ComputeClusterEnergy(Cluster31);
-									this->MetricContext.ComputeClusterEnergy(Cluster32);
-
-									Try31=this->MetricContext.GetClusterEnergy(Cluster31);
-									Try32=this->MetricContext.GetClusterEnergy(Cluster32);
-									Try3=Try31+Try32;
-
-								}
-
-								if ((Try1 <= Try2) && (Try1 <= Try3))
-									Result = 1;
-								else if ((Try2 < Try1) && (Try2 < Try3))
-									Result = 2;
-								else
-									Result = 3;
-
-								switch (Result)
-								{
-								case (1):
-									//Don't	do anything!
-									this->EdgeQueue.push(Edge);
-									break;
-
-								case (2):
-									// Set I1 in the same cluster as I2
-									this->Clustering->SetValue(I1,Val2);
-									(*Size2)++;
-									(*Size1)--;
-									this->MetricContext.DeepCopy(Cluster21,Cluster1);
-									this->MetricContext.DeepCopy(Cluster22,Cluster2);
-									this->AddItemRingToProcess(I1);
-									NumberOfModifications++;
-									this->ClustersLastModification[Val1]=this->NumberOfLoops;
-									this->ClustersLastModification[Val2]=this->NumberOfLoops;
-									break;
-
-								case(3):
-									// Set I2 in the same cluster as I1
-									this->Clustering->SetValue(I2,Val1);
-									(*Size1)++;
-									(*Size2)--;
-									this->MetricContext.DeepCopy(Cluster31,Cluster1);
-									this->MetricContext.DeepCopy(Cluster32,Cluster2);
-									this->AddItemRingToProcess(I2);
-									NumberOfModifications++;
-									this->ClustersLastModification[Val1]=this->NumberOfLoops;
-									this->ClustersLastModification[Val2]=this->NumberOfLoops;
-									break;
-								}
-							}
-							else
-							{
-								//Don't	do anything!
-								this->EdgeQueue.push(Edge);
-							}							
+							this->MetricContext.Sub(Cluster1,I1,Cluster21);
+							this->MetricContext.Add(Cluster2,I1,Cluster22);
+							this->MetricContext.ComputeClusterCentroid(Cluster21);
+							this->MetricContext.ComputeClusterCentroid(Cluster22);
+							this->MetricContext.ComputeClusterEnergy(Cluster21);
+							this->MetricContext.ComputeClusterEnergy(Cluster22);
+							Try21=this->MetricContext.GetClusterEnergy(Cluster21);
+							Try22=this->MetricContext.GetClusterEnergy(Cluster22);
+							Try2=Try21+Try22;
 						}
+
+						// Compute the energy when setting I2 to the same cluster as I1;
+						if ((*Size2==1)||(this->ConnexityConstraintProblem(I2,Edge,Val2,Val1)==1))
+							Try3=1000000000.0;
+						else
+						{
+							this->MetricContext.Sub(Cluster2,I2,Cluster32);
+							this->MetricContext.Add(Cluster1,I2,Cluster31);
+							this->MetricContext.ComputeClusterCentroid(Cluster31);
+							this->MetricContext.ComputeClusterCentroid(Cluster32);
+							this->MetricContext.ComputeClusterEnergy(Cluster31);
+							this->MetricContext.ComputeClusterEnergy(Cluster32);
+
+							Try31=this->MetricContext.GetClusterEnergy(Cluster31);
+							Try32=this->MetricContext.GetClusterEnergy(Cluster32);
+							Try3=Try31+Try32;
+
+						}
+
+						if ((Try1 <= Try2) && (Try1 <= Try3))
+							Result = 1;
+						else if ((Try2 < Try1) && (Try2 < Try3))
+							Result = 2;
+						else
+							Result = 3;
+						switch (Result)
+						{
+						case (1):
+							//Don't	do anything!
+							this->EdgeQueue.push(Edge);
+							break;
+
+						case (2):
+							// Set I1 in the same cluster as I2
+							this->Clustering->SetValue(I1,Val2);
+							(*Size2)++;
+							(*Size1)--;
+							this->MetricContext.DeepCopy(Cluster21,Cluster1);
+							this->MetricContext.DeepCopy(Cluster22,Cluster2);
+							this->AddItemRingToProcess(I1);
+							NumberOfModifications++;
+							this->ClustersLastModification[Val1]=this->NumberOfLoops;
+							this->ClustersLastModification[Val2]=this->NumberOfLoops;
+							break;
+
+						case(3):
+							// Set I2 in the same cluster as I1
+							this->Clustering->SetValue(I2,Val1);
+							(*Size1)++;
+							(*Size2)--;
+							this->MetricContext.DeepCopy(Cluster31,Cluster1);
+							this->MetricContext.DeepCopy(Cluster32,Cluster2);
+							this->AddItemRingToProcess(I2);
+							NumberOfModifications++;
+							this->ClustersLastModification[Val1]=this->NumberOfLoops;
+							this->ClustersLastModification[Val2]=this->NumberOfLoops;
+							break;
+						}
+					}
+					else
+					{
+						//Don't	do anything!
+						this->EdgeQueue.push(Edge);
 					}
 				}
 			}
@@ -964,6 +1006,8 @@ void vtkUniformClustering<Metric,EdgeType>::InitSamples(vtkIdList *List)
 	float test;
 	int	number;
 
+	int RealNumberOfClusters=this->NumberOfClusters-this->NumberOfSpareClusters;
+
 	// reset all items to the Null cluster
 	for	(i=0;i<this->GetNumberOfItems();i++)
 		this->Clustering->SetValue(i,NumberOfClusters);
@@ -972,7 +1016,7 @@ void vtkUniformClustering<Metric,EdgeType>::InitSamples(vtkIdList *List)
 	{
 	case 0:
 		// Randomly pick one item for each cluster
-		for	(i=0;i<this->NumberOfClusters;i++)
+		for	(i=0;i<RealNumberOfClusters;i++)
 		{
 			ok=0;
 			while (ok==0)
@@ -995,7 +1039,7 @@ void vtkUniformClustering<Metric,EdgeType>::InitSamples(vtkIdList *List)
 		}
 		break;
 	case 1:
-		this->ComputeInitialRandomSampling(List,Clustering,this->NumberOfClusters);
+		this->ComputeInitialRandomSampling(List,Clustering,RealNumberOfClusters);
 		break;
 	case 2:
 		for (i=0;i<this->GetNumberOfItems();i++)
@@ -1008,7 +1052,7 @@ template <class Metric, class EdgeType>
 void vtkUniformClustering<Metric,EdgeType>::ComputeInitialRandomSampling(vtkIdList *List,vtkIntArray	*Sampling,int NumberOfRegions)
 {
 	for	(int i=0;i<this->GetNumberOfItems();i++)
-		Sampling->SetValue(i,NumberOfClusters);
+		Sampling->SetValue(i,this->NumberOfClusters);
 
 	int	*Items=new int[this->GetNumberOfItems()];
 	int	NumberOfRemainingItems=this->GetNumberOfItems();
@@ -1038,7 +1082,7 @@ void vtkUniformClustering<Metric,EdgeType>::ComputeInitialRandomSampling(vtkIdLi
 		while((!Found)&&(FirstItem<this->GetNumberOfItems()))
 		{
 			Item=Items[FirstItem];
-			if (Sampling->GetValue(Item)==NumberOfClusters)
+			if (Sampling->GetValue(Item)==this->NumberOfClusters)
 				Found=true;
 			else
 				FirstItem++;
@@ -1055,7 +1099,7 @@ void vtkUniformClustering<Metric,EdgeType>::ComputeInitialRandomSampling(vtkIdLi
 			{
 				Item=IQueue.front();
 				IQueue.pop();
-				if (Sampling->GetValue(Item)==NumberOfClusters)
+				if (Sampling->GetValue(Item)==this->NumberOfClusters)
 				{
 					Sampling->SetValue(Item,NumberOfRemainingRegions);
 					SWeights+=this->MetricContext.GetItemWeight(Item);
@@ -1079,7 +1123,7 @@ void vtkUniformClustering<Metric,EdgeType>::ComputeInitialRandomSampling(vtkIdLi
 		return;
 	}
 
-	for (vtkIdType Cluster=0;Cluster<NumberOfClusters;Cluster++)
+	for (vtkIdType Cluster=0;Cluster<this->NumberOfClusters;Cluster++)
 		this->ClustersSizes->SetValue(Cluster,0);
 
 	int NumberOfItems=this->GetNumberOfItems();
@@ -1087,7 +1131,7 @@ void vtkUniformClustering<Metric,EdgeType>::ComputeInitialRandomSampling(vtkIdLi
 	for	(int i=0;i<NumberOfItems;i++)
 	{
 		vtkIdType Cluster=Sampling->GetValue(i);
-		if (Cluster!=NumberOfClusters)
+		if (Cluster!=this->NumberOfClusters)
 			this->ClustersSizes->SetValue(Cluster,this->ClustersSizes->GetValue(Cluster)+1);
 		Items[i]=i;
 	}
@@ -1103,11 +1147,8 @@ void vtkUniformClustering<Metric,EdgeType>::ComputeInitialRandomSampling(vtkIdLi
 			Item=Items[FirstItem];
 			FirstItem++;
 			vtkIdType Cluster=Sampling->GetValue(Item);
-			if (Cluster==NumberOfClusters)
-			{
+			if (Cluster==this->NumberOfClusters)
 				Found=true;
-
-			}
 			else
 			{
 				if (this->ClustersSizes->GetValue(Cluster)>1)
@@ -1167,23 +1208,27 @@ void vtkUniformClustering<Metric,EdgeType>::Allocate()
 	this->ClustersLastModification=new int [this->NumberOfClusters];
 
 	this->EdgesLastLoop=new	unsigned char[this->GetNumberOfEdges()];
+
+	this->IsClusterFreezed=vtkBitArray::New();
+	this->IsClusterFreezed->SetNumberOfValues(this->NumberOfClusters);
 }
 
 template <class Metric, class EdgeType>
 void vtkUniformClustering<Metric,EdgeType>::Init()
 {
-	int	i;
-
 	this->Allocate();
 	this->BuildMetric();
 
-	for	(i=0;i<this->NumberOfClusters;i++)
+	for	(vtkIdType i=0;i<this->NumberOfClusters;i++)
+	{
 		this->ClustersSizes->SetValue(i,0);
+		this->IsClusterFreezed->SetValue(i,0);
+	}
 
 	while (this->EdgeQueue.size())
 		this->EdgeQueue.pop();
 
-	for	(i=0;i<this->GetNumberOfEdges();i++)
+	for	(vtkIdType i=0;i<this->GetNumberOfEdges();i++)
 		this->EdgesLastLoop[i]=0;
 
 	this->RelativeNumberOfLoops=1;
@@ -1213,8 +1258,10 @@ vtkUniformClustering<Metric,EdgeType>::vtkUniformClustering()
 	this->Display=0;
 	this->ConsoleOutput=0;
 	this->MaxNumberOfConvergences=1000000000;
-	this->MaxNumberOfLoops=500;
+	this->MaxNumberOfLoops=5000000;
 	this->NumberOfClusters=0;
+	this->NumberOfSpareClusters=0;
+	this->SpareFactor=4;
 	this->InitialSamplingType=1;
 	this->ConnexityConstraint=0;
 	this->ComputeAndSaveEnergy=0;
@@ -1222,6 +1269,7 @@ vtkUniformClustering<Metric,EdgeType>::vtkUniformClustering()
 	this->Clusters=0;
 	this->UnconstrainedInitializationFlag=0;
 	this->EdgeList=vtkIdList::New();
+	this->IsClusterFreezed=0;
 }
 
 template <class Metric, class EdgeType>
@@ -1235,6 +1283,9 @@ vtkUniformClustering<Metric,EdgeType>::~vtkUniformClustering()
 
 	if (this->ClustersSizes)
 		this->ClustersSizes->Delete();
+
+	if (this->IsClusterFreezed)
+		this->IsClusterFreezed->Delete();
 
 	if (this->EdgesLastLoop)
 		delete [] this->EdgesLastLoop;

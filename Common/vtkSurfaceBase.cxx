@@ -199,8 +199,8 @@ bool vtkSurfaceBase::IsVertexManifold( const vtkIdType& iV )
 	// detect non-manifold edges
 	for (vtkIdType i=0;i<NumberOfRemainingEdges;i++)
 	{
-		if (this->EdgesNonManifoldFaces[Edges[i]]!=0)
-			return (0);
+		if (!this->IsEdgeManifold(Edges[i]))
+			return (false);
 	}
 
 	FirstEdge=this->GetFirstEdge(iV);
