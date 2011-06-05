@@ -54,13 +54,18 @@ public:
 	/// Sets the number of clusters to create
 	void SetNumberOfClusters(int N)
 	{
-		this->NumberOfClusters=N+N*this->SpareFactor;
-		this->NumberOfSpareClusters=this->NumberOfClusters-N;
+		this->NumberOfSpareClusters=std::max ((int) (N*this->SpareFactor), this->MinNumberOfSpareClusters);
+		this->NumberOfClusters=N+this->NumberOfSpareClusters;
 	};
 
 	void SetSpareFactor(double Factor)
 	{
 		this->SpareFactor=Factor;
+	}
+
+	void SetMinNumberOfSpareClusters(int N)
+	{
+		this->MinNumberOfSpareClusters=N;
 	}
 
 	/// Main class call: processes the clustering. List is the list of items to cluster. If you want to process
@@ -239,6 +244,9 @@ protected:
 	/// when setting the number of clusters, a proportion of clusters will be allocated in supplement
 	/// the spare factor determines this proportion.
 	double SpareFactor;
+
+	/// this number defines the minimum number of spare clusters
+	int MinNumberOfSpareClusters;
 
 	/// detects the clusters made of several disconnected components
 	/// their number is the returned integer. for each of these clusters
@@ -1270,6 +1278,7 @@ vtkUniformClustering<Metric,EdgeType>::vtkUniformClustering()
 	this->UnconstrainedInitializationFlag=0;
 	this->EdgeList=vtkIdList::New();
 	this->IsClusterFreezed=0;
+	this->MinNumberOfSpareClusters=0;
 }
 
 template <class Metric, class EdgeType>

@@ -225,6 +225,12 @@ int main( int argc, char *argv[] )
 			Remesh->SetCustomDensityMultiplicationFactor(atof(argv[ArgumentsIndex+1]));
 		}
 
+		if (strcmp(argv[ArgumentsIndex],"-r")==0)
+		{
+			cout<<"Setting number of reserve clusters to : "<<argv[ArgumentsIndex+1]<<endl;
+			Remesh->SetMinNumberOfSpareClusters(atoi(argv[ArgumentsIndex+1]));
+		}
+
 		ArgumentsIndex+=2;
 	}
 

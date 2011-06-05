@@ -244,6 +244,11 @@ template < class Metric >
 //				this->MetricContext.MultiplyItemWeight(Items->GetId(j),Factor);
 		}
 		vtkIdType FirstSpareCluster=this->NumberOfClusters-this->NumberOfSpareClusters;
+		if (this->NumberOfSpareClusters==0)
+		{
+			cout<<endl<<"Not enough spare clusters! allocate more!"<<endl;
+			exit(1);
+		}
 		this->IsClusterFreezed->SetValue(FirstSpareCluster,0);
 		cout<<"Adding cluster "<<FirstSpareCluster<<" near cluster "<<Cluster<<endl;
 		if (Items->GetNumberOfIds()>1)
@@ -553,7 +558,10 @@ template < class Metric >
 			{
 				vtkImageReader2 *Reader;
 				if(strstr (this->InputDensityFile,".mnc") != NULL)
+				{
 					Reader=vtkMINCImageReader::New();
+					((vtkMINCImageReader*) Reader)->RescaleRealValuesOn();
+				}
 				else
 					Reader=vtkMetaImageReader::New();
 
