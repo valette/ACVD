@@ -8,6 +8,7 @@ INCLUDE_DIRECTORIES(
  ADD_LIBRARY(
 vtkDiscreteRemeshing 
 vtkTestUniformClustering.cxx
+vtkManifoldSimplification.cxx
 )
 
 SET(LIB_ADDED
