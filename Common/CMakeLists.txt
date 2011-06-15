@@ -35,6 +35,7 @@ viewer2
 RandomTriangulation
 ExamplevtkSurface
 CleanMesh
+CheckOrientation
 )
 FOREACH(loop_var ${COMMON_EXAMPLES})
 	ADD_EXECUTABLE(${loop_var} ${loop_var}.cxx)
