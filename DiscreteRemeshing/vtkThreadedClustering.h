@@ -127,6 +127,7 @@ protected:
 
 	// Executes one process from the Thread pool
 	void ExecuteProcess (int Process, int Thread);
+	void ExecuteProcessWithDistances (int Process,int Thread);
 
 	// The static function used for clustering
 	static VTK_THREAD_RETURN_TYPE MyMainForClustering (void *arg);
@@ -295,7 +296,10 @@ template < class Metric >	VTK_THREAD_RETURN_TYPE vtkThreadedClustering
 		double Time;
 
 		Time = Clustering->Timer->GetUniversalTime ();
-		Clustering->ExecuteProcess (Process,MyId);
+		if (Clustering->MinimizeUsingEnergy)
+			Clustering->ExecuteProcess (Process,MyId);
+		else
+			Clustering->ExecuteProcessWithDistances (Process,MyId);
 		Time = Clustering->Timer->GetUniversalTime ()-Time;
 		Clustering->PoolAllocationLock2->Lock();
 		Clustering->PoolQueue2->Insert (-Time,Process);
@@ -529,6 +533,182 @@ template < class Metric > void
 	delete Cluster31;
 	delete Cluster32;	
 }
+
+template < class Metric > void
+	vtkThreadedClustering < Metric >::ExecuteProcessWithDistances (int Process,int Thread)
+{
+	vtkIdType Edge, I1, I2;
+	int Val1, Val2, *Size1, *Size2;
+
+	typename Metric::Cluster *Cluster1, *Cluster2;
+	std::queue < int > *Queue;
+	for (int CurrentQueue=0;CurrentQueue<this->PoolSize;CurrentQueue++)
+	{
+		Queue = &this->ProcessesPopQueues[Process][CurrentQueue];
+		while (!Queue->empty())
+		{
+			// the queue is not empty : let's use it
+			Edge = Queue->front ();
+			Queue->pop ();
+			this->GetEdgeItems (Edge, I1, I2);
+
+			if ((this->EdgesLastLoop[Edge] !=this->RelativeNumberOfLoops) && (I2 >= 0))
+			{
+				this->EdgesLastLoop[Edge] = this->RelativeNumberOfLoops;
+				Val1 = this->Clustering-> GetValue (I1);
+				Val2 = this->Clustering-> GetValue (I2);
+				if (Val2!=Val1)
+				{
+#ifdef THREADSAFECLUSTERING
+					// get the lock on the clusters
+					if (Val1<Val2)
+					{
+						#ifdef VTK_USE_PTHREADS
+						if (this->ClustersLocks[Val1]->TryLock()!=0)
+						{
+							this->NumberOfLockingCollisions[Thread]++;
+							this->ClustersLocks[Val1]->Lock();
+						}
+						if (this->ClustersLocks[Val2]->TryLock()!=0)
+						{
+							this->NumberOfLockingCollisions[Thread]++;
+							this->ClustersLocks[Val2]->Lock();
+						}
+						#else
+						this->ClustersLocks[Val1]->Lock();
+						this->ClustersLocks[Val2]->Lock();
+						#endif
+					}
+					else
+					{
+						#ifdef VTK_USE_PTHREADS
+						if (this->ClustersLocks[Val2]->TryLock()!=0)
+						{
+							this->NumberOfLockingCollisions[Thread]++;
+							this->ClustersLocks[Val2]->Lock();
+						}
+						if (this->ClustersLocks[Val1]->TryLock()!=0)
+						{
+							this->NumberOfLockingCollisions[Thread]++;
+							this->ClustersLocks[Val1]->Lock();
+						}
+						#else
+						this->ClustersLocks[Val2]->Lock();
+						this->ClustersLocks[Val1]->Lock();
+						#endif
+					}
+
+#endif
+
+					this->NumberOfIterations[Thread]++;
+					if (Val1 == this->NumberOfClusters)
+					{
+						// I1 is not associated. Give it to the same cluster as I2
+						this->MetricContext.AddItemToCluster(I1,this->Clusters+Val2);
+						this->MetricContext.ComputeClusterCentroid(this->Clusters+Val2);
+						this->MetricContext.ComputeClusterEnergy(this->Clusters+Val2);
+
+						(*this->ClustersSizes->GetPointer (Val2))++;
+						this->AddItemRingToProcess (I1,Process, Thread);
+						this->Clustering->SetValue (I1,Val2);
+						this->NumberOfModifications[Thread]++;
+					}
+					else if (Val2 ==this->NumberOfClusters)
+					{
+						// I2 is not associated. Give it to the same cluster as I1
+						this->MetricContext.AddItemToCluster(I2,this->Clusters+Val1);
+						this->MetricContext.ComputeClusterCentroid(this->Clusters+Val1);
+						this->MetricContext.ComputeClusterEnergy(this->Clusters+Val1);
+						(*this->ClustersSizes->GetPointer (Val1))++;
+						this->AddItemRingToProcess (I2,Process,Thread);
+						this->Clustering->SetValue (I2,Val1);
+						this->NumberOfModifications[Thread]++;
+					}
+					else
+					{
+						int Result;
+
+						// determine whether one of	the	two	adjacent clusters was modified,
+						// or whether any of the clusters is freezed
+						//	If not,	the	test is	useless, and the speed improved	:)
+						if (((this->ClustersLastModification[Val1] >=this->NumberOfLoops-1)
+						    || (this->ClustersLastModification[Val2]>=this->NumberOfLoops-1))
+						    &&((this->IsClusterFreezed->GetValue(Val1)==0)
+								&&(this->IsClusterFreezed->GetValue(Val2)==0)))
+						{
+							Cluster1=this->Clusters+Val1;
+							Cluster2=this->Clusters+Val2;
+
+							Size1=this->ClustersSizes->GetPointer(Val1);
+							Size2=this->ClustersSizes->GetPointer(Val2);
+
+							// Compute the initial energy
+							double C1[3],C2[3];
+							this->MetricContext.GetClusterCentroid(Cluster1,C1);
+							this->MetricContext.GetClusterCentroid(Cluster2,C2);
+
+							double P[3];
+							// Compute the energy when setting I1 to the same cluster as I2;
+							if ((*Size1!=1)&&(this->ThreadedConnexityConstraintProblem(I1,Edge,Val1,Val2,Thread)==0))
+							{
+						//		this->MetricContext.GetItemCoordinates(I1,P);
+								this->GetItemCoordinates(I1,P);
+								if (vtkMath::Distance2BetweenPoints(P,C1)>
+									vtkMath::Distance2BetweenPoints(P,C2))
+								{
+									Result=2;
+									this->Clustering->SetValue(I1,Val2);
+									(*Size2)++;
+									(*Size1)--;
+									this->MetricContext.AddItemToCluster(I1,Cluster2);
+									this->MetricContext.SubstractItemFromCluster(I1,Cluster1);
+									this->AddItemRingToProcess (I1, Process, Thread);
+									this->NumberOfModifications[Thread]++;
+									this->ClustersLastModification[Val1]=this->NumberOfLoops;
+									this->ClustersLastModification[Val2]=this->NumberOfLoops;
+								}
+							}
+							if ((*Size2!=1)&&(this->ThreadedConnexityConstraintProblem (I2, Edge, Val2, Val1, Thread)==0)
+							&& (Result!=2))
+							{
+							// Compute the energy when setting I2 to the same cluster as I1;
+							//	this->MetricContext.GetItemCoordinates(I2,P);
+								this->GetItemCoordinates(I2,P);
+								if (vtkMath::Distance2BetweenPoints(P,C1)<
+									vtkMath::Distance2BetweenPoints(P,C2))
+								{
+									Result=3;
+									this->Clustering->SetValue(I2,Val1);
+									(*Size2)--;
+									(*Size1)++;
+									this->MetricContext.AddItemToCluster(I2,Cluster1);
+									this->MetricContext.SubstractItemFromCluster(I2,Cluster2);
+									this->AddItemRingToProcess (I2, Process, Thread);
+									this->NumberOfModifications[Thread]++;
+									this->ClustersLastModification[Val1]=this->NumberOfLoops;
+									this->ClustersLastModification[Val2]=this->NumberOfLoops;
+								}
+							}
+						}
+						else
+						{
+							Result = 1;
+						}
+
+						if (Result==1)
+							this->AddEdgeToProcess (Edge, Process);
+					}
+#ifdef THREADSAFECLUSTERING
+				// release the lock on the clusters
+				this->ClustersLocks[Val1]->Unlock();
+				this->ClustersLocks[Val2]->Unlock();
+#endif
+				}
+			}
+		}
+	}
+}
+
 
 template < class Metric >
 int	vtkThreadedClustering < Metric >::ProcessOneLoop ()

@@ -44,6 +44,7 @@ SET(DISCRETEREMESHING_EXAMPLES
 ACVD
 ACVDQ
 AnisotropicRemeshingQ
+ManifoldSimplification
 )
 
 FOREACH(loop_var ${DISCRETEREMESHING_EXAMPLES})
