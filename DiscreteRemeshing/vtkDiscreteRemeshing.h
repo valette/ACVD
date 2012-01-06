@@ -219,20 +219,39 @@ template < class Metric >
 	{
 		if (!this->Output->IsVertexManifold(Cluster))
 		{
-			NumberOfTopologyIssues++;
-			ClustersWithIssues->InsertNextId(Cluster);
-/*			vtkIdList *CItems=ClusterItems[Cluster];
-			int Size=0;
-			if (CItems!=0)
-				Size=CItems->GetNumberOfIds();
+//			cout<<"Cluster "<<Cluster<<" is non manifold"<<endl;
+			vtkIdList *Items=ClusterItems[Cluster];
 
-			cout<<"Vertex "<<Cluster<<" is non manifold. Cluster size : "<<Size<<endl;*/
+			bool problem=true;
+			if (Items!=0)
+			{
+				if (Items->GetNumberOfIds()==1)
+				{
+					if (this->Input->IsVertexManifold(Items->GetId(0))!=1)
+					{
+						problem=false;
+						cout<<"discarding this topology issue as the input mesh also has a topology issue"<<endl;
+					}
+				}
+			}
 
-			//unfreeze this cluster and its neighbours
-			this->IsClusterFreezed->SetValue(Cluster,0);
-			this->Output->GetVertexNeighbours(Cluster,CList);
-			for (int i=0;i!=CList->GetNumberOfIds();i++)
-				this->IsClusterFreezed->SetValue(CList->GetId(i),0);
+			if (problem)
+			{
+				NumberOfTopologyIssues++;
+				ClustersWithIssues->InsertNextId(Cluster);
+	/*			vtkIdList *CItems=ClusterItems[Cluster];
+				int Size=0;
+				if (CItems!=0)
+					Size=CItems->GetNumberOfIds();
+
+				cout<<"Vertex "<<Cluster<<" is non manifold. Cluster size : "<<Size<<endl;*/
+
+				//unfreeze this cluster and its neighbours
+				this->IsClusterFreezed->SetValue(Cluster,0);
+				this->Output->GetVertexNeighbours(Cluster,CList);
+				for (int i=0;i!=CList->GetNumberOfIds();i++)
+					this->IsClusterFreezed->SetValue(CList->GetId(i),0);
+			}
 		}
 	}
 	CList->Delete();

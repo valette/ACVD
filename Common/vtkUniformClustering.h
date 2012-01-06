@@ -58,6 +58,8 @@ public:
 		this->NumberOfClusters=N+this->NumberOfSpareClusters;
 	};
 
+	// the spare factor is used when computing the number of reserve clusters when enforcing manifold output
+	// formula : reserve clusters=spare_factor*number_of_clusters
 	void SetSpareFactor(double Factor)
 	{
 		this->SpareFactor=Factor;
