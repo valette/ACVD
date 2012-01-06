@@ -348,10 +348,9 @@ NumberOfClusters,int ClusteringType)
 
 		double P[3];
 		double Q[3][3];
-		int j;
 		for (i=0;i<NumberOfItems;i++)
 		{
-			for (j=0;j<3;j++)
+			for (int j=0;j<3;j++)
 				P[j]=Items[i].Value[j]/Items[i].Weight;
 
 			Q[0][0]=Items[i].Quadric[0];

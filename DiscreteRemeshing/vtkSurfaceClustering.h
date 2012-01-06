@@ -141,7 +141,7 @@ void vtkSurfaceClustering<Metric>::CreateWindows()
 		if (this->Display>2)
 		{
 			std::stringstream strfile;
-			strfile<<"movie/mesh"<<(this->FrameNumber++)+1000<<".bmp";
+			strfile<<"movie/mesh"<<(this->FrameNumber++)+1000<<".png";
 			Window->Capture(strfile.str().c_str());
 		}
 	}
@@ -157,7 +157,7 @@ void vtkSurfaceClustering<Metric>::Snapshot()
 		if (this->Display>2)
 		{
 			std::stringstream strfile;
-			strfile<<"movie/mesh"<<(this->FrameNumber++)+1000<<".bmp";
+			strfile<<"movie/mesh"<<(this->FrameNumber++)+1000<<".png";
 			Window->Capture(strfile.str().c_str());
 		}		
 	}

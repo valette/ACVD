@@ -88,6 +88,8 @@ int main( int argc, char *argv[] )
 	//*******************************************************************************************
 
 	char filename[500];
+	char outputfile[500];
+	strcpy (outputfile,"simplification.ply");
 
 	if(argc>1)
 	{
@@ -101,6 +103,8 @@ int main( int argc, char *argv[] )
 		cout<<"gradation defines the influence of local curvature (0=uniform meshing)"<<endl;
 		cout<<endl<<"Optionnal arguments : "<<endl;
 		cout<<"-s threshold : defines the subsampling threshold i.e. the input mesh will be subdivided until its number ";
+		cout<<"-o directory : sets the output directory ";
+		cout<<"-of file : sets the output file name ";
 		cout<<" of vertices is above nvertices*threshold (default=10)"<<endl;
 		cout<<"-d 0/1/2 : enables display (default : 0)"<<endl;
 		cout<<"-q 0/1/2 : set the number of eigenvalues for quadrics post-processing (default : 3)"<<endl;
@@ -175,10 +179,15 @@ int main( int argc, char *argv[] )
 
 		if (strcmp(argv[ArgumentsIndex],"-o")==0)
 		{
-
 			OutputDirectory=argv[ArgumentsIndex+1];
 			cout<<"OutputDirectory: "<<OutputDirectory<<endl;
 			Remesh->SetOutputDirectory(argv[ArgumentsIndex+1]);		
+		}
+
+		if (strcmp(argv[ArgumentsIndex],"-of")==0)
+		{
+			strcpy(outputfile,argv[ArgumentsIndex+1]);
+			cout<<"Output file name: "<<outputfile<<endl;
 		}
 
 		if (strcmp(argv[ArgumentsIndex],"-l")==0)
@@ -267,11 +276,20 @@ int main( int argc, char *argv[] )
 	{
 		// Note : this is an adaptation of Siggraph 2000 Paper : Out-of-core simplification of large polygonal models
 		vtkIntArray *Clustering=Remesh->GetClustering();
-		vtkPLYWriter *Writer=vtkPLYWriter::New();
-		Writer->SetInput(Remesh->GetOutput());
-		Writer->SetFileName("output_1.ply");
-		Writer->Write();
-		Writer->Delete();
+
+		char REALFILE[5000];
+		char FileBeforeProcessing[500];
+		strcpy (FileBeforeProcessing,"smooth_");
+		strcat (FileBeforeProcessing, outputfile);
+		if (OutputDirectory)
+		{
+			strcpy (REALFILE,OutputDirectory);
+			strcat (REALFILE,FileBeforeProcessing);
+		}
+		else
+			strcpy (REALFILE,FileBeforeProcessing);
+
+		Remesh->GetOutput()->WriteToFile(REALFILE);
 
 		int Cluster,NumberOfMisclassedItems=0;
 
@@ -344,16 +362,14 @@ int main( int argc, char *argv[] )
 	if (OutputDirectory)
 	{
 		strcpy (REALFILE,OutputDirectory);
-		strcat (REALFILE,"simplification.ply");
+		strcat (REALFILE,"/");
+		strcat (REALFILE,outputfile);
 	}
 	else
-		strcpy(REALFILE,"simplification.ply");
+		strcpy(REALFILE,outputfile);
 
-	vtkPLYWriter *plyWriter=vtkPLYWriter::New();
-	plyWriter->SetInput(Remesh->GetOutput());
-	plyWriter->SetFileName(REALFILE);
-	plyWriter->Write();
-	plyWriter->Delete();
+	Remesh->GetOutput()->WriteToFile(REALFILE);
+
 	Remesh->Delete();
 	Mesh->Delete();
 	if (Display!=0)

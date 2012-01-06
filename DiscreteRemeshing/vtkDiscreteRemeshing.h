@@ -153,6 +153,8 @@ protected:
 	int NumberOfSubdivisionsBeforeClustering;
 
 	/// this array stores the parent-child informations (2 ints for each vertex: its two parents)
+	/// it is used only when the mesh is bubdivided before simplification, to interpolate the 
+	// curvature indicator;
 	vtkIntArray *VerticesParent1;
 	vtkIntArray *VerticesParent2;
 
@@ -219,7 +221,12 @@ template < class Metric >
 		{
 			NumberOfTopologyIssues++;
 			ClustersWithIssues->InsertNextId(Cluster);
-			cout<<"Vertex "<<Cluster<<" is non manifold"<<endl;
+/*			vtkIdList *CItems=ClusterItems[Cluster];
+			int Size=0;
+			if (CItems!=0)
+				Size=CItems->GetNumberOfIds();
+
+			cout<<"Vertex "<<Cluster<<" is non manifold. Cluster size : "<<Size<<endl;*/
 
 			//unfreeze this cluster and its neighbours
 			this->IsClusterFreezed->SetValue(Cluster,0);
@@ -250,27 +257,30 @@ template < class Metric >
 			exit(1);
 		}
 		this->IsClusterFreezed->SetValue(FirstSpareCluster,0);
-		cout<<"Adding cluster "<<FirstSpareCluster<<" near cluster "<<Cluster<<endl;
+//		cout<<"Adding cluster "<<FirstSpareCluster<<" near cluster "<<Cluster<<endl;
 		if (Items->GetNumberOfIds()>1)
 		{
-			this->Clustering->SetValue(Items->GetId(0),FirstSpareCluster);
+			vtkIdType ItemToMove=Items->GetId(0);
+			this->Clustering->SetValue(ItemToMove,FirstSpareCluster);
 			ClusterItems[FirstSpareCluster]=vtkIdList::New();
-			ClusterItems[FirstSpareCluster]->InsertNextId(Items->GetId(0));
+			ClusterItems[FirstSpareCluster]->InsertNextId(ItemToMove);
+			Items->DeleteId(ItemToMove);
+			this->NumberOfSpareClusters--;
 		}
 		else
 		{
 			// the cluster has only one item. Pick a neighbour item
 			vtkIdType Item=Items->GetId(0);
-			cout<<"Cluster "<<Cluster<<" contains only vertex "<<Item<<" of valence "
-			<<this->Input->GetValence(Item)<<endl;
+//			cout<<"Cluster "<<Cluster<<" contains only vertex "<<Item<<" of valence "
+//			<<this->Input->GetValence(Item)<<endl;
 			this->Input->GetVertexNeighbourFaces(Item,FList);
-			cout<<"Neighbour faces: "<<endl;
+/*			cout<<"Neighbour faces: "<<endl;
 			for (int j=0;j!=FList->GetNumberOfIds();j++)
 			{
 				vtkIdType v1,v2,v3;
 				this->Input->GetFaceVertices(FList->GetId(j),v1,v2,v3);
 				cout<<FList->GetId(j)<<" : vertices "<<v1<<" "<<v2<<" "<<v3<<endl;			
-			}
+			}*/
 			this->GetItemNeighbours(Item,IList);
 			bool found=false;
 			for (int j=0;j<IList->GetNumberOfIds();j++)
@@ -281,16 +291,18 @@ template < class Metric >
 				{
 					this->Clustering->SetValue(Neighbour,FirstSpareCluster);
 					ClusterItems[NeighbourCluster]->DeleteId(Neighbour);
+//					cout<<"Took 1 item from cluster "<<NeighbourCluster<<endl;
 					ClusterItems[FirstSpareCluster]=vtkIdList::New();
 					ClusterItems[FirstSpareCluster]->InsertNextId(Neighbour);
 					found=true;
+					this->NumberOfSpareClusters--;
 					break;
 				}
 			}
 			if (!found)
 			{
-				cout<<"Could not find a place to add cluster "<<FirstSpareCluster
-				<<" near cluster "<<Cluster<<endl;
+//				cout<<"Could not find a place to add cluster "<<FirstSpareCluster
+//				<<" near cluster "<<Cluster<<endl;
 				for (int j=0;j<IList->GetNumberOfIds();j++)
 				{
 					vtkIdType Neighbour=IList->GetId(j);
@@ -304,14 +316,13 @@ template < class Metric >
 					}
 					else
 					{
-						cout<<"Neighbour : "<<NeighbourCluster<<" has "
-							<<ClusterItems[NeighbourCluster]->GetNumberOfIds()<<" items"<<endl;
+//						cout<<"Neighbour : "<<NeighbourCluster<<" has "
+//							<<ClusterItems[NeighbourCluster]->GetNumberOfIds()<<" items"<<endl;
 					}
 				}
 				this->Snapshot();
 			}
 		}
-		this->NumberOfSpareClusters--;
 	}
 
 	// free memory
@@ -807,7 +818,7 @@ template < class Metric >
 	}
 
 	while (Levels[NumberOfSubdivisionsBeforeClustering]->GetNumberOfPoints () 
-				<this->SubsamplingThreshold * this->NumberOfClusters)
+				<this->SubsamplingThreshold * (this->NumberOfClusters-this->NumberOfSpareClusters))
 	{
 		if (this->ConsoleOutput)
 			cout << "Subdividing mesh" << endl;
@@ -943,10 +954,10 @@ template < class Metric >
 	void vtkDiscreteRemeshing < Metric >::BuildDelaunayTriangulation ()
 {
 
-	vtkIdType i, j, NumberOfFaces;
+	vtkIdType i, j;
 	double P[3];
 	vtkIdList *CList = vtkIdList::New ();
-	vtkIdType v1, v2, v3, vertices[4];
+	vtkIdType v1, v2, v3;
 
 	if (this->Output!=0)
 		this->Output->Delete();
@@ -1046,22 +1057,25 @@ template < class Metric >
 
 	this->FixMeshBoundaries ();
 
-	// add non manifold edges
-	for (vtkIdType i=0;i<this->GetNumberOfEdges();i++)
+	if (this->ForceManifold)
 	{
-		vtkIdType I1,I2;
-		vtkIdType C1,C2;
-		this->GetEdgeItems(i,I1,I2);
-		C1=this->Clustering->GetValue(I1);
-		C2=this->Clustering->GetValue(I2);
-		if ((C1!=C2)
-			&&(C1>=0)&&(C1<this->NumberOfClusters)
-			&&(C2>=0)&&(C2<this->NumberOfClusters))
+		// add non manifold edges
+		for (vtkIdType i=0;i<this->GetNumberOfEdges();i++)
 		{
-			if (this->Output->IsEdge(C1,C2)<0)
+			vtkIdType I1,I2;
+			vtkIdType C1,C2;
+			this->GetEdgeItems(i,I1,I2);
+			C1=this->Clustering->GetValue(I1);
+			C2=this->Clustering->GetValue(I2);
+			if ((C1!=C2)
+				&&(C1>=0)&&(C1<this->NumberOfClusters)
+				&&(C2>=0)&&(C2<this->NumberOfClusters))
 			{
-				this->Output->AddEdge(C1,C2);
-				cout<<"Added non-manifold edge "<<C1<<","<<C2<<endl;
+				if (this->Output->IsEdge(C1,C2)<0)
+				{
+					this->Output->AddEdge(C1,C2);
+					cout<<"Added non-manifold edge "<<C1<<","<<C2<<endl;
+				}
 			}
 		}
 	}

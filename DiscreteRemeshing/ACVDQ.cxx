@@ -107,6 +107,7 @@ int main( int argc, char *argv[] )
 		cout<<"-cmin value : set minimum custom indicator value"<<endl;
 		cout<<"-cmax value : set maximum custom indicator value"<<endl;
 		cout<<"-cf value : set custom indicator multiplication factor"<<endl;
+		cout<<"-m 0/1 : enforce a manifold output ON/OFF (default : 0)"<<endl;
 		return (0);
 	}
 
@@ -144,6 +145,12 @@ int main( int argc, char *argv[] )
 	int ArgumentsIndex=4;
 	while (ArgumentsIndex<argc)
 	{
+		if (strcmp(argv[ArgumentsIndex],"-m")==0)
+		{
+			Remesh->SetForceManifold(atoi(argv[ArgumentsIndex+1]));
+			cout<<"Force Manifold="<<atoi(argv[ArgumentsIndex+1])<<endl;
+		}
+
 		if (strcmp(argv[ArgumentsIndex],"-s")==0)
 		{
 			SubsamplingThreshold=atoi(argv[ArgumentsIndex+1]);
