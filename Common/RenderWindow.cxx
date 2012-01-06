@@ -485,7 +485,6 @@ vtkActor* RenderWindow::SetInput (vtkPolyData * Input)
 		Mapper->SetLookupTable (this->lut);
 	
 	this->Input = Input;
-	this->SInput=0;
 
 //	this->MeshActor->GetProperty()->SetDiffuse(0.5);
 //	this->MeshActor->GetProperty()->SetSpecular(0.5);
@@ -498,9 +497,8 @@ vtkActor* RenderWindow::SetInput (vtkPolyData * Input)
 
 vtkActor* RenderWindow::SetInput (vtkSurface * Input)
 {
-	if (!Input)
+	if (Input==0)
 		return(0);
-
 	this->SInput = Input;
 	return (this->SetInput((vtkPolyData *)Input));
 }
@@ -802,12 +800,20 @@ void RenderWindow::HighLightVertices(vtkIdList *Vertices, double Radius)
 
 void RenderWindow::DisplayNonManifoldVertices( double Radius )
 {
+	if (this->SInput==0)
+	{
+		cout<<"Warning : trying to display non manifold vertices does not work for vtkPolyData inputs"<<endl;
+		cout<<"Use vtkSurface to use this feature"<<endl;
+		return;
+	}
+
 	vtkIdList *Vertices=vtkIdList::New();
     for( vtkIdType i = 0; i < this->SInput->GetNumberOfPoints( ); i++ )
     {
         if( !this->SInput->IsVertexManifold( i ) )
         	Vertices->InsertNextId(i);
     }
+    this->HighLightVertices(Vertices,Radius);
     Vertices->Delete();
 }
 

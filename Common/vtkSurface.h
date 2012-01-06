@@ -42,6 +42,8 @@
 #include <vtkEdgeTable.h>
 #include <vtkCommand.h>
 #include <vtkIdListCollection.h>
+#include <vtkPolyDataWriter.h>
+#include <vtkPLYWriter.h>
 #include "vtkSurfaceBase.h"
 
 
@@ -139,7 +141,7 @@ public:
 	void DeleteEdgeLengths();
 
 	/// Computes the connected components of the mesh
-	vtkIdListCollection* GetConnectedComponnents();
+	vtkIdListCollection* GetConnectedComponents();
 	void DeleteConnectedComponents();
 
 
@@ -153,6 +155,10 @@ public:
    /// Creates the vtkSurface object by reading a mesh file.
    /// Supported file types : .wrl, .vtk and .ply
    void CreateFromFile (const char *FileName);
+
+   /// Saves the mesh
+   /// Supported file types : .vtk and .ply
+   void WriteToFile (const char *FileName);
 
    // The Constructor vtkSurface::New();
    static vtkSurface *New();

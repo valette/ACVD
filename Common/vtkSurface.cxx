@@ -681,7 +681,7 @@ void vtkSurface::GetMeshProperties(std::stringstream &stream)
 	if (NumberOfEmptySlots)
 		stream<<NumberOfEmptySlots<<" edges cells are not used (not active)"<<endl;
 
-	vtkIdListCollection *Components=this->GetConnectedComponnents();
+	vtkIdListCollection *Components=this->GetConnectedComponents();
 	stream<<"The mesh has "<<Components->GetNumberOfItems()<<" connected components"<<endl;
     this->DeleteConnectedComponents();
 
@@ -850,7 +850,7 @@ vtkSurface* vtkSurface::CleanConnectivity(double tolerance)
 	Delaunay->SetInput(CleanedMesh);
 
 	vtkIdListCollection *Components;
-	Components=CleanedMesh->GetConnectedComponnents();
+	Components=CleanedMesh->GetConnectedComponents();
 	NumberOfComponents=Components->GetNumberOfItems();
 	Delaunay->SetDebug(0);
 
@@ -1020,7 +1020,7 @@ vtkSurface* vtkSurface::CleanConnectivity(double tolerance)
 
 // Compute the connected components of the mesh (It is based on vertices and edges
 // So it works also with non manifold meshes)
-vtkIdListCollection* vtkSurface::GetConnectedComponnents()
+vtkIdListCollection* vtkSurface::GetConnectedComponents()
 {
 
 
@@ -1812,6 +1812,34 @@ void vtkSurface::QuantizeCoordinates(double Factor, double Tx, double Ty, double
 		this->Points->SetPoint(i,p);
 	}
 }
+
+void vtkSurface::WriteToFile (const char *FileName)
+{
+	char filename[500];
+
+	strcpy(filename,FileName);
+
+	if (filename != NULL)
+	{
+		char *p;
+
+		for (p = filename; *p; ++p)
+			*p = tolower(*p);
+	}
+
+	vtkPolyDataWriter *Writer;
+
+	if (strstr(filename,".vtk")!=NULL)
+		Writer = vtkPolyDataWriter::New();
+
+	if (strstr(filename,".ply")!=NULL)
+		Writer = vtkPLYWriter::New();
+
+	Writer->SetInput(this);
+	Writer->SetFileName(FileName);
+	Writer->Write();	
+}
+
 // ****************************************************************
 // ****************************************************************
 void vtkSurface::CreateFromFile(const char *FileName)

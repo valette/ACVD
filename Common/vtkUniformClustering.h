@@ -549,6 +549,11 @@ int	vtkUniformClustering<Metric,EdgeType>::CleanClustering()
 			}
 			Clusters[i]->Delete();
 		}
+		else
+		{
+			if (Clusters[i]!=0)
+				Clusters[i]->Delete();
+		}
 	}
 
 	delete [] Clusters;
@@ -1416,7 +1421,7 @@ vtkUniformClustering<Metric,EdgeType>::vtkUniformClustering()
 	this->MaxNumberOfLoops=5000000;
 	this->NumberOfClusters=0;
 	this->NumberOfSpareClusters=0;
-	this->SpareFactor=4;
+	this->SpareFactor=0;
 	this->InitialSamplingType=1;
 	this->ConnexityConstraint=0;
 	this->ComputeAndSaveEnergy=0;
