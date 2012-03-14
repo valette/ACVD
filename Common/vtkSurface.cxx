@@ -54,6 +54,71 @@
 #include "RenderWindow.h"
 #endif
 
+vtkSurface *vtkSurface::GetBiggestConnectedComponent()
+{
+	vtkIdListCollection *Collection=this->GetConnectedComponents();
+
+	// get the biggest component vertices
+	vtkIdType Id;
+	int Max=0;
+	for (int i=0;i<Collection->GetNumberOfItems();i++)
+	{
+		int Size=Collection->GetItem(i)->GetNumberOfIds();
+		if (Size>Max)
+		{
+			Max=Size;
+			Id=i;
+		}
+	}
+
+	vtkIdList *List=Collection->GetItem(Id);
+
+	vtkIdType *Ids=new vtkIdType[this->GetNumberOfPoints()];
+
+	for (vtkIdType i=0;i<this->GetNumberOfPoints();i++)
+		Ids[i]=-1;
+
+	vtkSurface *NewMesh=vtkSurface::New();
+	double Point[3];
+	for (vtkIdType i=0;i<List->GetNumberOfIds();i++)
+	{
+		vtkIdType PtId=List->GetId(i);
+		this->GetPoint(PtId,Point);
+		Ids[PtId]=NewMesh->AddVertex(Point);
+	}
+
+	int NumCells=this->GetNumberOfCells();
+	vtkIdType *pts, npts;
+	vtkIdType NewVertices[1000];
+
+	for (vtkIdType i=0;i<NumCells;i++)
+	{
+		this->GetCellPoints(i,npts, pts);
+		bool keep=true;
+		for (int j=0;j<npts;j++)
+			if (Ids[pts[j]]<0)
+				keep=false;
+
+		if (keep)
+		{
+			for (int j=0;j<npts;j++)
+			{
+				vtkIdType NewVertex=Ids[pts[j]];
+				if (NewVertex<0)
+				{
+					cout<<"Error in GetBiggestConnectedComponent()"<<endl;
+					exit(1);
+				}
+				NewVertices[j]=NewVertex;
+			}
+			NewMesh->AddPolygon(npts,NewVertices);
+		}
+	}
+
+	delete [] Ids;
+	return (NewMesh);
+}
+
 vtkSurface* vtkSurface::CleanMemory()
 {
 	vtkIdType NumberOfPoints=this->GetNumberOfPoints();
@@ -1046,7 +1111,7 @@ vtkIdListCollection* vtkSurface::GetConnectedComponents()
 			// a new component is detected
 			VQueue.push(i);
 			Component=vtkIdList::New();
-			Component->Allocate(this->GetNumberOfPoints());
+//			Component->Allocate(this->GetNumberOfPoints());
 
 			while(VQueue.size())
 			{

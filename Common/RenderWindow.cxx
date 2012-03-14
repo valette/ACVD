@@ -764,7 +764,7 @@ void RenderWindow::HighLightVertices(vtkIdList *Vertices, double Radius)
 
 		vtkSphereSource* s_sphere = vtkSphereSource::New( );
 		s_sphere->SetRadius( Radius );
-		double Res=20;
+		int Res=20;
 		s_sphere->SetThetaResolution(Res);
 		s_sphere->SetPhiResolution(Res);
 		s_sphere->Update( );
