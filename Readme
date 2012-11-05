@@ -26,6 +26,10 @@ Simple compilation HowTo under Linux:
 
 the executables (ACVD, ACVDQ and AnisotropicRemeshingQ should be found under the "bin" subdirectory)
 
+*Note for window$ users : if you get this compilation error :
+fatal error LNK1104: cannot open file '..\bin\Debug\vtkSurface.lib'
+you can fix it by unselecting 'build_shared_libs' with the cmake UI
+
 *************************************************************************
 execute ACVD.exe and ACVDQ.exe without arguments to see the available options.
 (respectively ACVD and ACVDQ for linux)
