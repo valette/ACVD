@@ -39,7 +39,6 @@ ExamplevtkSurface
 CleanMesh
 SplitMesh
 mesh2vtk
-RGB2gray
 vtk2ply
 stl2ply
 CheckOrientation
