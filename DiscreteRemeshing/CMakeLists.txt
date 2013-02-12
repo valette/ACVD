@@ -47,7 +47,6 @@ ACVD
 ACVDQ
 AnisotropicRemeshing
 AnisotropicRemeshingQ
-PCVD
 VolumeAnalysis
 ManifoldSimplification
 )
