@@ -297,11 +297,8 @@ NumberOfClusters,int ClusteringType)
 		for (i=0;i<NumberOfClusters;i++)
 			this->ResetCluster(Clusters+i);
 
-		int NumberOfItems;
-
 		if (ClusteringType==0)
 		{
-			NumberOfItems=Mesh->GetNumberOfCells();
 			// Items are triangles
 			vtkIdType v1,v2,v3;
 			double P1[3],P2[3],P3[3];
@@ -328,8 +325,6 @@ NumberOfClusters,int ClusteringType)
 		else
 		{
 			// Items are vertices
-			NumberOfItems=Mesh->GetNumberOfPoints();
-
 			Items=new Item[Mesh->GetNumberOfPoints()];
 			vtkDoubleArray *VerticesAreas=Mesh->GetVerticesAreas();
 			for (i=0;i<Mesh->GetNumberOfPoints();i++)
@@ -344,26 +339,6 @@ NumberOfClusters,int ClusteringType)
 			{
 				this->ComputeVertexQuadric(Items+i,Mesh,i,Items[i].Weight);
 			}
-		}
-
-		double P[3];
-		double Q[3][3];
-		for (i=0;i<NumberOfItems;i++)
-		{
-			for (int j=0;j<3;j++)
-				P[j]=Items[i].Value[j]/Items[i].Weight;
-
-			Q[0][0]=Items[i].Quadric[0];
-			Q[0][1]=Items[i].Quadric[1];
-			Q[0][2]=Items[i].Quadric[2];
-
-			Q[1][0]=Items[i].Quadric[1];
-			Q[1][1]=Items[i].Quadric[4];
-			Q[1][2]=Items[i].Quadric[5];
-
-			Q[2][0]=Items[i].Quadric[2];
-			Q[2][1]=Items[i].Quadric[5];
-			Q[2][2]=Items[i].Quadric[7];
 		}
 	}
 	// this method clamps the weights between AverageValue/Ratio and AverageValue*Ratio

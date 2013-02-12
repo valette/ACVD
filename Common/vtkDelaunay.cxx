@@ -34,6 +34,22 @@
 #include <vtkObjectFactory.h>
 #include "vtkDelaunay.h"
 
+bool vtkDelaunay::IsEdgeFlippable(vtkIdType Edge)
+{
+    vtkIdType v1, v2, v3, v4, f1, f2;
+    this->Mesh->GetEdgeFaces(Edge, f1, f2);
+    if (f2<0)
+        return false;
+    this->Mesh->GetEdgeVertices(Edge, v1, v2);
+    v3 = this->Mesh->GetThirdPoint(f1, v1, v2);
+    v4 = this->Mesh->GetThirdPoint(f2, v1, v2);
+    if (this->Mesh->IsEdge(v3,v4)) {
+        return false;
+    } else {
+        return true;
+    }
+}
+
 void vtkDelaunay::SetInput(vtkSurface *Input)
 {
 	if (this->Mesh)

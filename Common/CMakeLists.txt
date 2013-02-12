@@ -15,6 +15,8 @@
  vtkVolumeProperties.cxx
  vtkNeighbourhoodComputation.cxx
  vtkCurvatureMeasure.cxx
+ vtkMyMinimalStandardRandomSequence.cxx
+#  vtkJSWriter.cxx
  )
  
 
@@ -35,6 +37,11 @@ viewer2
 RandomTriangulation
 ExamplevtkSurface
 CleanMesh
+SplitMesh
+mesh2vtk
+RGB2gray
+vtk2ply
+stl2ply
 CheckOrientation
 )
 FOREACH(loop_var ${COMMON_EXAMPLES})

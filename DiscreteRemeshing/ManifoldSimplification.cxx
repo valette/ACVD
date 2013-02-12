@@ -51,8 +51,6 @@ int main( int argc, char *argv[] )
 
 	//******************************************************************************************
 	// Inside input parameters:
-	int Display=1;				// defines whether there will be a graphic display (0: No, 1: yes)
-
 	int NumberOfVertices=0;	// the number of desired vertices
 	//*******************************************************************************************
 

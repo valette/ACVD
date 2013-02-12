@@ -8,6 +8,7 @@ INCLUDE_DIRECTORIES(
  ADD_LIBRARY(
 vtkDiscreteRemeshing 
 vtkTestUniformClustering.cxx
+xmlParser.cpp
 vtkManifoldSimplification.cxx
 )
 
@@ -44,7 +45,10 @@ INCLUDE_DIRECTORIES(
 SET(DISCRETEREMESHING_EXAMPLES
 ACVD
 ACVDQ
+AnisotropicRemeshing
 AnisotropicRemeshingQ
+PCVD
+VolumeAnalysis
 ManifoldSimplification
 )
 

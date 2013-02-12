@@ -69,7 +69,7 @@ public:
 	
 	// Derive these methods when you want to do additionnal operations when an edge is flipped
 	virtual void UpdateEdge(vtkIdType Edge){};
-	virtual bool IsEdgeFlippable(vtkIdType Edge){return (true);};
+	virtual bool IsEdgeFlippable(vtkIdType Edge);
 
 	static	double ComputeDelaunayConformingCriterion( vtkSurface *Mesh,const vtkIdType& Edge )
 	{

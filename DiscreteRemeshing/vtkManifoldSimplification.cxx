@@ -97,19 +97,16 @@ void vtkManifoldSimplification::Simplify()
 			bool OK=true;
 			vtkIdType f1,f2;
 			double Point1[3],Point2[3],Point3[3],Point4[3];
-			vtkIdType RemainingVertex;
 			vtkIdType DisappearingVertex;
 			
 			if (Direction==0)
 			{
-				RemainingVertex=v1;
 				DisappearingVertex=v2;
 				this->Input->GetVertexNeighbourFaces(v2,FacesList);
 				this->Input->GetPoint(v1,Point1);
 			}
 			else
 			{
-				RemainingVertex=v2;
 				DisappearingVertex=v1;
 				this->Input->GetVertexNeighbourFaces(v1,FacesList);
 				this->Input->GetPoint(v2,Point1);
@@ -122,8 +119,8 @@ void vtkManifoldSimplification::Simplify()
 			for (int i=0;i!=FacesList->GetNumberOfIds();i++)
 			{
 				vtkIdType Vertices[3];
-				double Normal1[3];
-				double Normal2[3];
+				double Normal1[3]={0,0,0};
+				double Normal2[3]={0,0,0};
 				this->Input->GetFaceVertices(FacesList->GetId(i),Vertices[0],Vertices[1],Vertices[2]);
 				this->Input->GetPoint(Vertices[0],Point2);
 				this->Input->GetPoint(Vertices[1],Point3);
