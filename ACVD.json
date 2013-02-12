@@ -1,0 +1,455 @@
+{
+	"actions":
+	{
+		"bone_analysis" :{
+			"description" : "classifies a bone volume into rods and plates elements",
+		    "parameters":[
+		        {
+		            "name":"input_volume",
+		            "type":"file",
+		            "required":"true"
+		        },
+		        {
+		            "name":"radius",
+		            "prefix" : "-r ",
+		            "type":"int",
+		            "info" : "local window radius",
+		            "min":"1"
+		        },
+		        {
+		            "name":"step",
+		            "prefix" : "-s ",
+		            "type":"int",
+		            "info" : "local window displacement step size",
+		            "min":"1"
+		        },
+		        {
+		            "name":"low_threshold",
+		            "prefix" : "-lt ",
+		            "type":"int",
+		            "info" : "voxels with values lower than this parameter will be considered as empty",
+		            "min":"0"
+		        },
+		        {
+		            "name":"high_threshold",
+		            "prefix" : "-ht ",
+		            "info" : "voxels with values higher than this parameter will be considered as full",
+		            "type":"int",
+		            "min":"0"
+		        },
+		        {
+		            "name":"input_scale",
+		            "prefix" : "-is ",
+		            "type":"float",
+		            "info" : "input multiplicator",
+		            "min":"0"
+		        },
+		        {
+		            "name":"median_filter_radius",
+		            "type":"int",
+		            "info" : "this parameter defines the kernel radius when filtering the classification map",
+		            "required":"false"
+		        },
+		        {
+		            "name":"xmin",
+		            "prefix" : "-xmin ",
+		            "type":"int"
+		        },
+		        {
+		            "name":"xmax",
+		            "prefix" : "-xmax ",
+		            "type":"int"
+		        },
+		        {
+		            "name":"ymin",
+		            "prefix" : "-ymin ",
+		            "type":"int"
+		        },
+		        {
+		            "name":"ymax",
+		            "prefix" : "-ymax ",
+		            "type":"int"
+		        },
+		        {
+		            "name":"zmin",
+		            "prefix" : "-zmin ",
+		            "type":"int"
+		        },
+		        {
+		            "name":"zmax",
+		            "prefix" : "-zmax ",
+		            "type":"int"
+		        }
+		    ],
+		    "attributes":
+		    {
+		        "executable":"BoneAnalysis"
+		    }
+		},
+
+		"acvd" : {
+			"description" : "Performs simplification/remeshing of 3D triangular meshes",
+		    "parameters":[
+		        {
+		            "name":"input_mesh",
+		            "type":"file",
+		            "required":"true"
+		        },
+		        {
+		            "name":"number_of_desired_vertices",
+		            "info" : "number of desired vertices for the output mesh",
+		            "type":"int",
+		            "min":"0",
+		            "required":"true"
+		        },
+		        {
+		            "name" : "gradation",
+		            "type" : "float",
+		            "info" : "set to 0 for uniform meshing, increase (example : 2.5) to add curvature-adapted meshing",
+		            "required":"true",
+		            "min":"0",
+		            "max":"30",
+		            "defaultValue":"0"
+		        },
+		        {
+		            "prefix":"-m ",
+		            "info" : "force the output mesh to be manifold",
+		            "name":"force_manifold",
+		            "type":"int",
+		            "required":"false",
+		            "min":"0",
+		            "max":"1"
+		        },
+		        {
+		            "prefix":"-r ",
+		            "info" : "number of reserve vertices when a manifold output is required",
+		            "name":"vertex_reserve",
+		            "type":"int",
+		            "required":"false",
+		            "min":"0"
+		        },
+		        {
+		            "text":"-d 0"
+		        }
+		    ],
+		    "attributes":
+		    {
+		        "executable":"ACVD"
+		    }
+		},
+		"acvdq" : {
+			"description" : "Performs simplification/remeshing of 3D triangular meshes (usin QEM, more accurate but slower)",
+		    "parameters":[
+		        {
+		            "name":"input_mesh",
+		            "type":"file",
+		            "required":"true"
+		        },
+		        {
+		            "name":"number_of_desired_vertices",
+		            "info" : "number of desired vertices for the output mesh",
+		            "type":"int",
+		            "min":"0",
+		            "required":"true"
+		        },
+		        {
+		            "name":"gradation",
+		            "info" : "set to 0 for uniform meshing, increase (example : 2.5) to add curvature-adapted meshing",
+		            "type":"float",
+		            "required":"true",
+		            "min":"0",
+		            "max":"30",
+		            "defaultValue":"0"
+		        },
+		        {
+		            "text":"-d 0"
+		        }
+		    ],
+		    "attributes":
+		    {
+		        "executable":"ACVDQ"
+		    }
+		},
+		"extract_meshes" : {
+			"description" : "Generates meshes from labeled volume data : marching cubes + simplification + smoothing",
+		    "parameters":[
+		        {
+		            "name":"input_volume",
+		            "type":"file",
+		            "required":"true"
+		        },
+		        {
+		            "name":"max_number_of_vertices",
+		            "type":"int",
+		            "min":"-1",
+		            "defaultValue":"10000",
+		            "prefix":"-n "
+		        },
+		        {
+		            "name":"simlification_method",
+		            "type":"int",
+		            "min":"0",
+		            "max":"1",
+		            "defaultValue":"0",
+		            "prefix":"-s "
+		        },
+		        {
+		            "name":"number_of_smoothing_steps",
+		            "type":"int",
+		            "min":"0",
+		            "defaultValue":"0",
+		            "prefix":"-sm "
+		        },
+		        {
+		            "name":"gradation",
+		            "type":"float",
+		            "min":"0",
+		            "max":"3",
+		            "defaultValue":"0",
+		            "prefix":"-g "
+		        },
+		        {
+		            "name":"format",
+		            "type":"string",
+		            "defaultValue":"vtk",
+		            "prefix":"-f "
+		        },
+		        {
+		            "name":"manifold_output",
+		            "type":"int",
+		            "defaultValue":"0",
+		            "min":"0",
+		            "max":"1",
+		            "prefix":"-fill 1 -m "
+		        },
+		        {
+		            "name":"anisotropy",
+		            "type":"int",
+		            "defaultValue":"0",
+		            "min":"0",
+		            "max":"1",
+		            "prefix":"-a "
+		        },
+		        {
+		            "name":"num_voxel_max",
+		            "info" : "defines the maximum number of input voxels. If the input volume has more, it will be resampled to this number",
+		            "type":"int",
+		            "min":"0",
+		            "prefix":"-v "
+		        },
+		        {
+		            "name":"cleaning",
+		            "type":"int",
+		            "defaultValue":"0",
+		            "min":"0",
+		            "max":"1",
+		            "prefix":"-c "
+		        },
+		        {
+		            "name":"colors",
+		            "type":"file",
+		            "prefix":"-x "
+		        }
+		    ],
+		    "attributes":
+		    {
+		        "executable":"VolumeAnalysis"
+		    }
+		},
+		"mesh2vtk" : {
+			"description" : "Converts a mesh into a vtk format",
+		    "parameters":[
+		        {
+		            "name":"input_mesh",
+		            "type":"file",
+		            "required":"true"
+		        }
+		    ],
+		    "attributes":
+		    {
+		        "executable":"mesh2vtk"
+		    }
+		},
+		"slice_volume" : {
+			"description" : "Computes slices from volume data",
+		    "parameters":[
+		        {
+		            "name":"input_volume",
+		            "type":"file",
+		            "required":"true"
+		        },
+		        {
+		            "prefix":"-f ",
+		            "name":"format",
+		            "type":"int",
+		            "min":"0",
+		            "max":"1"
+		        },
+		        {
+		            "prefix":"-orientation ",
+		            "name":"slice_orientation",
+		            "type":"int",
+		            "required":"true",
+		            "min":"0",
+		            "max":"2"
+		        }
+		    ],
+		    "attributes":
+		    {
+		        "executable":"VolumeSlice",
+		        "permissions":"0"
+		    }
+		},
+		"volume_median_filtering" : {
+			"description" : "Computes median filtering for volume data",
+		    "parameters":[
+		        {
+		            "name":"input_volume",
+		            "type":"file",
+		            "required":"true"
+		        },
+		        {
+		            "name":"kernel_size",
+		            "type":"int",
+		            "required":"true",
+		            "defaultValue":"5",
+		            "min":"1",
+		            "max":"10"
+		        }
+		    ],
+		    "attributes":
+		    {
+		        "executable":"VolumeMedian"
+		    }
+		},
+		"volume_anisotropic_diffusion" : {
+		    "parameters":[
+		        {
+		            "name":"input_volume",
+		            "type":"file",
+		            "required":"true"
+		        },
+		        {
+		            "name":"number_of_iterations",
+		            "type":"int",
+		            "required":"true",
+		            "min":"1"
+		        },
+		        {
+		            "prefix":"-t ",
+		            "name":"diffusion_threshold",
+		            "type":"float"
+		        },
+		        {
+		            "prefix":"-f ",
+		            "name":"diffusion_factor",
+		            "type":"float"
+		        }
+		    ],
+		    "attributes":
+		    {
+		        "executable":"VolumeAnisotropicDiffusion"
+		    }
+		},
+		"extract_tubes" : {
+		    "parameters":[
+		        {
+		            "name":"input_volume",
+		            "type":"file",
+		            "required":"true"
+		        },
+		        {
+		            "prefix":"-l ",
+		            "name":"object_gray_level",
+		            "type":"int",
+		            "min":"0",
+		            "max":"100000000",
+		            "defaultValue":"255"
+		        },
+		        {
+		            "prefix":"-cl ",
+		            "name":"initial_cluster_size",
+		            "type":"int",
+		            "min":"0",
+		            "max":"100000000",
+		            "defaultValue":"100"
+		        },
+		        {
+		            "prefix":"-c ",
+		            "name":"chunks_dimension",
+		            "type":"int",
+		            "min":"0",
+		            "max":"100000000",
+		            "defaultValue":"100"
+		        },
+		        {
+		            "prefix":"-cm ",
+		            "name":"chunks_margin",
+		            "type":"int",
+		            "min":"0",
+		            "max":"100000000",
+		            "defaultValue":"30"
+		        },
+		        {
+		            "prefix":"-n ",
+		            "name":"max_number_of_clustering_steps",
+		            "type":"int",
+		            "min":"0",
+		            "max":"100000000",
+		            "defaultValue":"10"
+		        },
+		        {
+		            "prefix":"-nt ",
+		            "name":"number_of_threads",
+		            "type":"int",
+		            "min":"-1",
+		            "max":"100000000",
+		            "defaultValue":"-1"
+		        },
+		        {
+		            "prefix":"-cn ",
+		            "name":"clusters_percentage",
+		            "type":"float",
+		            "min":"0.0001"
+		        }
+		    ],
+		    "attributes":
+		    {
+		        "executable":"TVCIO"
+		    }
+		},
+		"cvtseg2" : {
+			"description" : "Computes a clustering of an input volume image into homogeneous clusters",
+		    "parameters":[
+		        {
+		            "name":"input_volume",
+		            "type":"file",
+		            "required":"true"
+		        },
+		        {
+		            "prefix":"-cn ",
+		            "name":"clusters_percentage",
+		            "type":"float",
+		            "min":"0.0001",
+		            "max":"1",
+		            "defaultValue":"0.01"
+		        },
+		        {
+		            "prefix":"-js ",
+		            "name":"write_JSON",
+		            "info":"when this parameter is set to 1, a JSON file will be written, containing clusters properties (coordinates, color, variance)",
+		            "type":"int",
+		            "min":"0",
+		            "max":"1"
+		        },
+		        {
+		            "text":"-cs 50 -gfn 1 -n 1"
+		        }
+		    ],
+		    "attributes":
+		    {
+		        "executable":"cvtseg2"
+		    }
+		}
+	}
+}
