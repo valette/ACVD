@@ -37,7 +37,6 @@ viewer2
 RandomTriangulation
 ExamplevtkSurface
 CleanMesh
-SplitMesh
 mesh2vtk
 vtk2ply
 stl2ply
