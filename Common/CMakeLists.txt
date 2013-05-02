@@ -51,12 +51,12 @@ ENDFOREACH(loop_var)
 #-----------------------------------------------------------------------------
 # Include the file 'InstallLibrary.cmake' which does the clean install job
 SET(LIBRARY_NAME vtkSurface)
-SET(LIBRARY_NAME_BUILD_TREE_CONFIG ${CMAKE_BINARY_DIR})
+SET(LIBRARY_NAME_BUILD_TREE_CONFIG ${VTKSURFACE_BINARY_DIR})
 # Installation
 # Headers
 INSTALL_FILES(/include/${LIBRARY_NAME} "\\.h$")
 # Binary
 INSTALL_TARGETS(/lib ${LIBRARY_NAME})
-SET(INSTALL_LIBRARY_FILES_DIR ${CMAKE_SOURCE_DIR}/CMake)
-INCLUDE(../CMake/InstallLibrary.cmake)
+SET(INSTALL_LIBRARY_FILES_DIR ${VTKSURFACE_SOURCE_DIR}/CMake)
+INCLUDE(${VTKSURFACE_SOURCE_DIR}/CMake/InstallLibrary.cmake)
 #-----------------------------------------------------------------------------
