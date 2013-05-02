@@ -7,13 +7,13 @@ TARGET_LINK_LIBRARIES(vtkVolumeProcessing vtkHybrid)
 #-----------------------------------------------------------------------------
 # Include the file 'InstallLibrary.cmake' which does the clean install job
 SET(LIBRARY_NAME vtkVolumeProcessing)
-SET(LIBRARY_NAME_BUILD_TREE_CONFIG ${CMAKE_BINARY_DIR})
+SET(LIBRARY_NAME_BUILD_TREE_CONFIG ${VTKSURFACE_BINARY_DIR})
 # Installation
 # Headers
 INSTALL_FILES(/include/${LIBRARY_NAME} "\\.h$")
 # Binary
 INSTALL_TARGETS(/lib ${LIBRARY_NAME})
-SET(INSTALL_LIBRARY_FILES_DIR ${CMAKE_SOURCE_DIR}/CMake)
+SET(INSTALL_LIBRARY_FILES_DIR ${VTKSURFACE_SOURCE_DIR}/CMake)
 INCLUDE(../CMake/InstallLibrary.cmake)
 #-----------------------------------------------------------------------------
 
