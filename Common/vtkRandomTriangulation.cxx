@@ -84,7 +84,7 @@ vtkSurface *vtkRandomTriangulation::BuildRandomTriangulation (int NumberOfPoints
 		vtkPolyData *Poly = vtkPolyData::New ();
 		Poly->SetPoints(Mesh->GetPoints());
 
-		Delaunay->SetInput (Poly);
+		Delaunay->SetInputData (Poly);
 		Delaunay->Update ();
 		vtkSurface *Mesh2 = vtkSurface::New ();
 		Mesh2->CreateFromPolyData (Delaunay->GetOutput ());
@@ -199,7 +199,7 @@ vtkSurface *vtkRandomTriangulation::BuildRandomTriangulation (int NumberOfPoints
 	}
 
 	Poly->SetPoints (Points);
-	Delaunay->SetInput (Poly);
+	Delaunay->SetInputData (Poly);
 	Delaunay->Update ();
 	vtkSurface *Mesh = vtkSurface::New ();
 	Mesh->CreateFromPolyData (Delaunay->GetOutput ());

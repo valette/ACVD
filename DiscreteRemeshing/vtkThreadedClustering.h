@@ -43,7 +43,7 @@ Auteur:    Sebastien VALETTE
 
 
 // define our derived class, with TryLock() method
-class VTK_COMMON_EXPORT vtkMySimpleCriticalSection : public vtkSimpleCriticalSection
+class VTK_EXPORT vtkMySimpleCriticalSection : public vtkSimpleCriticalSection
 {
 public:
 	static vtkMySimpleCriticalSection *New()

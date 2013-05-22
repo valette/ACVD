@@ -900,7 +900,7 @@ vtkSurface* vtkSurface::CleanConnectivity(double tolerance)
 
 	// Here we merge the points within the relative tolerance together
 	vtkCleanPolyData *Cleaner=vtkCleanPolyData::New();
-	Cleaner->SetInput(this);
+	Cleaner->SetInputData (this);
 	Cleaner->SetTolerance(tolerance*BBoxDiag);
 	Cleaner->Update();
 
@@ -912,7 +912,7 @@ vtkSurface* vtkSurface::CleanConnectivity(double tolerance)
 	// Here is the delaunay triangulation of the resulting points
 
 	vtkDelaunay3D *Delaunay=vtkDelaunay3D::New();
-	Delaunay->SetInput(CleanedMesh);
+	Delaunay->SetInputData (CleanedMesh);
 
 	vtkIdListCollection *Components;
 	Components=CleanedMesh->GetConnectedComponents();
@@ -1041,7 +1041,7 @@ vtkSurface* vtkSurface::CleanConnectivity(double tolerance)
 	}
 
 #ifdef 	DISPLAYMESHCLEANING
-	RenderWindow *Window=RenderWindow::New();
+	RenderWindow *Window = RenderWindow::New();
 	Window->SetInputEdges(EdgesP);
 	Window->SetInput(this);
 	Window->Render();
@@ -1892,15 +1892,15 @@ void vtkSurface::WriteToFile (const char *FileName)
 			*p = tolower(*p);
 	}
 
-	vtkPolyDataWriter *Writer;
+	vtkDataWriter *Writer;
 
 	if (strstr(filename,".vtk")!=NULL)
-		Writer = vtkPolyDataWriter::New();
+		Writer = (vtkDataWriter*) vtkPolyDataWriter::New();
 
 	if (strstr(filename,".ply")!=NULL)
-		Writer = vtkPLYWriter::New();
+		Writer = (vtkDataWriter*) vtkPLYWriter::New();
 
-	Writer->SetInput(this);
+	Writer->SetInputData(this);
 	Writer->SetFileName(FileName);
 	Writer->Write();	
 }

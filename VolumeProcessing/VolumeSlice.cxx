@@ -185,10 +185,10 @@ VTK_THREAD_RETURN_TYPE ThreadedImageSlice (void *arg)
 		Writer=vtkPNGWriter::New();
 		Suffix<<".png";
 		PNGSlice=vtkImageData::New();
-		PNGSlice->SetNumberOfScalarComponents(NumComponents);
-		PNGSlice->SetScalarTypeToUnsignedChar();
+//		PNGSlice->SetNumberOfScalarComponents(NumComponents);
+//		PNGSlice->SetScalarTypeToUnsignedChar();
 		PNGSlice->SetDimensions(Dimensions);
-		PNGSlice->AllocateScalars();		
+		PNGSlice->AllocateScalars(VTK_FLOAT, 3);	
 	}
 	else
 	{
@@ -207,7 +207,7 @@ VTK_THREAD_RETURN_TYPE ThreadedImageSlice (void *arg)
 		}
 	}
 	
-	Slicer->SetInput(Image);
+	Slicer->SetInputData(Image);
 	Slicer->SetOutputDimensionality(2);
 
 	for (int i=MyId;i<NumberOfSlices;i+=NumberOfThreads)
@@ -218,7 +218,7 @@ VTK_THREAD_RETURN_TYPE ThreadedImageSlice (void *arg)
 		Slicer->SetResliceAxesOrigin(Coords);
 		Slicer->Update();
 		if (Image->GetNumberOfScalarComponents()>1){
-			Writer->SetInput(Slicer->GetOutput());
+			Writer->SetInputData(Slicer->GetOutput());
 		}
 		else
 		{
@@ -239,7 +239,7 @@ VTK_THREAD_RETURN_TYPE ThreadedImageSlice (void *arg)
 					Output=Slicer->GetOutput();
 					break;
 				default:
-					Cast->SetInput(Slicer->GetOutput());
+					Cast->SetInputConnection(Slicer->GetOutputPort());
 					Cast->Update();
 					Output=Cast->GetOutput();
 					break;
@@ -253,13 +253,13 @@ VTK_THREAD_RETURN_TYPE ThreadedImageSlice (void *arg)
 					PNGPointer[j]=SlicePointer[j];
 				}
 
-				Writer->SetInput(PNGSlice);
+				Writer->SetInputData(PNGSlice);
 			}
 			else
 			{
-				Cast->SetInput(Slicer->GetOutput());
+				Cast->SetInputConnection(Slicer->GetOutputPort());
 				Cast->Update();
-				Writer->SetInput(Cast->GetOutput());
+				Writer->SetInputData(Cast->GetOutput());
 			}
 		}
 		std::stringstream Name;

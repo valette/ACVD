@@ -39,7 +39,7 @@ int main( int argc, char *argv[] )
 	Mesh->CreateFromFile(argv[1]);
 
 	vtkPolyDataNormals *Normals=vtkPolyDataNormals::New();
-	Normals->SetInput(Mesh);
+	Normals->SetInputData (Mesh);
 	Normals->SplittingOff();
 	Normals->FlipNormalsOn();
 	Normals->Update();
@@ -49,7 +49,7 @@ int main( int argc, char *argv[] )
 	Output->GetCellData()->SetScalars(0);
 
 	vtkPolyDataWriter *Writer=vtkPolyDataWriter::New();
-	Writer->SetInput(Output);
+	Writer->SetInputData(Output);
 	Writer->SetFileName("good_orientation.vtk");
 	Writer->Write();
 	Writer->Delete();

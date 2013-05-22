@@ -58,7 +58,7 @@ int main( int argc, char *argv[] )
 
 	// Load the mesh and create the vtkSurface data structure
 	vtkPLYWriter *Writer=vtkPLYWriter::New();
-	Writer->SetInput(Reader->GetOutput());
+	Writer->SetInputData(Reader->GetOutput());
 	Writer->SetFileName("mesh.ply");
 	Writer->Write();
 	cout<<"conversion to mesh.ply finished!"<<endl;

@@ -31,7 +31,7 @@ int main( int argc, char *argv[] )
 	Reader->SetFileName(argv[1]);
 	Reader->Update();
 	vtkMetaImageWriter *Writer=vtkMetaImageWriter::New();
-	Writer->SetInput(Reader->GetOutput());
+	Writer->SetInputData(Reader->GetOutput());
 	Writer->SetFileName(argv[2]);
 	Writer->Write();
 }

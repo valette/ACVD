@@ -125,7 +125,7 @@ int main( int argc, char *argv[] )
 	if (0)
 	{
 		vtkPLYWriter *plyWriter=vtkPLYWriter::New();
-		plyWriter->SetInput(Mesh);
+		plyWriter->SetInputData(Mesh);
 		plyWriter->SetFileName("input.ply");
 		plyWriter->Write();
 		plyWriter->Delete();
@@ -243,7 +243,7 @@ int main( int argc, char *argv[] )
 		strcpy(REALFILE,"output.ply");
 
 	vtkPLYWriter *plyWriter=vtkPLYWriter::New();
-	plyWriter->SetInput(Remesh->GetOutput());
+	plyWriter->SetInputData(Remesh->GetOutput());
 	plyWriter->SetFileName(REALFILE);
 	plyWriter->Write();
 	plyWriter->Delete();
