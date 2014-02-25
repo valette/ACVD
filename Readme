@@ -14,15 +14,15 @@ This code is distributed under the CeCILL-B license (BSD-compatible)
 
 **************************************************************************
 Dependencies:
-VTK (version >5) www.vtk.org
+VTK (version 5, version 6 in progress) www.vtk.org
 CMAKE www.cmake.org
 **************************************************************************
 
 Simple compilation HowTo under Linux:
-
-- extract the archive and launch a terminal under the extracted directory
-- type "cmake . -DCMAKE_BUILD_TYPE=Release -DUSE_MULTITHREADING=true"
-- then "make"
+git clone https://github.com/valette/ACVD.git
+cd ACVD
+cmake . -DCMAKE_BUILD_TYPE=Release -DUSE_MULTITHREADING=true
+make
 
 the executables (ACVD, ACVDQ and AnisotropicRemeshingQ should be found under the "bin" subdirectory)
 
