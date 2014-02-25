@@ -56,26 +56,22 @@ public:
 	int Format;
 	double Range[2];
 	int NumberOfSlices;
-	bool pngUsingMHDColors;
 	int xyzOrientation;
 	double	nativeTransformMtrx[3][3];
 	char anatomicalOrientation[1000];
 
-	MyThreaderHelperClass()
-	{
+	MyThreaderHelperClass() {
 		strcpy (prefix,"slice");
 		strcpy (directory, "");
-		offset=10000;
-		userdefinedscale=false;
-		Shift=0;
-		Scale=1;
-		Format=1;
-		pngUsingMHDColors=false;
-		xyzOrientation=0;
+		offset = 10000;
+		userdefinedscale = false;
+		Shift = 0;
+		Scale = 1;
+		Format = 1;
+		xyzOrientation = 0;
 	}
 
-	~MyThreaderHelperClass()
-	{
+	~MyThreaderHelperClass() {
 	}
 };
 
@@ -147,61 +143,45 @@ VTK_THREAD_RETURN_TYPE ThreadedImageSlice (void *arg)
 			pointIndex = 2;
 			axesName = "XY";
 	};
-	cout<<" "<<endl;
-	cout<<">>>>>>> params :"<<endl;
-	for (int i=0; i<3; ++i)
-	{
-		for(int j=0; j<3; ++j)
-			cout<<params[i][j]<<",";
-		cout<<endl;
-	}
 
 	Slicer->SetResliceAxesDirectionCosines(	params[0][0],	params[0][1],	params[0][2],
 											params[1][0],	params[1][1],	params[1][2],
 											params[2][0],	params[2][1],	params[2][2]);
-	vtkImageData *PNGSlice=0;
-
+	vtkImageData *PNGSlice = 0;
 
 	int NumComponents;
-	switch (Image->GetScalarType())
-	{
+	switch (Image->GetScalarType()) {
 	case 2:
 	case 15:
 	case 3:
-		NumComponents=1;
+		NumComponents = 1;
 		break;
 	case 4:
 	case 5:
-		NumComponents=2;
+		NumComponents = 2;
 		break;
 	default:
-		NumComponents=4;
+		NumComponents = 4;
 		break;
 	}
 
-	if (Helper->Format==0)
-	{
-		Cast->SetOutputScalarTypeToFloat ();
-		Writer=vtkPNGWriter::New();
-		Suffix<<".png";
-		PNGSlice=vtkImageData::New();
+	if (Helper->Format == 0) {
+		Cast->SetOutputScalarTypeToFloat();
+		Writer = vtkPNGWriter::New();
+		Suffix << ".png";
+		PNGSlice = vtkImageData::New();
 //		PNGSlice->SetNumberOfScalarComponents(NumComponents);
 //		PNGSlice->SetScalarTypeToUnsignedChar();
 		PNGSlice->SetDimensions(Dimensions);
-		PNGSlice->AllocateScalars(VTK_FLOAT, 3);	
-	}
-	else
-	{
+		PNGSlice->AllocateScalars(VTK_UNSIGNED_CHAR, 4);
+	} else {
 		Cast->SetOutputScalarTypeToUnsignedChar ();
-		Writer=vtkJPEGWriter::New();
-		Suffix<<".jpg";
-		if (!Helper->userdefinedscale)
-		{
-			Cast->SetShift(-Helper->Range[0]);
-			Cast->SetScale(255/(Helper->Range[1]-Helper->Range[0]));
-		}
-		else
-		{
+		Writer = vtkJPEGWriter::New();
+		Suffix << ".jpg";
+		if (!Helper->userdefinedscale) {
+			Cast->SetShift( - Helper->Range[0]);
+			Cast->SetScale(255 / (Helper->Range[1] - Helper->Range[0]));
+		} else {
 			Cast->SetShift(Helper->Shift);
 			Cast->SetScale(Helper->Scale);
 		}
@@ -210,33 +190,28 @@ VTK_THREAD_RETURN_TYPE ThreadedImageSlice (void *arg)
 	Slicer->SetInputData(Image);
 	Slicer->SetOutputDimensionality(2);
 
-	for (int i=MyId;i<NumberOfSlices;i+=NumberOfThreads)
-	{
-		Point[pointIndex]=i;
+	for (int i = MyId; i < NumberOfSlices; i += NumberOfThreads) {
+		Point[pointIndex] = i;
 		double Coords[3];
 		Image->GetPoint (Image->ComputePointId(Point), Coords);
 		Slicer->SetResliceAxesOrigin(Coords);
 		Slicer->Update();
-		if (Image->GetNumberOfScalarComponents()>1){
+		if (Image->GetNumberOfScalarComponents() > 1) {
 			Writer->SetInputData(Slicer->GetOutput());
-		}
-		else
-		{
-			if (Helper->Format==0)
-			{
+		} else {
+			if (Helper->Format == 0) {
 				vtkImageData *Output;
 				unsigned char* SlicePointer;
 				int j;
 				int numPixels;
 
-				switch (Image->GetScalarType())
-				{
+				switch (Image->GetScalarType()) {
 				case 2:
 				case 15:
 				case 3:
 				case 4:
 				case 5:
-					Output=Slicer->GetOutput();
+					Output = Slicer->GetOutput();
 					break;
 				default:
 					Cast->SetInputConnection(Slicer->GetOutputPort());
@@ -245,25 +220,22 @@ VTK_THREAD_RETURN_TYPE ThreadedImageSlice (void *arg)
 					break;
 				}
 
-				unsigned char* PNGPointer=(unsigned char *) PNGSlice->GetScalarPointer();
-				SlicePointer=(unsigned char *) Output->GetScalarPointer();
-				numPixels=Dimensions[0]*Dimensions[1]*NumComponents;
-				for (j=0;j!=numPixels;j++)
-				{
-					PNGPointer[j]=SlicePointer[j];
+				unsigned char* PNGPointer = (unsigned char *) PNGSlice->GetScalarPointer();
+				SlicePointer = (unsigned char *) Output->GetScalarPointer();
+				numPixels = Dimensions[0] * Dimensions[1] * NumComponents;
+				for (j = 0; j != numPixels; j++) {
+					PNGPointer[j] = SlicePointer[j];
 				}
 
 				Writer->SetInputData(PNGSlice);
-			}
-			else
-			{
+			} else {
 				Cast->SetInputConnection(Slicer->GetOutputPort());
 				Cast->Update();
 				Writer->SetInputData(Cast->GetOutput());
 			}
 		}
 		std::stringstream Name;
-		Name<<Helper->directory<<Helper->prefix<<axesName<<i+Helper->offset<<Suffix.str();
+		Name << Helper->directory << Helper->prefix << axesName << i+Helper->offset << Suffix.str();
 		Writer->SetFileName(Name.str().c_str());
 		Writer->Write();
 	}
@@ -301,9 +273,6 @@ int main( int argc, char *argv[] )
 	Reader->Update();
 	vtkImageData *Image=Reader->GetOutput();
 	Image->GetScalarRange(Helper.Range);
-	cout<<"Range : "<<Helper.Range[0]<<"   "<<Helper.Range[1]<<endl;
-	if (Image->GetNumberOfScalarComponents()>1)
-		Helper.pngUsingMHDColors = true;
 	
 	Helper.Image=Image;
 	
@@ -351,84 +320,68 @@ int main( int argc, char *argv[] )
 	int ArgumentsIndex=2;
 	while (ArgumentsIndex<argc)
 	{
-		if (strcmp(argv[ArgumentsIndex],"-sc")==0)
-		{
-			double Scale=atof(argv[ArgumentsIndex+1]);
-			cout<<"Scale="<<Scale<<endl;
-			Helper.Scale=Scale;
-			Helper.userdefinedscale=true;
+		if (strcmp(argv[ArgumentsIndex], "-sc") == 0) {
+			double Scale = atof(argv[ArgumentsIndex + 1]);
+			cout << "Scale=" << Scale << endl;
+			Helper.Scale = Scale;
+			Helper.userdefinedscale = true;
 		}
 
-		if (strcmp(argv[ArgumentsIndex],"-sh")==0)
-		{
-			double Shift=atof(argv[ArgumentsIndex+1]);
-			cout<<"Shift="<<Shift<<endl;
-			Helper.Shift=Shift;
-			Helper.userdefinedscale=true;
+		if (strcmp(argv[ArgumentsIndex], "-sh") == 0) {
+			double Shift = atof(argv[ArgumentsIndex + 1]);
+			cout << "Shift=" << Shift << endl;
+			Helper.Shift = Shift;
+			Helper.userdefinedscale = true;
 		}
 
-		if (strcmp(argv[ArgumentsIndex],"-f")==0)
-		{
+		if (strcmp(argv[ArgumentsIndex], "-f") == 0) {
 
-			Helper.Format=atoi(argv[ArgumentsIndex+1]);
+			Helper.Format=atoi(argv[ArgumentsIndex + 1]);
 			cout<<"Format: "<<Helper.Format<<endl;
 		}
 
-		if (strcmp(argv[ArgumentsIndex],"-o")==0)
-		{
-			strcpy (Helper.directory, argv[ArgumentsIndex+1]);
-			cout<<"Output directory : "<< Helper.directory <<endl;
+		if (strcmp(argv[ArgumentsIndex], "-o") == 0) {
+			strcpy (Helper.directory, argv[ArgumentsIndex + 1]);
+			cout<<"Output directory : "<< Helper.directory << endl;
 		}
 
-		if (strcmp(argv[ArgumentsIndex],"-mhdcolors")==0)
-		{
-			Helper.pngUsingMHDColors = true;
-		}
-		
-		if (strcmp(argv[ArgumentsIndex],"-orientation")==0)
-		{
-			int tempVal = atoi(argv[ArgumentsIndex+1]);
-			if((0<=tempVal)&&(tempVal<3))
+		if (strcmp(argv[ArgumentsIndex], "-orientation") == 0) {
+			int tempVal = atoi(argv[ArgumentsIndex + 1]);
+			if((0 <= tempVal) && (tempVal < 3))
 				Helper.xyzOrientation = tempVal;
 		}
 		
-		ArgumentsIndex+=2;
+		ArgumentsIndex += 2;
 	}
 
 	int Dimensions[3];
 	Image->GetDimensions(Dimensions);
-	//// Slice on z (z growing):
-	//~ Helper.NumberOfSlices=Dimensions[2];
-	//// Slice on x (x decreasing):
-	//~ Helper.NumberOfSlices=Dimensions[0];
-	//// Slice on y (y growing):
-	//~ Helper.NumberOfSlices=Dimensions[1];
-	
-	cout<<"Dimensions : "<<Dimensions[0]<<" "<<Dimensions[1]<<" "<<Dimensions[2]<<endl;
+	cout << "Dimensions : " << Dimensions[0] << " " << Dimensions[1] <<
+		" " << Dimensions[2] << endl;
 
-	vtkMultiThreader *Threader=vtkMultiThreader::New();
+	vtkMultiThreader *Threader = vtkMultiThreader::New();
 	Threader->SetSingleMethod (ThreadedImageSlice, (void *) &Helper);
-	cout<<"Using "<<Threader->GetNumberOfThreads()<<" threads"<<endl;
-	Threader->SingleMethodExecute ();
+	cout << "Using " << Threader->GetNumberOfThreads() << " threads" << endl;
+	Threader->SingleMethodExecute();
 	Threader->Delete();
 
 	//output xml file containint volume details
-	vtkXMLDataElement *Root=vtkXMLDataElement::New ();
+	vtkXMLDataElement *Root = vtkXMLDataElement::New ();
 	Root->SetName("volume");
 
-	vtkXMLDataElement *OriginalName=vtkXMLDataElement::New ();
+	vtkXMLDataElement *OriginalName = vtkXMLDataElement::New ();
 	OriginalName->SetName("name");
 	OriginalName->SetCharacterData (argv[1], strlen(argv[1])+1);
 	Root->AddNestedElement(OriginalName);
 
-	vtkXMLDataElement *XMLDimensions=vtkXMLDataElement::New ();
+	vtkXMLDataElement *XMLDimensions = vtkXMLDataElement::New ();
 	XMLDimensions->SetName("dimensions");
 	XMLDimensions->SetIntAttribute ("x", Dimensions[0]);
 	XMLDimensions->SetIntAttribute ("y", Dimensions[1]);
 	XMLDimensions->SetIntAttribute ("z", Dimensions[2]);
 	Root->AddNestedElement(XMLDimensions);
 
-	vtkXMLDataElement *XMLRange=vtkXMLDataElement::New ();
+	vtkXMLDataElement *XMLRange = vtkXMLDataElement::New ();
 	XMLRange->SetName("scalars");
 	XMLRange->SetIntAttribute("numberOfScalarComponents", Image->GetNumberOfScalarComponents());
 	XMLRange->SetFloatAttribute ("min", Helper.Range[0]);
@@ -436,13 +389,13 @@ int main( int argc, char *argv[] )
 	XMLRange->SetIntAttribute ("type", 	Image->GetScalarType());
 	XMLRange->SetIntAttribute ("size", 	Image->GetScalarSize());
 	char typeString[1000];
-	strcpy(typeString,Image->GetScalarTypeAsString());
+	strcpy(typeString, Image->GetScalarTypeAsString());
 	XMLRange->SetCharacterData (typeString, strlen(typeString)+1);
 	Root->AddNestedElement(XMLRange);
 
 	double Origin[3];
 	Image->GetOrigin(Origin);
-	vtkXMLDataElement *XMLOrigin=vtkXMLDataElement::New ();
+	vtkXMLDataElement *XMLOrigin = vtkXMLDataElement::New ();
 	XMLOrigin->SetName("origin");
 	XMLOrigin->SetDoubleAttribute ("x", Origin[0]);
 	XMLOrigin->SetDoubleAttribute ("y", Origin[1]);
@@ -451,7 +404,7 @@ int main( int argc, char *argv[] )
 
 	double Spacing[3];
 	Image->GetSpacing(Spacing);
-	vtkXMLDataElement *XMLSpacing=vtkXMLDataElement::New ();
+	vtkXMLDataElement *XMLSpacing = vtkXMLDataElement::New ();
 	XMLSpacing->SetName("spacing");
 	XMLSpacing->SetDoubleAttribute ("x", Spacing[0]);
 	XMLSpacing->SetDoubleAttribute ("y", Spacing[1]);
@@ -460,7 +413,7 @@ int main( int argc, char *argv[] )
 
 	int Extent[6];
 	Image->GetExtent(Extent);
-	vtkXMLDataElement *XMLExtent=vtkXMLDataElement::New ();
+	vtkXMLDataElement *XMLExtent = vtkXMLDataElement::New ();
 	XMLExtent->SetName("extent");
 	XMLExtent->SetIntAttribute ("x1", Extent[0]);
 	XMLExtent->SetIntAttribute ("x2", Extent[1]);
