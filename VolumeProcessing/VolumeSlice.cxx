@@ -11,12 +11,6 @@ Auteur:   Sebastien Valette
 // .SECTION Description
 
 #include <sstream>
-#include <cstring>
-
-#include <cstdlib>
-#include <string>
-#include <fstream>
-#include <iostream>
 
 #include <vtkPNGWriter.h>
 #include <vtkJPEGWriter.h>
@@ -24,26 +18,12 @@ Auteur:   Sebastien Valette
 #include <vtkMetaImageReader.h>
 #include <vtkImageReslice.h>
 #include <vtkImageShiftScale.h>
-#include <vtkLookupTable.h>
-#include <vtkImageMapToColors.h>
-#include <vtkTIFFWriter.h>
 #include <vtkXMLDataElement.h>
 #include <vtkXMLUtilities.h>
 #include <vtkMultiThreader.h>
 #include <vtkTimerLog.h>
 
-using std::cout ;
-using std::cerr ;
-using std::string ;
-using std::ostream ;
-using std::fstream ;
-using std::ifstream ;
-using std::ofstream ;
-using std::istringstream ;
-using std::ostringstream ;
-
-class MyThreaderHelperClass
-{
+class MyThreaderHelperClass {
 public:
     vtkImageData *Image;
 
@@ -71,12 +51,10 @@ public:
 		xyzOrientation = 0;
 	}
 
-	~MyThreaderHelperClass() {
-	}
+	~MyThreaderHelperClass() {}
 };
 
-VTK_THREAD_RETURN_TYPE ThreadedImageSlice (void *arg)
-{
+VTK_THREAD_RETURN_TYPE ThreadedImageSlice (void *arg) {
 	vtkMultiThreader::ThreadInfo *Info = (vtkMultiThreader::ThreadInfo*) arg;
 	MyThreaderHelperClass *Helper = (MyThreaderHelperClass *) Info->UserData;
 	int MyId = Info->ThreadID;
@@ -98,8 +76,7 @@ VTK_THREAD_RETURN_TYPE ThreadedImageSlice (void *arg)
 	int pointIndex;
 	double params[3][3];
 	std::string axesName;
-	switch(Helper->xyzOrientation)
-	{
+	switch(Helper->xyzOrientation) {
 	//// Slice on x (x decreasing): ZY X
 		case 1 :
 			Image->GetDimensions(orientationDims);
@@ -107,9 +84,9 @@ VTK_THREAD_RETURN_TYPE ThreadedImageSlice (void *arg)
 			Dimensions[0] = orientationDims[2];
 			Dimensions[1] = orientationDims[1];
 			Dimensions[2] = 1;
-			params[0][0]=0;		params[0][1]=0;		params[0][2]=1;
-			params[1][0]=0;		params[1][1]=-1;	params[1][2]=0;
-			params[2][0]=1;		params[2][1]=0;		params[2][2]=0;
+			params[0][0] = 0;	params[0][1] = 0;	params[0][2] = 1;
+			params[1][0] = 0;	params[1][1] = -1;	params[1][2] = 0;
+			params[2][0] = 1;	params[2][1] = 0;	params[2][2] = 0;
 			Point[2] = 0;
 			Point[1] = 0;
 			pointIndex = 0;
@@ -122,9 +99,9 @@ VTK_THREAD_RETURN_TYPE ThreadedImageSlice (void *arg)
 			Dimensions[0] = orientationDims[0];
 			Dimensions[1] = orientationDims[2];
 			Dimensions[2] = 1;
-			params[0][0]=1;		params[0][1]=0;		params[0][2]=0;
-			params[1][0]=0;		params[1][1]=0;		params[1][2]=-1;
-			params[2][0]=0;		params[2][1]=-1;	params[2][2]=0;
+			params[0][0] = 1;	params[0][1] = 0;	params[0][2] = 0;
+			params[1][0] = 0;	params[1][1] = 0;	params[1][2] = -1;
+			params[2][0] = 0;	params[2][1] = -1;	params[2][2] = 0;
 			Point[0] = 0;
 			Point[2] = 0;
 			pointIndex = 1;
@@ -135,9 +112,9 @@ VTK_THREAD_RETURN_TYPE ThreadedImageSlice (void *arg)
 			Image->GetDimensions(Dimensions);
 			NumberOfSlices = Dimensions[2];
 			Dimensions[2] = 1;
-			params[0][0]=1;		params[0][1]=0;		params[0][2]=0;
-			params[1][0]=0;		params[1][1]=-1;	params[1][2]=0;
-			params[2][0]=0;		params[2][1]=0;		params[2][2]=1;
+			params[0][0] = 1;	params[0][1] = 0;	params[0][2] = 0;
+			params[1][0] = 0;	params[1][1] = -1;	params[1][2] = 0;
+			params[2][0] = 0;	params[2][1] = 0;	params[2][2] = 1;
 			Point[0] = 0;
 			Point[1] = 0;
 			pointIndex = 2;
@@ -151,13 +128,13 @@ VTK_THREAD_RETURN_TYPE ThreadedImageSlice (void *arg)
 
 	int NumComponents;
 	switch (Image->GetScalarType()) {
-	case 2:
-	case 15:
-	case 3:
+	case 2: //VTK_CHAR
+	case 15: // VTK_SIGNED_CHAR
+	case 3: // VTK_UNSIGNED_CHAR
 		NumComponents = 1;
 		break;
-	case 4:
-	case 5:
+	case 4: // VTK_SHORT
+	case 5: // VTK_UNSIGNED_SHORT
 		NumComponents = 2;
 		break;
 	default:
@@ -170,10 +147,8 @@ VTK_THREAD_RETURN_TYPE ThreadedImageSlice (void *arg)
 		Writer = vtkPNGWriter::New();
 		Suffix << ".png";
 		PNGSlice = vtkImageData::New();
-//		PNGSlice->SetNumberOfScalarComponents(NumComponents);
-//		PNGSlice->SetScalarTypeToUnsignedChar();
 		PNGSlice->SetDimensions(Dimensions);
-		PNGSlice->AllocateScalars(VTK_UNSIGNED_CHAR, 4);
+		PNGSlice->AllocateScalars(VTK_UNSIGNED_CHAR, NumComponents);
 	} else {
 		Cast->SetOutputScalarTypeToUnsignedChar ();
 		Writer = vtkJPEGWriter::New();
@@ -205,18 +180,19 @@ VTK_THREAD_RETURN_TYPE ThreadedImageSlice (void *arg)
 				int j;
 				int numPixels;
 
+
 				switch (Image->GetScalarType()) {
-				case 2:
-				case 15:
-				case 3:
-				case 4:
-				case 5:
+				case 2: //VTK_CHAR
+				case 15: // VTK_SIGNED_CHAR
+				case 3: // VTK_UNSIGNED_CHAR
+				case 4: // VTK_SHORT
+				case 5: // VTK_UNSIGNED_SHORT
 					Output = Slicer->GetOutput();
 					break;
 				default:
 					Cast->SetInputConnection(Slicer->GetOutputPort());
 					Cast->Update();
-					Output=Cast->GetOutput();
+					Output = Cast->GetOutput();
 					break;
 				}
 
@@ -235,79 +211,78 @@ VTK_THREAD_RETURN_TYPE ThreadedImageSlice (void *arg)
 			}
 		}
 		std::stringstream Name;
-		Name << Helper->directory << Helper->prefix << axesName << i+Helper->offset << Suffix.str();
+		Name << Helper->directory << Helper->prefix << axesName <<
+			i + Helper->offset << Suffix.str();
 		Writer->SetFileName(Name.str().c_str());
 		Writer->Write();
 	}
 
-	if (Helper->Format==0)
-	{
+	if (Helper->Format == 0) {
 		PNGSlice->Delete();
 	}
 
 	return (VTK_THREAD_RETURN_VALUE);
 }
 
-int main( int argc, char *argv[] )
-{
+int main( int argc, char *argv[]) {
 	MyThreaderHelperClass Helper;
 
-	if (argc<2)
-	{
-		cout<<"Usage : VolumeSlice file.mhd [options]"<<endl;
-		cout<<"Options : "<<endl;
-		cout<<"-f value  : set format (0: png ; 1 : jpg) default : 1"<<endl;
-		cout<<"-sc value : set scale "<<endl;
-		cout<<"-sh value : set shift "<<endl;
-		cout<<"-o value : set output directory"<<endl;
-		cout<<"-mhdcolors : create png image without using scale nor shifting"<<endl;
-		cout<<"-orientation : set the axe used for the orientation of the slice (0 : z; 1 : x; 2 : y) default : 0"<<endl;
+	if (argc<2) {
+		cout << "Usage : VolumeSlice file.mhd [options]"<<endl;
+		cout << "Options : "<<endl;
+		cout << "-f value  : set format (0: png ; 1 : jpg) default : 1"<<endl;
+		cout << "-sc value : set scale "<<endl;
+		cout << "-sh value : set shift "<<endl;
+		cout << "-o value : set output directory"<<endl;
+		cout << "-mhdcolors : create png image without using scale nor shifting"<<endl;
+		cout << "-orientation : set the axe used for the orientation of the slice (0 : z; 1 : x; 2 : y) default : 0"<<endl;
 		exit(1);
 	}
 	
 	// Load Volume
-	cout <<"load : "<<argv[1]<<endl;
+	cout << "load : " << argv[1] << endl;
 	
-	vtkMetaImageReader *Reader=vtkMetaImageReader::New();
+	vtkMetaImageReader *Reader = vtkMetaImageReader::New();
 	Reader->SetFileName(argv[1]);
 	Reader->Update();
-	vtkImageData *Image=Reader->GetOutput();
+	vtkImageData *Image = Reader->GetOutput();
 	Image->GetScalarRange(Helper.Range);
 	
-	Helper.Image=Image;
+	Helper.Image = Image;
 	
 	bool matrixFound = false;
 	bool anOrientation = false;
-	string matrixPrefix;
+	std::string matrixPrefix;
 	// Keep transformation matrix and anatomical orientation of input meta image, it needs to be copied to output images.
 	// Since VTK currently offers no methods to read and write this information, we're forced to use IO streams
-	string imageReaderType = Reader->GetClassName();
+	std::string imageReaderType = Reader->GetClassName();
 	for(int i=0; i<3; ++i)
 		for(int j=0; j<3; ++j)
 			Helper.nativeTransformMtrx[j][i] = 0;
 	Helper.nativeTransformMtrx[0][0] = 1;
 	Helper.nativeTransformMtrx[1][1] = 1;
 	Helper.nativeTransformMtrx[2][2] = 1;
-	if(imageReaderType=="vtkMetaImageReader")
-	{
+	if(imageReaderType=="vtkMetaImageReader") {
 		ifstream is(argv[1]);
-		string line, prefix;
-		while(is)
-		{
+		std::string line, prefix;
+		while(is) {
 			getline(is, line);
-			istringstream iss(line);
+			std::istringstream iss(line);
 			iss >> prefix;
-			if((prefix=="TransformMatrix")||(prefix == "Orientation")||(prefix == "Rotation"))
-			{
+			if((prefix == "TransformMatrix") ||
+				(prefix == "Orientation") ||
+				(prefix == "Rotation")) {
+
 				matrixPrefix = prefix;
 				iss >> prefix; // eat the "=" sign
-				for(int i=0; i<3; ++i)
-					for(int j=0; j<3; ++j)
+				for(int i = 0; i < 3; ++i)
+					for(int j = 0; j < 3; ++j)
 						iss >> Helper.nativeTransformMtrx[j][i];
 				matrixFound = true;
+
 			}
-			if(prefix=="AnatomicalOrientation")
-			{
+
+			if(prefix == "AnatomicalOrientation") {
 				iss >> prefix; // eat the "=" sign
 				iss >> Helper.anatomicalOrientation;
 				anOrientation = true;
@@ -317,9 +292,8 @@ int main( int argc, char *argv[] )
 	}
 
 	// Parse optionnal arguments
-	int ArgumentsIndex=2;
-	while (ArgumentsIndex<argc)
-	{
+	int ArgumentsIndex = 2;
+	while (ArgumentsIndex < argc) {
 		if (strcmp(argv[ArgumentsIndex], "-sc") == 0) {
 			double Scale = atof(argv[ArgumentsIndex + 1]);
 			cout << "Scale=" << Scale << endl;
@@ -423,8 +397,7 @@ int main( int argc, char *argv[] )
 	XMLExtent->SetIntAttribute ("z2", Extent[5]);
 	Root->AddNestedElement(XMLExtent);
 
-	if(matrixFound)
-	{
+	if(matrixFound) {
 		vtkXMLDataElement *XMLMatrix = vtkXMLDataElement::New ();
 		XMLMatrix->SetName("matrix");
 		XMLMatrix->SetDoubleAttribute ("x1", Helper.nativeTransformMtrx[0][0]);
@@ -438,11 +411,11 @@ int main( int argc, char *argv[] )
 		XMLMatrix->SetDoubleAttribute ("z3", Helper.nativeTransformMtrx[2][2]);
 		Root->AddNestedElement(XMLMatrix);
 	}
-	if(anOrientation)
-	{
+
+	if(anOrientation) {
 		vtkXMLDataElement *XMLAnOr = vtkXMLDataElement::New ();
 		XMLAnOr->SetName("anamori");
-		XMLAnOr->SetCharacterData (Helper.anatomicalOrientation, strlen(Helper.anatomicalOrientation)+1);
+		XMLAnOr->SetCharacterData (Helper.anatomicalOrientation, strlen(Helper.anatomicalOrientation) + 1);
 		Root->AddNestedElement(XMLAnOr);
 	}
 	
@@ -455,6 +428,6 @@ int main( int argc, char *argv[] )
 	Root->AddNestedElement(Slices);
 
 	std::stringstream FileName;
-	FileName<<Helper.directory<<"volume.xml";
+	FileName << Helper.directory << "volume.xml";
 	vtkXMLUtilities::WriteElementToFile (Root, FileName.str().c_str());
 }
