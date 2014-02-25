@@ -1,3 +1,4 @@
+### Info ### 
 This code is the implementation deriving from those papers:
 
 [1] S. Valette,J.-M. Chassery and R. Prost, Generic remeshing of 3D triangular meshes with metric-dependent discrete Voronoi Diagrams, IEEE Transactions on Visualization and Computer Graphics, Volume 14, no. 2, pages 369-381, 2008.
@@ -8,29 +9,29 @@ This code is the implementation deriving from those papers:
 
 
 This code is cross-platform and should compile under Linux ,MacOS and Window$ OS.
-
+### Licence ### 
 This code is distributed under the CeCILL-B license (BSD-compatible)
 (copyright CNRS, INSA-Lyon, UCBL, INSERM.)
 
-**************************************************************************
-Dependencies:
+
+###  Dependencies ### 
 VTK (version 5, version 6 in progress) www.vtk.org
 CMAKE www.cmake.org
-**************************************************************************
 
-Simple compilation HowTo under Linux:
-git clone https://github.com/valette/ACVD.git
-cd ACVD
-cmake . -DCMAKE_BUILD_TYPE=Release -DUSE_MULTITHREADING=true
-make
+###  Simple compilation HowTo under Linux ### 
+	git clone https://github.com/valette/ACVD.git
+	cd ACVD
+	cmake . -DCMAKE_BUILD_TYPE=Release -DUSE_MULTITHREADING=true
+	make
 
 the executables (ACVD, ACVDQ and AnisotropicRemeshingQ should be found under the "bin" subdirectory)
 
-*Note for window$ users : if you get this compilation error :
-fatal error LNK1104: cannot open file '..\bin\Debug\vtkSurface.lib'
+### Note for window$ users ### 
+if you get this compilation error :
+	fatal error LNK1104: cannot open file '..\bin\Debug\vtkSurface.lib'
 you can fix it by unselecting 'build_shared_libs' with the cmake UI
 
-*************************************************************************
+### Options ### 
 execute ACVD.exe and ACVDQ.exe without arguments to see the available options.
 (respectively ACVD and ACVDQ for linux)
 
