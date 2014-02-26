@@ -18,8 +18,8 @@ This code is distributed under the CeCILL-B license (BSD-compatible)
 
 
 ###  Dependencies ###
-VTK (version 5, version 6 in progress) www.vtk.org
-CMAKE www.cmake.org
+* VTK (version 5, version 6 in progress) www.vtk.org
+* CMAKE www.cmake.org
 
 ###  Simple compilation HowTo under Linux ###
 	git clone https://github.com/valette/ACVD.git
