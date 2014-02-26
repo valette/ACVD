@@ -33,7 +33,14 @@ Author:   Sebastien Valette
 // .NAME ACVD 
 // .SECTION Description
 
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <iostream>
+
 #include "vtkIsotropicDiscreteRemeshing.h"
+
+using namespace std;
 
 /////////////////////////////////////////////////////////////////////////////////////////
 // ACVD program:
@@ -50,23 +57,21 @@ Author:   Sebastien Valette
 int main( int argc, char *argv[] )
 {
 
-	//******************************************************************************************
-	// Inside input parameters:
 	int Display=1;				// defines whether there will be a graphic display (0: No, 1: yes)
 
-	int NumberOfSamples = 0;	// the number of desired vertices
-	double Gradation = 0;		// the gamma parameter for simplification (if gamma=0: uniform)
+	int NumberOfSamples = 0;	// number of desired vertices
+	double Gradation = 0;		// gamma parameter for simplification (if gamma=0: uniform)
 								// other appropriates values range between 0 and 2
 	int SubsamplingThreshold = 10;
 	int QuadricsOptimizationLevel = 1;
-	char* OutputDirectory = 0;		// the output directory
-	//*******************************************************************************************
 
+	char* OutputDirectory = 0;
 	char outputfile[500];
+
 	strcpy (outputfile, "simplification.ply");
 
 	if(argc > 3) {
-		cout << "load : " << argv[1] << endl;
+		std::cout << "load : " << argv[1] << endl;
 		NumberOfSamples = atoi(argv[2]);
 		Gradation = atof(argv[3]);
 	} else {
@@ -297,6 +302,6 @@ int main( int argc, char *argv[] )
 	Remesh->Delete();
 	Mesh->Delete();
 	if (Display) {
-		Window->Delete();
+	//	Window->Delete();
 	}
 }

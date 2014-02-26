@@ -1522,63 +1522,51 @@ void vtkSurfaceBase::Init(int numPoints, int numFaces, int numEdges)
 // et cree le tableau d'arretes
 void vtkSurfaceBase::CreateFromPolyData(vtkPolyData *input)
 {
-	vtkIdType i,j,v1,v2;
-	vtkIdType NumberOfVertices,*Vertices;
-
 	// just copy the polydata in input
 	this->ShallowCopy(input);
 
 	// Delete the cells that are not polygons
-	vtkCellArray *VerticesCells=this->GetVerts();
-	vtkCellArray *LinesCells=this->GetLines();
-	vtkCellArray *StripsCells=this->GetStrips();
-
-	if ((VerticesCells!=0)||(LinesCells!=0)||(StripsCells!=0))
-	{
+    if (this->GetVerts() || this->GetLines() || this->GetStrips()) {
 		this->SetVerts(0);
 		this->SetLines(0);
 		this->SetStrips(0);
 		this->Modified();
-		this->BuildCells();
-	}
+    }
+    this->BuildCells();
 
-	vtkIdType numPoints=this->GetNumberOfPoints();
-	vtkIdType numFaces=this->GetNumberOfCells();
+    vtkIdType numPoints = this->GetNumberOfPoints();
+    vtkIdType numFaces = this->GetNumberOfCells();
 
 	this->AllocateVerticesAttributes(numPoints);
-	this->AllocateEdgesAttributes(numPoints+numFaces+1000);
+    this->AllocateEdgesAttributes(numPoints + numFaces + 1000);
 	this->AllocatePolygonsAttributes(numFaces);
 
-	for (i=0;i<this->GetNumberOfCells();i++)
-	{
-		bool ActiveFace=false;
-		this->GetCellPoints(i,NumberOfVertices,Vertices);
-		if (NumberOfVertices>1)
-		{
+    for (vtkIdType i = 0; i < this->GetNumberOfCells(); i++) {
+        bool ActiveFace = false;
+        vtkIdType NumberOfVertices, *Vertices;
+        input->GetCellPoints(i, NumberOfVertices, Vertices);
+
+        if (NumberOfVertices > 1) {
 			// test whether the face is an active one (at least its first two vertices should be different)
-			if (Vertices[0]!=Vertices[1])
-			{
-				ActiveFace=true;
-				for (j=0;j<NumberOfVertices;j++)
-				{	
-					v1=Vertices[j];
-					v2=Vertices[(j+1)%NumberOfVertices];
-					this->AddEdge(v1,v2,i);
+            if (Vertices[0] != Vertices[1]) {
+                ActiveFace = true;
+                for (vtkIdType j = 0; j < NumberOfVertices; j++) {
+                    vtkIdType v1 = Vertices[j];
+                    vtkIdType v2 = Vertices[(j + 1) % NumberOfVertices];
+                    this->AddEdge(v1, v2, i);
 				}
 			}
 		}
-		if (ActiveFace)
-			this->ActivePolygons->SetValue(i,1);
-		else
-		{
+        if (ActiveFace) {
+            this->ActivePolygons->SetValue(i, 1);
+        } else {
 			// The face is not used. Let's push it in the garbage collector
-			this->ActivePolygons->SetValue(i,0);
+            this->ActivePolygons->SetValue(i, 0);
 			this->CellsGarbage[NumberOfVertices].push(i);			
 		}
 	}
 
-	if (this->OrientedSurface)
-	{
+    if (this->OrientedSurface) {
 		this->CheckNormals();
 	}
 }
