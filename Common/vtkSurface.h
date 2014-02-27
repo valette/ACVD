@@ -69,7 +69,7 @@ public:
 	/// Returns the points bounding box diagonal length
 	double GetBoundingBoxDiagonalLength();
 
-	// Recusrsively splits the edges longer than Ratio*AverageLength
+	/// Recusrsively splits the edges longer than Ratio*AverageLength
 	void SplitLongEdges (double Ratio);
 
 	/// returns a mesh which is a linear subdivision of this
@@ -97,11 +97,11 @@ public:
 	/// returns the legth of the input edge;
 	double GetEdgeLength(vtkIdType Edge);
 
-	// returns the normals of the mesh triangles
+	/// returns the normals of the mesh triangles
 	vtkDoubleArray *GetTrianglesNormals();
 	void DeleteTrianglesNormals();
 
-	// returns the area of a given cell and its barycenter
+	/// returns the area of a given cell and its barycenter
 	void GetCellMassProperties(vtkIdType CellId, double &Area, double *Baricenter);
 
 	/// Computes the Triangles Areas
@@ -151,7 +151,7 @@ public:
    /// usefull to give an objective quality criterion of the mesh
    void ComputeTrianglesStatistics(double &Amin, double & Aav,double &Qmin, double &Qav, double &P30);
 
-   // Computes the histogram of triangles quality and writes it in a file
+   /// Computes the histogram of triangles quality and writes it in a file
    void ComputeQualityHistogram(const char *FileName);
 
    /// Creates the vtkSurface object by reading a mesh file.
@@ -162,7 +162,7 @@ public:
    /// Supported file types : .vtk and .ply
    void WriteToFile (const char *FileName);
 
-   // The Constructor vtkSurface::New();
+   /// The Constructor vtkSurface::New();
    static vtkSurface *New();
 
    vtkTypeMacro(vtkSurface,vtkSurfaceBase);
@@ -184,10 +184,10 @@ public:
    void QuantizeCoordinates(double Factor, double Tx, double Ty, double Tz);
 
 
-   // Writes the mesh to a .iv file
+   /// Writes the mesh to a .iv file
    void WriteInventor(const char *filename);
 
-   // Writes the mesh to a .smf file
+   /// Writes the mesh to a .smf file
    void WriteSMF(const char *filename);
 
    /// Computes the list of sharp vertices
