@@ -33,20 +33,20 @@ int main( int argc, char *argv[] )
 	Reader->Update();
 
 	vtkImageResample *Resampler=vtkImageResample::New();
-	Resampler->SetInput(Reader->GetOutput());
+	Resampler->SetInputConnection(Reader->GetOutputPort());
 	Resampler->SetInterpolationModeToNearestNeighbor();
 	for (int i=0;i<3;i++)
 		Resampler->SetAxisMagnificationFactor(i, atof(argv[3]));
 	cout<<"Resampling...";
 	Resampler->Update();
-	vtkImageData *Image=Resampler->GetOutput();
+	vtkImageData *Image = Resampler->GetOutput();
 	cout<<"done."<<endl;
 	int Dimensions[3];
 	Image->GetDimensions(Dimensions);
 	cout<<"New image dimensions : "<<Dimensions[0]<<" "<<Dimensions[1]<<" "<<Dimensions[2]<<endl;
 
-	vtkMetaImageWriter *Writer=vtkMetaImageWriter::New();
-	Writer->SetInput(Image);
+	vtkMetaImageWriter *Writer = vtkMetaImageWriter::New();
+	Writer->SetInputData(Image);
 	Writer->SetFileName(argv[2]);
 	Writer->Write();
 }

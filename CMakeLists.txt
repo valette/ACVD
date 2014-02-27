@@ -1,14 +1,4 @@
-PROJECT(VTKSURFACE)
-CMAKE_MINIMUM_REQUIRED(VERSION 2.4)
-#MARK_AS_ADVANCED( FORCE CMAKE_BACKWARDS_COMPATIBILITY )
-
-# for CMake 2.6 corrected behaviour (see "cmake --help-policy CMP0003")
-IF(COMMAND cmake_policy AND ${CMAKE_MAJOR_VERSION} EQUAL 2 AND ${CMAKE_MINOR_VERSION} GREATER 4)
-  CMAKE_POLICY(SET CMP0003 NEW)
-#  CMAKE_POLICY(SET CMP0005 NEW)
-ENDIF(COMMAND cmake_policy AND ${CMAKE_MAJOR_VERSION} EQUAL 2 AND ${CMAKE_MINOR_VERSION} GREATER 4)
-# --------------------------------------------------------------------------
-
+PROJECT(vtkSurface)
 
 # --------------------- OPTIONS OF THE PROJECT -----------------------------
 # Build static lib by default
@@ -37,12 +27,10 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/ACVD.json
 # -------------------- DEPENDENCIES TO EXTERNALS ---------------------------
 # Find and load VTK settings.
 
-#INCLUDE(${CMAKE_ROOT}/Modules/FindVTK.cmake)
-FIND_PACKAGE(VTK REQUIRED)
-IF(VTK_FOUND)
-    INCLUDE(${VTK_USE_FILE})
-ENDIF(VTK_FOUND)
 
+cmake_minimum_required(VERSION 2.8.7)
+find_package(VTK REQUIRED NO_MODULE)
+include(${VTK_USE_FILE})
 
 SET(VTKSURFACE_PROJECT_DIR ${PROJECT_SOURCE_DIR})
 SET(VTKSURFACE_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/Common)

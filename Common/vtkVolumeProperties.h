@@ -23,17 +23,17 @@
 #ifndef __vtkVolumeProperties_h
 #define __vtkVolumeProperties_h
 
-#include <vtkProcessObject.h>
 #include <vtkPolyData.h>
+#include <vtkPolyDataAlgorithm.h>
 
-class VTK_EXPORT vtkVolumeProperties : public vtkProcessObject
+class VTK_EXPORT vtkVolumeProperties : public vtkPolyDataAlgorithm
 {
 public:
   // Description:
   // Constructs with initial values of zero.
   static vtkVolumeProperties *New();
 
-  vtkTypeMacro(vtkVolumeProperties,vtkProcessObject);
+  vtkTypeMacro(vtkVolumeProperties, vtkObject);
   //void PrintSelf(ostream& os, vtkIndent indent);
 
   // Description:

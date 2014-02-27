@@ -153,7 +153,7 @@ VTK_THREAD_RETURN_TYPE ThreadedSurfaceExtraction (void *arg)
 	Contour->ComputeNormalsOff();
 	Contour->ComputeGradientsOff ();
 	Contour->ComputeScalarsOff();
-	Contour->SetInput(Image);
+	Contour->SetInputData(Image);
 	for (int i=MyId; i<Labels->GetNumberOfIds(); i+=NumberOfThreads)
 	{
 		double StartTime=Timer->GetUniversalTime();
@@ -175,7 +175,7 @@ VTK_THREAD_RETURN_TYPE ThreadedSurfaceExtraction (void *arg)
 			/*
 			vtkPolyDataConnectivityFilter *Connectivity=vtkPolyDataConnectivityFilter::New();
 			Connectivity->SetExtractionModeToLargestRegion();
-			Connectivity->SetInput(Mesh);
+			Connectivity->SetInputData(Mesh);
 			Connectivity->Update();
 			Mesh->ShallowCopy(Connectivity->GetOutput());
 			Connectivity->Delete();*/
@@ -184,7 +184,7 @@ VTK_THREAD_RETURN_TYPE ThreadedSurfaceExtraction (void *arg)
 		if (Helper->FillHoles!=0)
 		{
 			vtkFillHolesFilter *HolesFill= vtkFillHolesFilter::New();
-			HolesFill->SetInput(Mesh);
+			HolesFill->SetInputData(Mesh);
 			HolesFill->SetHoleSize(1e9);
 			HolesFill->Update();
 			if (HolesFill->GetOutput()->GetNumberOfCells()>0)
@@ -217,7 +217,7 @@ VTK_THREAD_RETURN_TYPE ThreadedSurfaceExtraction (void *arg)
 			if (Helper->SimplificationType==1)
 			{
 				vtkQuadricClustering *Simplification=vtkQuadricClustering::New();
-				Simplification->SetInput(Mesh);
+				Simplification->SetInputData(Mesh);
 				int NumberOfSubdivisions=(int) pow((double) WantedNumberOfVertices, (double) 1.0/3.0);
 				Simplification->SetNumberOfDivisions (NumberOfSubdivisions,NumberOfSubdivisions,NumberOfSubdivisions);
 				Simplification->Update();
@@ -338,14 +338,14 @@ VTK_THREAD_RETURN_TYPE ThreadedSurfaceExtraction (void *arg)
 		if (Helper->NumberOfSmoothingSteps!=0)
 		{
 			vtkWindowedSincPolyDataFilter *Smoother=vtkWindowedSincPolyDataFilter::New();
-			Smoother->SetInput(Mesh);
+			Smoother->SetInputData(Mesh);
 			Smoother->SetNumberOfIterations(Helper->NumberOfSmoothingSteps);
 			Smoother->Update();
 			Mesh->ShallowCopy(Smoother->GetOutput());
 			Smoother->Delete();
 		}
 
-		Writer->SetInput(Mesh);
+		Writer->SetInputData(Mesh);
 		Writer->SetFileName(Name.str().c_str());
 		Writer->Write();
 		Timer->StopTimer();
@@ -562,7 +562,7 @@ int main( int argc, char *argv[] )
 		break;
 	default:
 		Cast=vtkImageCast::New();
-		Cast->SetInput(Image);
+		Cast->SetInputData(Image);
 		Cast->SetOutputScalarTypeToInt ();
 		Cast->Update();
 		Image->ShallowCopy(Cast->GetOutput());
@@ -580,7 +580,7 @@ int main( int argc, char *argv[] )
 		if (Factor<1.0/MaximumSubsamplingFactor)
 			Factor=1.0/MaximumSubsamplingFactor;
 		vtkImageResample *Resampler=vtkImageResample::New();
-		Resampler->SetInput(Image);
+		Resampler->SetInputData(Image);
 		Resampler->SetInterpolationModeToNearestNeighbor();
 		for (int i=0;i<3;i++)
 			Resampler->SetAxisMagnificationFactor(i, Factor);

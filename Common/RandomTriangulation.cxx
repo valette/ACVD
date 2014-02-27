@@ -63,7 +63,7 @@ int main( int argc, char *argv[] )
 	Window->Interact();
 	
 	vtkPLYWriter *Writer=vtkPLYWriter::New();
-	Writer->SetInput(Mesh);
+	Writer->SetInputData(Mesh);
 	Writer->SetFileName("mesh.ply");
 	Writer->Write();
 	Writer->Delete();

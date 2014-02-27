@@ -91,17 +91,17 @@ vtkOFFReader::~vtkOFFReader()
 
 //----------------------------------------------------------------------------
 // 
-void vtkOFFReader::ExecuteInformation()
+void vtkOFFReader::RequestInformation()
 {
   vtkPolyData *output = this->GetOutput();
 
-  output->SetMaximumNumberOfPieces(-1);
+ // output->SetMaximumNumberOfPieces(-1);
 }
 
 
 //----------------------------------------------------------------------------
 // 
-void vtkOFFReader::Execute()
+void vtkOFFReader::RequestData()
 {
 	vtkPoints *temp_points=vtkPoints::New();
 	vtkPolyData *output_mesh=this->GetOutput();

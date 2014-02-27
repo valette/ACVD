@@ -287,7 +287,7 @@ int main( int argc, char *argv[] )
 		strcpy(REALFILE,"simplification.ply");
 	
 	vtkPLYWriter *plyWriter=vtkPLYWriter::New();
-	plyWriter->SetInput(Remesh->GetOutput());
+	plyWriter->SetInputData(Remesh->GetOutput());
 	plyWriter->SetFileName(REALFILE);
 	plyWriter->Write();
 	plyWriter->Delete();

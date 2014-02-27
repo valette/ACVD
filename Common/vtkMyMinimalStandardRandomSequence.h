@@ -34,7 +34,7 @@
 #include <vtkObject.h>
 //#include "vtkRandomSequence.h"
 //  : public vtkRandomSequence
-class VTK_COMMON_EXPORT vtkMyMinimalStandardRandomSequence : public vtkObject
+class VTK_EXPORT vtkMyMinimalStandardRandomSequence : public vtkObject
 {
 public:
 //  vtkTypeMacro(vtkMyMinimalStandardRandomSequence,vtkRandomSequence);

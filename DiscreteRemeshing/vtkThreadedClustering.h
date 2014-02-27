@@ -43,7 +43,7 @@ Auteur:    Sebastien VALETTE
 
 
 // define our derived class, with TryLock() method
-class VTK_COMMON_EXPORT vtkMySimpleCriticalSection : public vtkSimpleCriticalSection
+class VTK_EXPORT vtkMySimpleCriticalSection : public vtkSimpleCriticalSection
 {
 public:
 	static vtkMySimpleCriticalSection *New()
@@ -1060,8 +1060,8 @@ template < class Metric >
 	this->DisplayThreadsTimingsFlag = 0;
 
 	this->Timer = vtkTimerLog::New ();
-	this->PoolAllocationLock=vtkSimpleCriticalSection::New();
-	this->PoolAllocationLock2=vtkSimpleCriticalSection::New();	
+	this->PoolAllocationLock = new vtkSimpleCriticalSection;
+	this->PoolAllocationLock2 = new vtkSimpleCriticalSection;
 	this->EdgesProcess = 0;
 
 #ifdef THREADSAFECLUSTERING
@@ -1088,8 +1088,8 @@ template < class Metric >
 	vtkThreadedClustering < Metric >::~vtkThreadedClustering ()
 {
 	this->Timer->Delete ();
-	this->PoolAllocationLock->Delete();
-	this->PoolAllocationLock2->Delete();
+	delete this->PoolAllocationLock;
+	delete this->PoolAllocationLock2;
 	this->PoolQueue1->Delete();
 	this->PoolQueue2->Delete();
 

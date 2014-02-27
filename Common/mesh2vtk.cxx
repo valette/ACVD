@@ -56,7 +56,7 @@ int main( int argc, char *argv[] )
 	cout <<"load : "<<argv[1]<<endl;
 	Mesh->CreateFromFile(argv[1]);
 	vtkPolyDataWriter *Writer=vtkPolyDataWriter::New();
-	Writer->SetInput(Mesh);
+	Writer->SetInputData(Mesh);
 	Writer->SetFileName("mesh.vtk");
 	Writer->Write();
 	cout<<"conversion to mesh.vtk finished!"<<endl;

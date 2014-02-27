@@ -30,12 +30,12 @@ int main( int argc, char *argv[] )
 	Reader->SetFileName(argv[1]);
 	Reader->Update();
 	vtkImageMedian3D *Median=vtkImageMedian3D::New();
-	Median->SetInput(Reader->GetOutput());
+	Median->SetInputConnection(Reader->GetOutputPort());
 	int Radius=atoi(argv[2]);
 	Median->SetKernelSize(Radius,Radius,Radius);
 	Median->Update();
 	vtkMetaImageWriter *Writer=vtkMetaImageWriter::New();
-	Writer->SetInput(Median->GetOutput());
+	Writer->SetInputData(Median->GetOutput());
 	Writer->SetFileName("output.mhd");
 	Writer->Write();
 }

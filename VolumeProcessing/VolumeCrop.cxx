@@ -42,7 +42,7 @@ int main( int argc, char *argv[] )
 	}
 	vtkExtractVOI *Extract=vtkExtractVOI::New();
 	Extract->SetVOI(VOI);
-	Extract->SetInput(Reader->GetOutput());
+	Extract->SetInputData(Reader->GetOutput());
 	Extract->Update();
 
 	//save VOI
@@ -53,7 +53,7 @@ int main( int argc, char *argv[] )
 	cout<<"New image dimensions : "<<Dimensions[0]<<" "<<Dimensions[1]<<" "<<Dimensions[2]<<endl;
 
 	vtkMetaImageWriter *Writer=vtkMetaImageWriter::New();
-	Writer->SetInput(Image);
+	Writer->SetInputData(Image);
 	Writer->SetFileName(argv[2]);
 	Writer->Write();
 }
