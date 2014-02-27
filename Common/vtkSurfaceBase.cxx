@@ -1523,28 +1523,28 @@ void vtkSurfaceBase::Init(int numPoints, int numFaces, int numEdges)
 void vtkSurfaceBase::CreateFromPolyData(vtkPolyData *input)
 {
 	// just copy the polydata in input
+	input->BuildCells();
 	this->ShallowCopy(input);
 
 	// Delete the cells that are not polygons
-    if (this->GetVerts() || this->GetLines() || this->GetStrips()) {
+	if (this->GetVerts() || this->GetLines() || this->GetStrips()) {
 		this->SetVerts(0);
 		this->SetLines(0);
 		this->SetStrips(0);
 		this->Modified();
-    }
-    this->BuildCells();
+	}
 
-    vtkIdType numPoints = this->GetNumberOfPoints();
-    vtkIdType numFaces = this->GetNumberOfCells();
+	vtkIdType numPoints = this->GetNumberOfPoints();
+	vtkIdType numFaces = this->GetNumberOfCells();
 
 	this->AllocateVerticesAttributes(numPoints);
     this->AllocateEdgesAttributes(numPoints + numFaces + 1000);
 	this->AllocatePolygonsAttributes(numFaces);
 
-    for (vtkIdType i = 0; i < this->GetNumberOfCells(); i++) {
+    for (vtkIdType i = 0; i < numFaces; i++) {
         bool ActiveFace = false;
         vtkIdType NumberOfVertices, *Vertices;
-        input->GetCellPoints(i, NumberOfVertices, Vertices);
+        this->GetCellPoints(i, NumberOfVertices, Vertices);
 
         if (NumberOfVertices > 1) {
 			// test whether the face is an active one (at least its first two vertices should be different)
