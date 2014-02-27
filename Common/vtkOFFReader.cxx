@@ -197,8 +197,10 @@ void vtkOFFReader::RequestData()
 		// boucle sur les cellules : lecture des coordonnees 
 		for (i=0;i<this->NumberOfCells;i++)
 		{
+			int intValue;
 			// lecture du nombre de points de la cellule
-			UnusedResult=fscanf( stream, "%d", &CellType);
+			UnusedResult=fscanf( stream, "%d", &intValue);
+			CellType = intValue;
 
 #if ALEX_DEBUG
 			cout << "cellule a " << CellType << " points" << endl;
@@ -207,7 +209,8 @@ void vtkOFFReader::RequestData()
 			// lecture des IDs des points de la cellule
 			for (j=0;j<CellType;j++) 
 			{
-				UnusedResult=fscanf( stream, "%d", &Temp_Cell[j]);
+				UnusedResult=fscanf( stream, "%d", &intValue);
+				Temp_Cell[j] = intValue;
 
 #if ALEX_DEBUG
 				cout << "point # " << j << " Id " << Temp_Cell[j] << "; "; 
