@@ -1,6 +1,23 @@
 INCLUDE_DIRECTORIES(
     ${VTKSURFACE_INCLUDE_DIR}
 )
+
+OPTION(USE_MULTITHREADING "Use Multithreaded classes" OFF)
+MARK_AS_ADVANCED(USE_MULTITHREADING)
+
+OPTION(USE_LLOYDCLUSTERING "Use Lloyd relaxations instead of new algorithm for clustering" OFF)
+MARK_AS_ADVANCED(USE_LLOYDCLUSTERING)
+
+
+# --------------------------------------------------------------------
+# Switch to enable Multithreaded clustering
+
+IF(USE_MULTITHREADING)
+    ADD_DEFINITIONS (-D DOmultithread)
+ENDIF(USE_MULTITHREADING)
+IF(USE_LLOYDCLUSTERING)
+    ADD_DEFINITIONS (-D DOLloydClustering)
+ENDIF(USE_LLOYDCLUSTERING)
  
  
  # --------------------------------------------------------------------------
