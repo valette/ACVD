@@ -29,16 +29,7 @@ xmlParser.cpp
 vtkManifoldSimplification.cxx
 )
 
-SET(LIB_ADDED
-vtkSurface
-vtkCommon
-vtkFiltering
-vtkImaging
-vtkIO
-vtkRendering
-vtkHybrid)
-
-TARGET_LINK_LIBRARIES(vtkDiscreteRemeshing ${LIB_ADDED})
+TARGET_LINK_LIBRARIES(vtkDiscreteRemeshing ${VTK_LIBRARIES})
 
 INCLUDE_DIRECTORIES(
     ${VTK_INCLUDE_DIR}
@@ -57,8 +48,7 @@ ManifoldSimplification
 
 FOREACH(loop_var ${DISCRETEREMESHING_EXAMPLES})
 	ADD_EXECUTABLE(${loop_var} ${loop_var}.cxx)
-	TARGET_LINK_LIBRARIES(${loop_var} vtkSurface vtkDiscreteRemeshing
-	vtkCommon vtkFiltering vtkGraphics vtkImaging vtkIO vtkRendering vtkHybrid)
+	TARGET_LINK_LIBRARIES(${loop_var} vtkSurface vtkDiscreteRemeshing ${VTK_LIBRARIES})
 ENDFOREACH(loop_var)
 
 ## eof - CMakeLists.txt
