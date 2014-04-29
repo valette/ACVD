@@ -24,10 +24,10 @@ This code is distributed under the CeCILL-B license (BSD-compatible)
 ###  Simple compilation HowTo under Linux ###
 	git clone https://github.com/valette/ACVD.git
 	cd ACVD
-	cmake . -DCMAKE_BUILD_TYPE=Release -DUSE_MULTITHREADING=true
+	cmake . -DCMAKE_BUILD_TYPE=Release
 	make
 
-the executables (ACVD, ACVDQ and AnisotropicRemeshingQ should be found under the "bin" subdirectory)
+the executables (ACVD, ACVDQ, AnisotropicRemeshingQ and others should be found under the "bin" subdirectory)
 
 ### Note for window$ users ###
 if you get this compilation error :
@@ -35,15 +35,12 @@ if you get this compilation error :
 you can fix it by unselecting 'build_shared_libs' with the cmake UI
 
 ### Options ###
-execute ACVD.exe and ACVDQ.exe without arguments to see the available options.
-(respectively ACVD and ACVDQ for linux)
+launch the executables  without arguments to see the available options.
 
-the output of the program is written in the file simplification.ply
+for ACVD, the output is written in the file simplification.ply
 
 additionnally, when running ACVD, a file output_1.ply is also written. It is the output mesh before post-processing using quadrics.
 
 note that to enforce a manifold output mesh, such as explained in [3], you need to use the -m 1 option, and to define a correct number of spare clusters using options -sf or -sc.
 
 comments, suggestions : sebastien.valette@creatis.insa-lyon.fr
-
-
