@@ -1868,25 +1868,28 @@ void vtkSurface::QuantizeCoordinates(double Factor, double Tx, double Ty, double
 }
 
 void vtkSurface::WriteToFile (const char *FileName) {
-	char filename[500];
+	char filename[5000];
 	strcpy(filename,FileName);
 
-	if (filename != NULL) {
-		for (char *p = filename; *p; ++p)
-			*p = tolower(*p);
-	}
+	for (char *p = filename; *p; ++p)
+		*p = tolower(*p);
 
 	vtkDataWriter *Writer;
 
-	if (strstr(filename,".vtk"))
-		Writer = (vtkDataWriter*) vtkPolyDataWriter::New();
+	if (strstr(filename,".vtk")) {
+		vtkPolyDataWriter *Writer = vtkPolyDataWriter::New();
+		Writer->SetInputData(this);
+		Writer->SetFileName(FileName);
+		Writer->Write();
+	}
 
-	if (strstr(filename,".ply"))
-		Writer = (vtkDataWriter*) vtkPLYWriter::New();
+	if (strstr(filename,".ply")) {
+		vtkPLYWriter *Writer = vtkPLYWriter::New();
+		Writer->SetInputData(this);
+		Writer->SetFileName(FileName);
+		Writer->Write();
+	}
 
-	Writer->SetInputData(this);
-	Writer->SetFileName(FileName);
-	Writer->Write();	
 }
 
 void vtkSurface::CreateFromFile(const char *FileName)
