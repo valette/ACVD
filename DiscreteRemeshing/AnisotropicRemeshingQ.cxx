@@ -205,11 +205,7 @@ int main( int argc, char *argv[] )
 //	Remesh->SetDisplayCharacteristicsWindowOn();
 //	Remesh->SetAlgorithmType(1);
 
-	if (Mesh->GetNumberOfPoints()>3000000)
-		Remesh->SetDisplay(0);
-	else
-		Remesh->SetDisplay(Display);
-
+	Remesh->SetDisplay(Display);
 	Remesh->Remesh();
 	
 	// save the output mesh to .ply format

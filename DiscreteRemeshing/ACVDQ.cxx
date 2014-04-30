@@ -265,12 +265,7 @@ int main( int argc, char *argv[] )
 	Remesh->SetConsoleOutput(2);
 	Remesh->SetSubsamplingThreshold(SubsamplingThreshold);
 	Remesh->GetMetric()->SetGradation(Gradation);
-
-	if (Mesh->GetNumberOfPoints()>3000000)
-		Remesh->SetDisplay(0);
-	else
-		Remesh->SetDisplay(Display);
-		
+	Remesh->SetDisplay(Display);
 	Remesh->SetConstrainedInitialization(1);
 	Remesh->Remesh();
 

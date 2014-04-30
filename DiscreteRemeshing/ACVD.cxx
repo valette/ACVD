@@ -210,6 +210,7 @@ int main( int argc, char *argv[] )
 	Remesh->SetConsoleOutput(2);
 	Remesh->SetSubsamplingThreshold(SubsamplingThreshold);
 	Remesh->GetMetric()->SetGradation(Gradation);
+	Remesh->SetDisplay(Display);
 	Remesh->Remesh();
 
 	if (QuadricsOptimizationLevel != 0) {
