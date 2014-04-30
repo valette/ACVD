@@ -18,13 +18,13 @@ This code is distributed under the CeCILL-B license (BSD-compatible)
 
 
 ###  Dependencies ###
-* VTK (version 5, version 6 in progress) www.vtk.org
+* VTK www.vtk.org (version 5.x, version 6.x in the vtk6 branch : https://github.com/valette/ACVD/tree/vtk6) 
 * CMAKE www.cmake.org
 
 ###  Simple compilation HowTo under Linux ###
 	git clone https://github.com/valette/ACVD.git
 	cd ACVD
-	cmake . -DCMAKE_BUILD_TYPE=Release -DUSE_MULTITHREADING=true
+	cmake . -DCMAKE_BUILD_TYPE=Release
 	make
 
 the executables (ACVD, ACVDQ and AnisotropicRemeshingQ should be found under the "bin" subdirectory)
@@ -35,8 +35,7 @@ if you get this compilation error :
 you can fix it by unselecting 'build_shared_libs' with the cmake UI
 
 ### Options ###
-execute ACVD.exe and ACVDQ.exe without arguments to see the available options.
-(respectively ACVD and ACVDQ for linux)
+execute ACVD and ACVDQ without arguments to see the available options.
 
 the output of the program is written in the file simplification.ply
 
