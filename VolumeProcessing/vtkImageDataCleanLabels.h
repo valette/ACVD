@@ -2,7 +2,7 @@
 
 
 
-class vtkImageDataCleanLabels : public vtkSimpleImageToImageFilter
+class VTK_EXPORT vtkImageDataCleanLabels : public vtkSimpleImageToImageFilter
 {
 
 public :
