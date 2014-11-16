@@ -30,7 +30,9 @@ IF (WIN32)
 
   # ON LINUX : FILES MUST BE INSTALLED BY make install 
 ELSE (WIN32)
-
+  SET(INSTALL_CMAKE_DIR lib/CMake/avcd CACHE PATH
+	  "Installation directory for CMake files"
+    )
   CONFIGURE_FILE(
     ${INSTALL_LIBRARY_FILES_DIR}/FindLibrary.cmake.in
     ${CMAKE_CURRENT_BINARY_DIR}/Find${LIBRARY_NAME}.cmake
@@ -38,7 +40,7 @@ ELSE (WIN32)
     )
   INSTALL( 
     FILES ${CMAKE_CURRENT_BINARY_DIR}/Find${LIBRARY_NAME}.cmake
-    DESTINATION ${CMAKE_ROOT}/Modules 
+	DESTINATION ${INSTALL_CMAKE_DIR} COMPONENT dev
     )
   CONFIGURE_FILE(
     ${INSTALL_LIBRARY_FILES_DIR}/UseLibrary.cmake.in
