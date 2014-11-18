@@ -1,7 +1,6 @@
- 
  # --------------------------------------------------------------------------
  # Library compilation
- ADD_LIBRARY(vtkSurface
+add_library(vtkSurface
  RenderWindow.cxx
  vtkDelaunay.cxx
  vtkDualMeshDisplay.cxx
@@ -18,22 +17,8 @@
  vtkMyMinimalStandardRandomSequence.cxx
 #  vtkJSWriter.cxx
  )
- 
-TARGET_LINK_LIBRARIES(vtkSurface ${VTK_LIBRARIES})
+target_link_libraries(vtkSurface ${VTK_LIBRARIES})
 
-SET(COMMON_EXAMPLES
-viewer
-viewer2
-RandomTriangulation
-ExamplevtkSurface
-CleanMesh
-mesh2vtk
-vtk2ply
-stl2ply
-CheckOrientation
-)
-FOREACH(loop_var ${COMMON_EXAMPLES})
-	ADD_EXECUTABLE(${loop_var} ${loop_var}.cxx)
-	TARGET_LINK_LIBRARIES(${loop_var} vtkSurface ${VTK_LIBRARIES})
-ENDFOREACH(loop_var)
-
+if( BUILD_EXAMPLES )
+  add_subdirectory( Examples )
+endif()
