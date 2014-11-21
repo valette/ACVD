@@ -1,3 +1,5 @@
+include_directories( ${ACVD_SOURCE_DIR}/Common )
+
 set(COMMON_EXAMPLES
   viewer
   viewer2

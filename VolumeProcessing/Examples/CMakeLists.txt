@@ -1,3 +1,5 @@
+include_directories( ${ACVD_SOURCE_DIR}/VolumeProcessing )
+
 add_executable(VolumeCleanLabels VolumeCleanLabels.cxx)
 target_link_libraries(VolumeCleanLabels vtkVolumeProcessing ${VTK_LIBRARIES})
 
