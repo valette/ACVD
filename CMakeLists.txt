@@ -19,6 +19,7 @@ set( ACVD_LIB_SOVERSION ${ACVD_MAJOR_VERSION}.${ACVD_MINOR_VERSION} )
 set(INSTALL_LIB_DIR lib CACHE PATH "Installation directory for libraries")
 set(INSTALL_BIN_DIR bin CACHE PATH "Installation directory for executables")
 set(INSTALL_INCLUDE_DIR include CACHE PATH "Installation directory for header files")
+set(INSTALL_DOC_DIR share/doc/ACVD CACHE PATH "Installation directory for html doc" )
 set( INSTALL_CMAKE_DIR lib/cmake/ACVD "Installation directory for CMake files" )
 
 # find_package
