@@ -29,3 +29,10 @@ target_link_libraries(png2raw ${VTK_LIBRARIES})
 
 add_executable(readimage ReadImage.cxx)
 target_link_libraries(readimage ${VTK_LIBRARIES})
+
+install( TARGETS VolumeCleanLabels VolumeSlice Minc2Mhd VolumeSubsample VolumeCrop VolumeMedian VolumeAnisotropicDiffusion png2raw readimage
+  EXPORT ACVDTargets
+  RUNTIME DESTINATION ${INSTALL_BIN_DIR}
+  LIBRARY DESTINATION ${INSTALL_LIB_DIR}
+  ARCHIVE DESTINATION ${INSTALL_LIB_DIR}
+)

@@ -6,6 +6,22 @@ if( POLICY CMP0042 )
   cmake_policy( SET CMP0042 NEW )
 endif()
 
+# version
+set( ACVD_MAJOR_VERSION 1 )
+set( ACVD_MINOR_VERSION 0 )
+set( ACVD_PATCH_VERSION 0 )
+set( ACVD_VERSION ${ACVD_MAJOR_VERSION}.${ACVD_MINOR_VERSION}.${ACVD_PATCH_VERSION} )
+
+set( ACVD_LIB_VERSION ${ACVD_VERSION} )
+set( ACVD_LIB_SOVERSION ${ACVD_MAJOR_VERSION}.${ACVD_MINOR_VERSION} )
+
+# installation
+set(INSTALL_LIB_DIR lib CACHE PATH "Installation directory for libraries")
+set(INSTALL_BIN_DIR bin CACHE PATH "Installation directory for executables")
+set(INSTALL_INCLUDE_DIR include CACHE PATH "Installation directory for header files")
+set( INSTALL_CMAKE_DIR lib/cmake/ACVD "Installation directory for CMake files" )
+
+# find_package
 find_package(VTK REQUIRED NO_MODULE)
 include(${VTK_USE_FILE})
 

@@ -31,6 +31,24 @@ vtkManifoldSimplification.cxx
 
 target_link_libraries(vtkDiscreteRemeshing vtkSurface)
 
+set_target_properties(vtkDiscreteRemeshing PROPERTIES
+  DEBUG_POSTFIX "-d"
+  VERSION "${ACVD_LIB_VERSION}"
+  SOVERSION "${ACVD_LIB_SOVERSION}"
+)
+
+install( TARGETS vtkDiscreteRemeshing
+  EXPORT ACVDTargets
+  RUNTIME DESTINATION ${INSTALL_BIN_DIR}
+  LIBRARY DESTINATION ${INSTALL_LIB_DIR}
+  ARCHIVE DESTINATION ${INSTALL_LIB_DIR}
+)
+
+file( GLOB _vtkDiscreteRemeshing_hdrs *.h )
+install( FILES ${_vtkDiscreteRemeshing_hdrs}
+  DESTINATION ${INSTALL_INCLUDE_DIR}/ACVD/DiscreteRemeshing
+)
+
 if( BUILD_EXAMPLES )
   add_subdirectory( Examples )
 endif()
