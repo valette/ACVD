@@ -20,7 +20,15 @@ set(INSTALL_LIB_DIR lib CACHE PATH "Installation directory for libraries")
 set(INSTALL_BIN_DIR bin CACHE PATH "Installation directory for executables")
 set(INSTALL_INCLUDE_DIR include CACHE PATH "Installation directory for header files")
 set(INSTALL_DOC_DIR share/doc/ACVD CACHE PATH "Installation directory for html doc" )
-set( INSTALL_CMAKE_DIR lib/cmake/ACVD "Installation directory for CMake files" )
+set(INSTALL_CMAKE_DIR lib/cmake/ACVD CACHE PATH "Installation directory for CMake files" )
+
+# Make relative paths absolute (needed later on)
+foreach(p LIB BIN INCLUDE CMAKE)
+  set(var INSTALL_${p}_DIR)
+  if(NOT IS_ABSOLUTE "${${var}}")
+    set(${var} "${CMAKE_INSTALL_PREFIX}/${${var}}")
+  endif()
+endforeach()
 
 # find_package
 find_package(VTK REQUIRED NO_MODULE)
@@ -64,13 +72,59 @@ if(BUILD_VOLUMEPROCESSING)
     set( ACVD_LIBRARIES ${ACVD_LIBRARIES} vtkVolumeProcessing )
 endif(BUILD_VOLUMEPROCESSING)
 
+export( TARGETS ${_targets}
+  FILE "${ACVD_BINARY_DIR}/ACVDTargets.cmake"
+)
+
+# Export the package for use from the build-tree
+# (this registers the build-tree with a global CMake-registry)
+export(PACKAGE ACVD)
+
+# -------------------------------------------------------------
+# for the build tree
+set( CONF_INCLUDE_DIRS
+  "${ACVD_SOURCE_DIR}/modules/core/include"
+)
+
+if( BUILD_DISCRETEREMESHING )
+  set( CONF_INCLUDE_DIRS "${CONF_INCLUDE_DIRS}" "${ACVD_SOURCE_DIR}/DiscreteRemeshing" )
+endif()
+
+if( BUILD_VOLUMEPROCESSING )
+  set( CONF_INCLUDE_DIRS "${CONF_INCLUDE_DIRS}" "${ACVD_SOURCE_DIR}/VolumeProcessing" )
+endif()
+
 configure_file( ${ACVD_SOURCE_DIR}/ACVDConfig.cmake.in
   ${ACVD_BINARY_DIR}/ACVDConfig.cmake
   @ONLY
 )
+# for the install tree
+file(RELATIVE_PATH REL_INCLUDE_DIR "${INSTALL_CMAKE_DIR}"
+   "${INSTALL_INCLUDE_DIR}")
 
+set( CONF_INCLUDE_DIRS
+  "\${ACVD_CMAKE_DIR}/${REL_INCLUDE_DIR}/ACVD/Common"
+)
+if( BUILD_DISCRETEREMESHING )
+  set( CONF_INCLUDE_DIRS "${CONF_INCLUDE_DIRS}" "\${ACVD_CMAKE_DIR}/${REL_INCLUDE_DIR}/ACVD/DiscreteRemeshing" )
+endif()
+
+if( BUILD_VOLUMEPROCESSING )
+  set( CONF_INCLUDE_DIRS "${CONF_INCLUDE_DIRS}" "\${ACVD_CMAKE_DIR}/${REL_INCLUDE_DIR}/ACVD/VolumeProcessing" )
+endif()
+
+configure_file( ${ACVD_SOURCE_DIR}/ACVDConfig.cmake.in
+  ${ACVD_BINARY_DIR}/ACVDConfig.cmake
+  @ONLY
+)
 configure_file( ${ACVD_SOURCE_DIR}/ACVDConfigVersion.cmake.in
   ${ACVD_BINARY_DIR}/ACVDConfigVersion.cmake
   @ONLY
 )
+install( FILES
+    "${ACVD_BINARY_DIR}/ACVDConfig.cmake"
+    "${ACVD_BINARY_DIR}/ACVDConfigVersion.cmake"
+  DESTINATION ${INSTALL_CMAKE_DIR} COMPONENT dev
+)
+install(EXPORT ACVDTargets DESTINATION "${INSTALL_CMAKE_DIR}" COMPONENT dev)
 
