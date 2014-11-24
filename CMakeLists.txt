@@ -52,12 +52,25 @@ if(BUILD_DOCUMENTATION)
 endif(BUILD_DOCUMENTATION)
 
 add_subdirectory(Common)
+set( ACVD_LIBRARIES vtkSurface )
 
 if(BUILD_DISCRETEREMESHING)
     add_subdirectory(DiscreteRemeshing)
+    set( ACVD_LIBRARIES ${ACVD_LIBRARIES} vtkDiscreteRemeshing )
 endif(BUILD_DISCRETEREMESHING)
 
 if(BUILD_VOLUMEPROCESSING)
     add_subdirectory(VolumeProcessing)
+    set( ACVD_LIBRARIES ${ACVD_LIBRARIES} vtkVolumeProcessing )
 endif(BUILD_VOLUMEPROCESSING)
+
+configure_file( ${ACVD_SOURCE_DIR}/ACVDConfig.cmake.in
+  ${ACVD_BINARY_DIR}/ACVDConfig.cmake
+  @ONLY
+)
+
+configure_file( ${ACVD_SOURCE_DIR}/ACVDConfigVersion.cmake.in
+  ${ACVD_BINARY_DIR}/ACVDConfigVersion.cmake
+  @ONLY
+)
 
