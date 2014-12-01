@@ -1,54 +1,38 @@
-INCLUDE_DIRECTORIES(
+include_directories(
     ${VTKSURFACE_INCLUDE_DIR}
 )
 
-OPTION(USE_MULTITHREADING "Use Multithreaded classes" OFF)
-MARK_AS_ADVANCED(USE_MULTITHREADING)
+option(USE_MULTITHREADING "Use Multithreaded classes" OFF)
+mark_as_advanced(USE_MULTITHREADING)
 
-OPTION(USE_LLOYDCLUSTERING "Use Lloyd relaxations instead of new algorithm for clustering" OFF)
-MARK_AS_ADVANCED(USE_LLOYDCLUSTERING)
+option(USE_LLOYDCLUSTERING "Use Lloyd relaxations instead of new algorithm for clustering" OFF)
+mark_as_advanced(USE_LLOYDCLUSTERING)
 
 
 # --------------------------------------------------------------------
 # Switch to enable Multithreaded clustering
 
-IF(USE_MULTITHREADING)
-    ADD_DEFINITIONS (-D DOmultithread)
-ENDIF(USE_MULTITHREADING)
-IF(USE_LLOYDCLUSTERING)
-    ADD_DEFINITIONS (-D DOLloydClustering)
-ENDIF(USE_LLOYDCLUSTERING)
- 
- 
+if(USE_MULTITHREADING)
+    add_definitions (-D DOmultithread)
+endif(USE_MULTITHREADING)
+if(USE_LLOYDCLUSTERING)
+    add_definitions (-D DOLloydClustering)
+endif(USE_LLOYDCLUSTERING)
+
+
  # --------------------------------------------------------------------------
  # Library compilation
- ADD_LIBRARY(
-vtkDiscreteRemeshing 
+add_library(
+vtkDiscreteRemeshing
 vtkTestUniformClustering.cxx
 xmlParser.cpp
 vtkManifoldSimplification.cxx
 )
 
-TARGET_LINK_LIBRARIES(vtkDiscreteRemeshing vtkSurface)
+target_link_libraries(vtkDiscreteRemeshing vtkSurface)
 
-INCLUDE_DIRECTORIES(
-    ${VTK_INCLUDE_DIR}
-    ${VTKSURFACE_INCLUDE_DIR}
-    ${VTKDISCRETEREMESHING_INCLUDE_DIR}
-)
-
-SET(DISCRETEREMESHING_EXAMPLES
-ACVD
-ACVDQ
-AnisotropicRemeshing
-AnisotropicRemeshingQ
-VolumeAnalysis
-ManifoldSimplification
-)
-
-FOREACH(loop_var ${DISCRETEREMESHING_EXAMPLES})
-	ADD_EXECUTABLE(${loop_var} ${loop_var}.cxx)
-	TARGET_LINK_LIBRARIES(${loop_var} vtkDiscreteRemeshing )
-ENDFOREACH(loop_var)
+if( BUILD_EXAMPLES )
+  add_subdirectory( Examples )
+endif()
 
 ## eof - CMakeLists.txt
