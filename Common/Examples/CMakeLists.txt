@@ -17,3 +17,10 @@ foreach(loop_var ${COMMON_EXAMPLES})
   target_link_libraries(${loop_var} vtkSurface ${VTK_LIBRARIES})
 endforeach(loop_var)
 
+install( TARGETS ${COMMON_EXAMPLES}
+  EXPORT ACVDTargets
+  RUNTIME DESTINATION ${INSTALL_BIN_DIR}
+  LIBRARY DESTINATION ${INSTALL_LIB_DIR}
+  ARCHIVE DESTINATION ${INSTALL_LIB_DIR}
+)
+
