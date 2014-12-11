@@ -8,7 +8,6 @@ INCLUDE_DIRECTORIES(
  ADD_LIBRARY(
 vtkDiscreteRemeshing 
 vtkTestUniformClustering.cxx
-xmlParser.cpp
 vtkManifoldSimplification.cxx
 )
 
