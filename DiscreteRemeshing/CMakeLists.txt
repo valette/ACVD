@@ -25,7 +25,6 @@ endif(USE_LLOYDCLUSTERING)
 add_library(
 vtkDiscreteRemeshing
 vtkTestUniformClustering.cxx
-xmlParser.cpp
 vtkManifoldSimplification.cxx
 )
 
