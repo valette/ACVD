@@ -83,7 +83,7 @@ export(PACKAGE ACVD)
 # -------------------------------------------------------------
 # for the build tree
 set( CONF_INCLUDE_DIRS
-  "${ACVD_SOURCE_DIR}/modules/core/include"
+  "${ACVD_SOURCE_DIR}/Common"
 )
 
 if( BUILD_DISCRETEREMESHING )
@@ -114,7 +114,7 @@ if( BUILD_VOLUMEPROCESSING )
 endif()
 
 configure_file( ${ACVD_SOURCE_DIR}/ACVDConfig.cmake.in
-  ${ACVD_BINARY_DIR}/ACVDConfig.cmake
+  ${ACVD_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/ACVDConfig.cmake
   @ONLY
 )
 configure_file( ${ACVD_SOURCE_DIR}/ACVDConfigVersion.cmake.in
