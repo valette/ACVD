@@ -145,6 +145,10 @@ void vtkOOCMetaImageReader::ReadImageParameters ( ) {
 		return;
 	}
 
+	if (this->MetaImagePtr->BinaryDataByteOrderMSB()) {
+		this->SetDataByteOrderToBigEndian();
+	}
+
 	this->SetFileDimensionality(this->MetaImagePtr->NDims());
 	if ( FileDimensionality <= 0 || FileDimensionality >= 4)
 	{
