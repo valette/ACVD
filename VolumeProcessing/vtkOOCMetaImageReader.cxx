@@ -75,10 +75,11 @@ vtkOOCMetaImageReader::vtkOOCMetaImageReader()
 	//ImageReader
 	int idx;
 
-	for (idx = 0; idx < 3; ++idx)
-	{
-		this->DataVOI[idx*2] = this->DataVOI[idx*2 + 1] = 0;
+	for (int i = 0; i < 6; ++i) {
+		this->DataVOI[i] = VTK_INT_MIN;
 	}
+
+	this->XMin = this->XMax = this->YMin = this->YMax = this->ZMin = this->ZMax = VTK_INT_MIN;
 
 	// Left over from short reader
 	this->DataMask = 0xffff;
@@ -307,16 +308,35 @@ int vtkOOCMetaImageReader::RequestInformation (
 
 	// set the extent, if the VOI has not been set then default to
 	// the DataExtent
-	if (this->DataVOI[0] || this->DataVOI[1] || 
-		this->DataVOI[2] || this->DataVOI[3] || 
-		this->DataVOI[4] || this->DataVOI[5])
-	{
-		this->ComputeTransformedExtent(this->DataVOI,extent);
+	int VOI[6];
+	for (int i = 0; i < 6; i++) {
+		if (this->DataVOI[i] != VTK_INT_MIN) {
+			VOI[i] = this->DataVOI[i];
+		} else {
+			VOI[i] = this->DataExtent[i];
+		}
 	}
-	else
-	{
-		this->ComputeTransformedExtent(this->DataExtent,extent);
+
+	if (this->XMin != VTK_INT_MIN) {
+		VOI[0] = this->XMin;
 	}
+	if (this->XMax != VTK_INT_MIN) {
+		VOI[1] = this->XMax;
+	}
+	if (this->YMin != VTK_INT_MIN) {
+		VOI[2] = this->YMin;
+	}
+	if (this->YMax != VTK_INT_MIN) {
+		VOI[3] = this->YMax;
+	}
+	if (this->ZMin != VTK_INT_MIN) {
+		VOI[4] = this->ZMin;
+	}
+	if (this->ZMax != VTK_INT_MIN) {
+		VOI[5] = this->ZMax;
+	}
+
+	this->ComputeTransformedExtent(VOI, extent);
 
 	outInfo->Set(vtkStreamingDemandDrivenPipeline::WHOLE_EXTENT(),extent, 6);
 

@@ -1,5 +1,6 @@
 ADD_LIBRARY(vtkVolumeProcessing
 vtkImageDataCleanLabels.cxx
+vtkOOCMetaImageReader.cxx
 )
 
 TARGET_LINK_LIBRARIES(vtkVolumeProcessing vtkHybrid)
@@ -47,3 +48,6 @@ TARGET_LINK_LIBRARIES(png2raw vtkHybrid)
 
 ADD_EXECUTABLE(readimage ReadImage.cxx)
 TARGET_LINK_LIBRARIES(readimage vtkHybrid)
+
+ADD_EXECUTABLE(VolumeOOCSlice VolumeOOCSlice.cxx)
+TARGET_LINK_LIBRARIES(VolumeOOCSlice vtkHybrid vtkVolumeProcessing)

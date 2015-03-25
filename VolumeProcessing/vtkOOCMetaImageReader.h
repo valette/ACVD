@@ -43,6 +43,20 @@ public:
 	static vtkOOCMetaImageReader *New();
 	//{return new vtkOOCMetaImageReader;};
 
+	vtkGetMacro(XMin, int);
+	vtkSetMacro(XMin, int);
+	vtkGetMacro(XMax, int);
+	vtkSetMacro(XMax, int);
+	vtkGetMacro(YMin, int);
+	vtkSetMacro(YMin, int);
+	vtkGetMacro(YMax, int);
+	vtkSetMacro(YMax, int);
+	vtkGetMacro(ZMin, int);
+	vtkSetMacro(ZMin, int);
+	vtkGetMacro(ZMax, int);
+	vtkSetMacro(ZMax, int);
+
+
 
   //Meta-File reading functionality
     virtual const char * GetFileExtensions() 
@@ -154,6 +168,7 @@ protected:
                                     vtkIdType outIncr[3]);
 
   int DataVOI[6];
+  int XMin, XMax, YMin, YMax, ZMin, ZMax;
   
   char *ScalarArrayName;
   
