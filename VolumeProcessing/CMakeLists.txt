@@ -1,5 +1,6 @@
 add_library(vtkVolumeProcessing
 vtkImageDataCleanLabels.cxx
+vtkOOCMetaImageReader.cxx
 )
 
 target_link_libraries(vtkVolumeProcessing ${VTK_LIBRARIES})

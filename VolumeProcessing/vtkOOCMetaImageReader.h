@@ -43,6 +43,20 @@ public:
 	static vtkOOCMetaImageReader *New();
 	//{return new vtkOOCMetaImageReader;};
 
+	vtkGetMacro(XMin, int);
+	vtkSetMacro(XMin, int);
+	vtkGetMacro(XMax, int);
+	vtkSetMacro(XMax, int);
+	vtkGetMacro(YMin, int);
+	vtkSetMacro(YMin, int);
+	vtkGetMacro(YMax, int);
+	vtkSetMacro(YMax, int);
+	vtkGetMacro(ZMin, int);
+	vtkSetMacro(ZMin, int);
+	vtkGetMacro(ZMax, int);
+	vtkSetMacro(ZMax, int);
+
+
 
   //Meta-File reading functionality
     virtual const char * GetFileExtensions() 
@@ -154,6 +168,7 @@ protected:
                                     vtkIdType outIncr[3]);
 
   int DataVOI[6];
+  int XMin, XMax, YMin, YMax, ZMin, ZMax;
   
   char *ScalarArrayName;
   
@@ -174,7 +189,7 @@ protected:
   //This is the method where the actual reading of the file takes places. As such, it should
   //replicate vtkImageReader's functionality because it's this class that permets the lecture of
   //regions of interest
-  void ExecuteData(vtkDataObject *data);
+  void ExecuteData(vtkDataObject *data, vtkInformation* outInfo);
 private:
   vtkOOCMetaImageReader(const vtkOOCMetaImageReader&);  // Not implemented.
   void operator=(const vtkOOCMetaImageReader&);  // Not implemented.

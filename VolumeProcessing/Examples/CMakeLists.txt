@@ -6,6 +6,9 @@ target_link_libraries(VolumeCleanLabels vtkVolumeProcessing ${VTK_LIBRARIES})
 add_executable(VolumeSlice VolumeSlice.cxx)
 target_link_libraries(VolumeSlice ${VTK_LIBRARIES})
 
+add_executable(VolumeOOCSlice VolumeOOCSlice.cxx)
+target_link_libraries(VolumeOOCSlice vtkVolumeProcessing ${VTK_LIBRARIES})
+
 add_executable(Minc2Mhd Minc2Mhd.cxx)
 target_link_libraries(Minc2Mhd ${VTK_LIBRARIES})
 

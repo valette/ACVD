@@ -1,6 +1,21 @@
 {
 	"actions":
 	{
+		"VolumeOOCSlice": {
+			"parameters": [
+				{
+					"name": "input_file",
+					"type": "file",
+					"required": true
+				},
+				{
+					"name": "slice",
+					"type": "int",
+					"required": true
+				}
+			],
+			"executable": "VolumeOOCSlice"
+		},
 		"acvd" : {
 			"description" : "Performs simplification/remeshing of 3D triangular meshes",
 		    "parameters":[
