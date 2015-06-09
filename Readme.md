@@ -43,6 +43,6 @@ additionnally, when running ACVD, a file output_1.ply is also written. It is the
 
 note that to enforce a manifold output mesh, such as explained in [3], you need to use the -m 1 option, and to define a correct number of spare clusters using options -sf or -sc.
 
-comments, suggestions : sebastien.valette@creatis.insa-lyon.fr
+comments, suggestions : https://github.com/valette/ACVD/issues
 
 
