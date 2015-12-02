@@ -279,6 +279,21 @@
 		    {
 		        "executable":"VolumeAnisotropicDiffusion"
 		    }
+		},
+		"img2raw": {
+			"parameters": [
+				{
+					"text": "-o output.mhd"
+				},
+				{
+					"name": "input_directory",
+					"type": "directory",
+					"required": true
+				}
+			],
+			"executable": "img2raw",
+			"noCache" : true
 		}
+
 	}
 }

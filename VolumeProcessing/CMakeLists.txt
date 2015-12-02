@@ -51,3 +51,6 @@ TARGET_LINK_LIBRARIES(readimage vtkHybrid)
 
 ADD_EXECUTABLE(VolumeOOCSlice VolumeOOCSlice.cxx)
 TARGET_LINK_LIBRARIES(VolumeOOCSlice vtkHybrid vtkVolumeProcessing)
+
+ADD_EXECUTABLE(img2raw img2raw.cxx)
+TARGET_LINK_LIBRARIES(img2raw vtkHybrid)
