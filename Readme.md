@@ -18,7 +18,7 @@ This code is distributed under the CeCILL-B license (BSD-compatible)
 
 
 ###  Dependencies ###
-* VTK www.vtk.org (version 5.x, version 6.x in the vtk6 branch : https://github.com/valette/ACVD/tree/vtk6) 
+* VTK www.vtk.org (version 6.x, version 5.x in the vtk5 branch : https://github.com/valette/ACVD/tree/vtk5) 
 * CMAKE www.cmake.org
 
 ###  Simple compilation HowTo under Linux ###
@@ -28,11 +28,6 @@ This code is distributed under the CeCILL-B license (BSD-compatible)
 	make
 
 the executables (ACVD, ACVDQ, AnisotropicRemeshingQ and others should be found under the "bin" subdirectory)
-
-### Note for window$ users ###
-if you get this compilation error :
-	fatal error LNK1104: cannot open file '..\bin\Debug\vtkSurface.lib'
-you can fix it by unselecting 'build_shared_libs' with the cmake UI
 
 ### Options ###
 execute ACVD and ACVDQ without arguments to see the available options.
