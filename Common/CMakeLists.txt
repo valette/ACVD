@@ -41,6 +41,7 @@ mesh2vtk
 vtk2ply
 stl2ply
 CheckOrientation
+sampleMesh
 )
 FOREACH(loop_var ${COMMON_EXAMPLES})
 	ADD_EXECUTABLE(${loop_var} ${loop_var}.cxx)
