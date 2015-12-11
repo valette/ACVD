@@ -1,0 +1,23 @@
+# Config file for ACVD package
+
+# Compute paths
+get_filename_component( ACVD_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH )
+set( ACVD_INCLUDE_DIRS "@CONF_INCLUDE_DIRS@" )
+
+# Our library dependencies (contains definitions for IMPORTED targets)
+if(NOT TARGET ACVD_core AND NOT ACVD_BINARY_DIR)
+  include("${ACVD_CMAKE_DIR}/ACVDTargets.cmake")
+endif()
+
+set( BUILD_SHARED_LIBS @BUILD_SHARED_LIBS@ )
+set( BUILD_DISCRETEREMESHING @BUILD_DISCRETEREMESHING@ )
+set( BUILD_VOLUMEPROCESSING @BUILD_VOLUMEPROCESSING@ )
+set( USE_MULTITHREADING @USE_MULTITHREADING@ )
+set( USE_LLOYDCLUSTERING @USE_LLOYDCLUSTERING@ )
+
+set( VTK_DIR @VTK_DIR@ )
+find_package( VTK )
+
+set( ACVD_LIBRARIES "@ACVD_LIBRARIES@" )
+
+include_directories( ${ACVD_INCLUDE_DIRS} )

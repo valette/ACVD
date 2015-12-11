@@ -189,7 +189,7 @@ protected:
   //This is the method where the actual reading of the file takes places. As such, it should
   //replicate vtkImageReader's functionality because it's this class that permets the lecture of
   //regions of interest
-  void ExecuteData(vtkDataObject *data);
+  void ExecuteData(vtkDataObject *data, vtkInformation* outInfo);
 private:
   vtkOOCMetaImageReader(const vtkOOCMetaImageReader&);  // Not implemented.
   void operator=(const vtkOOCMetaImageReader&);  // Not implemented.

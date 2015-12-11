@@ -1,51 +1,31 @@
-ADD_LIBRARY(vtkVolumeProcessing
+add_library(vtkVolumeProcessing
 vtkImageDataCleanLabels.cxx
 vtkOOCMetaImageReader.cxx
 )
 
-TARGET_LINK_LIBRARIES(vtkVolumeProcessing vtkHybrid)
-
-#-----------------------------------------------------------------------------
-# Include the file 'InstallLibrary.cmake' which does the clean install job
-SET(LIBRARY_NAME vtkVolumeProcessing)
-SET(LIBRARY_NAME_BUILD_TREE_CONFIG ${VTKSURFACE_BINARY_DIR})
-# Installation
-# Headers
-INSTALL_FILES(/include/${LIBRARY_NAME} "\\.h$")
-# Binary
-INSTALL_TARGETS(/lib ${LIBRARY_NAME})
-SET(INSTALL_LIBRARY_FILES_DIR ${VTKSURFACE_SOURCE_DIR}/CMake)
-INCLUDE(../CMake/InstallLibrary.cmake)
-#-----------------------------------------------------------------------------
+target_link_libraries(vtkVolumeProcessing ${VTK_LIBRARIES})
 
 
-ADD_EXECUTABLE(VolumeCleanLabels VolumeCleanLabels.cxx)
-TARGET_LINK_LIBRARIES(VolumeCleanLabels vtkHybrid vtkVolumeProcessing)
+set_target_properties( vtkVolumeProcessing PROPERTIES
+  DEBUG_POSTFIX "-d"
+  VERSION "${ACVD_LIB_VERSION}"
+  SOVERSION "${ACVD_LIB_SOVERSION}"
+)
 
-ADD_EXECUTABLE(VolumeSlice VolumeSlice.cxx)
-TARGET_LINK_LIBRARIES(VolumeSlice vtkHybrid)
+install( TARGETS vtkVolumeProcessing
+  EXPORT ACVDTargets
+  RUNTIME DESTINATION ${INSTALL_BIN_DIR}
+  LIBRARY DESTINATION ${INSTALL_LIB_DIR}
+  ARCHIVE DESTINATION ${INSTALL_LIB_DIR}
+)
 
-ADD_EXECUTABLE(Minc2Mhd Minc2Mhd.cxx)
-TARGET_LINK_LIBRARIES(Minc2Mhd vtkHybrid)
+file( GLOB _vtkVolumeProcessing_hdrs *.h )
 
-ADD_EXECUTABLE(VolumeSubsample VolumeSubsample.cxx)
-TARGET_LINK_LIBRARIES(VolumeSubsample vtkHybrid)
+install( FILES ${_vtkVolumeProcessing_hdrs}
+  DESTINATION ${INSTALL_INCLUDE_DIR}/ACVD/VolumeProcessing
+)
 
-ADD_EXECUTABLE(VolumeCrop VolumeCrop.cxx)
-TARGET_LINK_LIBRARIES(VolumeCrop vtkHybrid)
-
-ADD_EXECUTABLE(VolumeMedian VolumeMedian.cxx)
-TARGET_LINK_LIBRARIES(VolumeMedian vtkHybrid)
-
-ADD_EXECUTABLE(VolumeAnisotropicDiffusion VolumeAnisotropicDiffusion.cxx)
-TARGET_LINK_LIBRARIES(VolumeAnisotropicDiffusion vtkHybrid)
-
-#ADD_EXECUTABLE(OOCRead OOCRead.cxx vtkOOCMetaImageReader.cxx BinarySubimageWriter.cxx ResampledVolumeGenerator.cxx vtkMHDFileWriter.cxx)
-#TARGET_LINK_LIBRARIES(OOCRead vtkHybrid)
-
-ADD_EXECUTABLE(png2raw png2raw.cxx)
-TARGET_LINK_LIBRARIES(png2raw vtkHybrid)
-
+<<<<<<< HEAD
 ADD_EXECUTABLE(readimage ReadImage.cxx)
 TARGET_LINK_LIBRARIES(readimage vtkHybrid)
 
@@ -54,3 +34,8 @@ TARGET_LINK_LIBRARIES(VolumeOOCSlice vtkHybrid vtkVolumeProcessing)
 
 ADD_EXECUTABLE(img2raw img2raw.cxx)
 TARGET_LINK_LIBRARIES(img2raw vtkHybrid)
+=======
+if( BUILD_EXAMPLES )
+  add_subdirectory( Examples )
+endif()
+>>>>>>> d6582bd360bea6b52c1fe32a32c2509d03fba282

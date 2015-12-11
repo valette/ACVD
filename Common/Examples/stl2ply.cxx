@@ -1,9 +1,9 @@
 /*=========================================================================
 
-Program:   mesh2vtk : a simple mesh consersion tool
+Program:   stl2ply : a simple mesh consersion tool
 Module:    vtkSurface
 Language:  C++
-Date:      2011/07
+Date:      2012/02
 Author:   Sebastien Valette
 
 =========================================================================*/
@@ -30,35 +30,37 @@ Author:   Sebastien Valette
 *  knowledge of the CeCILL-B license and that you accept its terms.
 * ------------------------------------------------------------------------ */  
 
-// .NAME mesh2vtk 
+// .NAME stl2ply
 // .SECTION Description
 
-#include "vtkSurface.h"
-#include <vtkPolyDataWriter.h>
+#include <vtkPolyData.h>
+#include <vtkSTLReader.h>
+#include <vtkPLYWriter.h>
 
 /// a simple mesh consersion tool
-/// Usage : mesh2vtk inputfile
-/// where inputfile is a mesh
-/// the output is mesh.vtk
+/// Usage : stl2ply inputfile
+/// where inputfile is a mesh in stl format
+/// the output is mesh.ply
 
 int main( int argc, char *argv[] )
 {
-	vtkSurface *Mesh;
-
 	if (argc<2)
 	{
-		cout<<"Usage : mesh2vtk inputmesh"<<endl;
+		cout<<"Usage : stl2ply inputmesh"<<endl;
 		exit(1);
 	}
 
-	// Load the mesh and create the vtkSurface data structure
-	Mesh=vtkSurface::New();
 	cout <<"load : "<<argv[1]<<endl;
-	Mesh->CreateFromFile(argv[1]);
-	vtkPolyDataWriter *Writer=vtkPolyDataWriter::New();
-	Writer->SetInput(Mesh);
-	Writer->SetFileName("mesh.vtk");
+
+	vtkSTLReader *Reader=vtkSTLReader::New();
+	Reader->SetFileName(argv[1]);
+	Reader->Update();
+
+	// Load the mesh and create the vtkSurface data structure
+	vtkPLYWriter *Writer=vtkPLYWriter::New();
+	Writer->SetInputData(Reader->GetOutput());
+	Writer->SetFileName("mesh.ply");
 	Writer->Write();
-	cout<<"conversion to mesh.vtk finished!"<<endl;
+	cout<<"conversion to mesh.ply finished!"<<endl;
 	return (0);
 }

@@ -41,13 +41,13 @@
 #ifndef __vtkSMFReader_h
 #define __vtkSMFReader_h
 
-#include <vtkPolyDataSource.h>
+#include <vtkPolyDataAlgorithm.h>
 #include <vtkPolyData.h>
 #include <vtkFloatArray.h>
 #include <vtkCellArray.h>
 #include <vtkPoints.h>
 
-class VTK_EXPORT vtkSMFReader : public vtkPolyDataSource 
+class VTK_EXPORT vtkSMFReader : public vtkPolyDataAlgorithm 
 {
 public:
   static vtkSMFReader *New();

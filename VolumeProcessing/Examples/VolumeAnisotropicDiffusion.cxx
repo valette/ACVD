@@ -30,7 +30,7 @@ int main( int argc, char *argv[] )
 	Reader->SetFileName(argv[1]);
 	Reader->Update();
 	vtkImageAnisotropicDiffusion3D *Diffusion=vtkImageAnisotropicDiffusion3D::New();
-	Diffusion->SetInput(Reader->GetOutput());
+	Diffusion->SetInputData(Reader->GetOutput());
 	int NumberOfIterations=atoi(argv[2]);
 	Diffusion->SetNumberOfIterations(NumberOfIterations);
 
@@ -54,7 +54,7 @@ int main( int argc, char *argv[] )
 
 	Diffusion->Update();
 	vtkMetaImageWriter *Writer=vtkMetaImageWriter::New();
-	Writer->SetInput(Diffusion->GetOutput());
+	Writer->SetInputData(Diffusion->GetOutput());
 	Writer->SetFileName("output.mhd");
 	Writer->Write();
 }

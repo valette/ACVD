@@ -1185,7 +1185,7 @@ vtkCurvatureMeasure::vtkCurvatureMeasure ()
 	this->ComputeCurvatureInfoFlag = 1;
 	this->CellsCurvatureInfo = 0;
 	
-	this->StatisticsLock = vtkSimpleCriticalSection::New ();
+	this->StatisticsLock = new vtkSimpleCriticalSection();
 	this->Timer = vtkTimerLog::New ();
 	this->NumberOfBadMatrices = 0;
 	this->NumberOfCellsWithSmallNeighbourhood = 0;	
@@ -1193,7 +1193,7 @@ vtkCurvatureMeasure::vtkCurvatureMeasure ()
 
 vtkCurvatureMeasure::~vtkCurvatureMeasure ()
 {
-	this->StatisticsLock->Delete ();
+	delete this->StatisticsLock;
 	this->Timer->Delete ();
 	
 	if (this->CurvatureCollection)

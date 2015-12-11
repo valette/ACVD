@@ -1,86 +1,130 @@
-PROJECT(VTKSURFACE)
-CMAKE_MINIMUM_REQUIRED(VERSION 2.4)
-#MARK_AS_ADVANCED( FORCE CMAKE_BACKWARDS_COMPATIBILITY )
+project(ACVD)
 
-# for CMake 2.6 corrected behaviour (see "cmake --help-policy CMP0003")
-IF(COMMAND cmake_policy AND ${CMAKE_MAJOR_VERSION} EQUAL 2 AND ${CMAKE_MINOR_VERSION} GREATER 4)
-  CMAKE_POLICY(SET CMP0003 NEW)
-#  CMAKE_POLICY(SET CMP0005 NEW)
-ENDIF(COMMAND cmake_policy AND ${CMAKE_MAJOR_VERSION} EQUAL 2 AND ${CMAKE_MINOR_VERSION} GREATER 4)
-# --------------------------------------------------------------------------
+cmake_minimum_required(VERSION 2.8.7)
 
+if( POLICY CMP0042 )
+  cmake_policy( SET CMP0042 NEW )
+endif()
 
-# --------------------- OPTIONS OF THE PROJECT -----------------------------
-# Build static lib by default
+# version
+set( ACVD_MAJOR_VERSION 1 )
+set( ACVD_MINOR_VERSION 0 )
+set( ACVD_PATCH_VERSION 0 )
+set( ACVD_VERSION ${ACVD_MAJOR_VERSION}.${ACVD_MINOR_VERSION}.${ACVD_PATCH_VERSION} )
 
-OPTION(BUILD_SHARED_LIBS "Build vtkSurface with shared libraries." ON)
-OPTION(BUILD_DOCUMENTATION "Build the html documentation with doxygen." OFF)
+set( ACVD_LIB_VERSION ${ACVD_VERSION} )
+set( ACVD_LIB_SOVERSION ${ACVD_MAJOR_VERSION}.${ACVD_MINOR_VERSION} )
 
-OPTION(BUILD_DISCRETEREMESHING "Build Discrete Remeshing Tools." ON)
-OPTION(BUILD_VOLUMEPROCESSING "Build Volume tools" ON)
+# installation
+set(INSTALL_LIB_DIR lib CACHE PATH "Installation directory for libraries")
+set(INSTALL_BIN_DIR bin CACHE PATH "Installation directory for executables")
+set(INSTALL_INCLUDE_DIR include CACHE PATH "Installation directory for header files")
+set(INSTALL_DOC_DIR share/doc/ACVD CACHE PATH "Installation directory for html doc" )
+set(INSTALL_CMAKE_DIR lib/cmake/ACVD CACHE PATH "Installation directory for CMake files" )
 
-OPTION(USE_MULTITHREADING "Use Multithreaded classes" OFF)
+# Make relative paths absolute (needed later on)
+foreach(p LIB BIN INCLUDE CMAKE)
+  set(var INSTALL_${p}_DIR)
+  if(NOT IS_ABSOLUTE "${${var}}")
+    set(${var} "${CMAKE_INSTALL_PREFIX}/${${var}}")
+  endif()
+endforeach()
 
-OPTION(USE_LLOYDCLUSTERING "Use Lloyd relaxations instead of new algorithm for clustering" OFF)
-MARK_AS_ADVANCED(USE_LLOYDCLUSTERING)
+# find_package
+find_package(VTK REQUIRED NO_MODULE)
+include(${VTK_USE_FILE})
 
-#
-SET (EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin CACHE PATH "Single output directory for building all executables.")
-SET (LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin CACHE PATH "Single output directory for building all libraries.")
-MARK_AS_ADVANCED(LIBRARY_OUTPUT_PATH EXECUTABLE_OUTPUT_PATH)
+option(BUILD_SHARED_LIBS "Build vtkSurface with shared libraries." ON)
+option(BUILD_DOCUMENTATION "Build the html documentation with doxygen." OFF)
 
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/ACVD.json
-    ${EXECUTABLE_OUTPUT_PATH}/ACVD.json COPYONLY)
+option(BUILD_DISCRETEREMESHING "Build Discrete Remeshing Tools." ON)
+option(BUILD_VOLUMEPROCESSING "Build Volume tools" ON)
 
+option(BUILD_EXAMPLES "Build examples" ON)
 
+set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin CACHE PATH "Single output directory for building all executables.")
 
-# -------------------- DEPENDENCIES TO EXTERNALS ---------------------------
-# Find and load VTK settings.
+set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin CACHE PATH "Single output directory for building all libraries.")
+mark_as_advanced(LIBRARY_OUTPUT_PATH EXECUTABLE_OUTPUT_PATH)
 
-#INCLUDE(${CMAKE_ROOT}/Modules/FindVTK.cmake)
-FIND_PACKAGE(VTK REQUIRED)
-IF(VTK_FOUND)
-    INCLUDE(${VTK_USE_FILE})
-ENDIF(VTK_FOUND)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/ACVD.json ${EXECUTABLE_OUTPUT_PATH}/ACVD.json COPYONLY)
 
+set(VTKSURFACE_PROJECT_DIR ${PROJECT_SOURCE_DIR})
+set(VTKSURFACE_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/Common)
+set(VTKDISCRETEREMESHING_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/DiscreteRemeshing)
+set(VTKVOLUMEPROCESSING_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/VolumeProcessing)
 
-SET(VTKSURFACE_PROJECT_DIR ${PROJECT_SOURCE_DIR})
-SET(VTKSURFACE_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/Common)
-SET(VTKDISCRETEREMESHING_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/DiscreteRemeshing)
-SET(VTKVOLUMEPROCESSING_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/VolumeProcessing)
-# --------------------------------------------------------------------------
-# Find and load Doxygen settings (when required)
+if(BUILD_DOCUMENTATION)
+    find_package(Doxygen)
+    add_subdirectory(doc)
+endif(BUILD_DOCUMENTATION)
 
+add_subdirectory(Common)
+set( ACVD_LIBRARIES vtkSurface )
 
-IF(BUILD_DOCUMENTATION)
-    FIND_PACKAGE(Doxygen)
-ENDIF(BUILD_DOCUMENTATION)
+if(BUILD_DISCRETEREMESHING)
+    add_subdirectory(DiscreteRemeshing)
+    set( ACVD_LIBRARIES ${ACVD_LIBRARIES} vtkDiscreteRemeshing )
+endif(BUILD_DISCRETEREMESHING)
 
-# --------------------------------------------------------------------
-# Switch to enable Multithreaded clustering
+if(BUILD_VOLUMEPROCESSING)
+    add_subdirectory(VolumeProcessing)
+    set( ACVD_LIBRARIES ${ACVD_LIBRARIES} vtkVolumeProcessing )
+endif(BUILD_VOLUMEPROCESSING)
 
-IF(USE_MULTITHREADING)
-    ADD_DEFINITIONS (-D DOmultithread)
-ENDIF(USE_MULTITHREADING)
-IF(USE_LLOYDCLUSTERING)
-    ADD_DEFINITIONS (-D DOLloydClustering)
-ENDIF(USE_LLOYDCLUSTERING)
+export( TARGETS ${_targets}
+  FILE "${ACVD_BINARY_DIR}/ACVDTargets.cmake"
+)
 
-# -------------------------- SUBDIRS TO HANDLE -----------------------------
+# Export the package for use from the build-tree
+# (this registers the build-tree with a global CMake-registry)
+export(PACKAGE ACVD)
 
-# The main library
-ADD_SUBDIRECTORY(Common)
+# -------------------------------------------------------------
+# for the build tree
+set( CONF_INCLUDE_DIRS
+  "${ACVD_SOURCE_DIR}/Common"
+)
 
-IF(BUILD_DISCRETEREMESHING)
-    ADD_SUBDIRECTORY(DiscreteRemeshing)
-ENDIF(BUILD_DISCRETEREMESHING)
+if( BUILD_DISCRETEREMESHING )
+  set( CONF_INCLUDE_DIRS "${CONF_INCLUDE_DIRS}" "${ACVD_SOURCE_DIR}/DiscreteRemeshing" )
+endif()
 
-IF(BUILD_VOLUMEPROCESSING)
-    ADD_SUBDIRECTORY(VolumeProcessing)
-ENDIF(BUILD_VOLUMEPROCESSING)
+if( BUILD_VOLUMEPROCESSING )
+  set( CONF_INCLUDE_DIRS "${CONF_INCLUDE_DIRS}" "${ACVD_SOURCE_DIR}/VolumeProcessing" )
+endif()
 
-IF(BUILD_DOCUMENTATION)
-    ADD_SUBDIRECTORY(doc)
-ENDIF(BUILD_DOCUMENTATION)
+configure_file( ${ACVD_SOURCE_DIR}/ACVDConfig.cmake.in
+  ${ACVD_BINARY_DIR}/ACVDConfig.cmake
+  @ONLY
+)
+# for the install tree
+file(RELATIVE_PATH REL_INCLUDE_DIR "${INSTALL_CMAKE_DIR}"
+   "${INSTALL_INCLUDE_DIR}")
 
-## eof - CMakeLists.txt
+set( CONF_INCLUDE_DIRS
+  "\${ACVD_CMAKE_DIR}/${REL_INCLUDE_DIR}/ACVD/Common"
+)
+if( BUILD_DISCRETEREMESHING )
+  set( CONF_INCLUDE_DIRS "${CONF_INCLUDE_DIRS}" "\${ACVD_CMAKE_DIR}/${REL_INCLUDE_DIR}/ACVD/DiscreteRemeshing" )
+endif()
+
+if( BUILD_VOLUMEPROCESSING )
+  set( CONF_INCLUDE_DIRS "${CONF_INCLUDE_DIRS}" "\${ACVD_CMAKE_DIR}/${REL_INCLUDE_DIR}/ACVD/VolumeProcessing" )
+endif()
+
+configure_file( ${ACVD_SOURCE_DIR}/ACVDConfig.cmake.in
+  ${ACVD_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/ACVDConfig.cmake
+  @ONLY
+)
+configure_file( ${ACVD_SOURCE_DIR}/ACVDConfigVersion.cmake.in
+  ${ACVD_BINARY_DIR}/ACVDConfigVersion.cmake
+  @ONLY
+)
+install( FILES
+    "${ACVD_BINARY_DIR}/ACVDConfig.cmake"
+    "${ACVD_BINARY_DIR}/ACVDConfigVersion.cmake"
+  DESTINATION ${INSTALL_CMAKE_DIR} COMPONENT dev
+)
+install(EXPORT ACVDTargets DESTINATION "${INSTALL_CMAKE_DIR}" COMPONENT dev)
+

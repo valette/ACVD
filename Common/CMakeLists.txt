@@ -1,7 +1,6 @@
- 
  # --------------------------------------------------------------------------
  # Library compilation
- ADD_LIBRARY(vtkSurface
+add_library(vtkSurface
  RenderWindow.cxx
  vtkDelaunay.cxx
  vtkDualMeshDisplay.cxx
@@ -18,46 +17,27 @@
  vtkMyMinimalStandardRandomSequence.cxx
 #  vtkJSWriter.cxx
  )
- 
+target_link_libraries(vtkSurface ${VTK_LIBRARIES})
 
-# Set the added libraries
-SET(LIB_ADDED 
-vtkCommon
-vtkFiltering
-vtkImaging
-vtkIO
-vtkRendering
-vtkHybrid)
-
-TARGET_LINK_LIBRARIES(vtkSurface ${LIB_ADDED})
-
-SET(COMMON_EXAMPLES
-viewer
-viewer2
-RandomTriangulation
-ExamplevtkSurface
-CleanMesh
-mesh2vtk
-vtk2ply
-stl2ply
-CheckOrientation
-sampleMesh
+set_target_properties( vtkSurface PROPERTIES
+  DEBUG_POSTFIX "-d"
+  VERSION "${ACVD_LIB_VERSION}"
+  SOVERSION "${ACVD_LIB_SOVERSION}"
 )
-FOREACH(loop_var ${COMMON_EXAMPLES})
-	ADD_EXECUTABLE(${loop_var} ${loop_var}.cxx)
-	TARGET_LINK_LIBRARIES(${loop_var} vtkSurface
-	vtkCommon vtkFiltering vtkGraphics vtkImaging vtkIO vtkRendering vtkHybrid)
-ENDFOREACH(loop_var)
 
-#-----------------------------------------------------------------------------
-# Include the file 'InstallLibrary.cmake' which does the clean install job
-SET(LIBRARY_NAME vtkSurface)
-SET(LIBRARY_NAME_BUILD_TREE_CONFIG ${VTKSURFACE_BINARY_DIR})
-# Installation
-# Headers
-INSTALL_FILES(/include/${LIBRARY_NAME} "\\.h$")
-# Binary
-INSTALL_TARGETS(/lib ${LIBRARY_NAME})
-SET(INSTALL_LIBRARY_FILES_DIR ${VTKSURFACE_SOURCE_DIR}/CMake)
-INCLUDE(${VTKSURFACE_SOURCE_DIR}/CMake/InstallLibrary.cmake)
-#-----------------------------------------------------------------------------
+install( TARGETS vtkSurface
+  EXPORT ACVDTargets
+  RUNTIME DESTINATION ${INSTALL_BIN_DIR}
+  LIBRARY DESTINATION ${INSTALL_LIB_DIR}
+  ARCHIVE DESTINATION ${INSTALL_LIB_DIR}
+)
+
+file( GLOB _vtkSurface_hdrs *.h )
+
+install( FILES ${_vtkSurface_hdrs}
+  DESTINATION ${INSTALL_INCLUDE_DIR}/ACVD/Common
+)
+
+if( BUILD_EXAMPLES )
+  add_subdirectory( Examples )
+endif()

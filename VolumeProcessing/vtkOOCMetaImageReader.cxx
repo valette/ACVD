@@ -24,7 +24,6 @@ PURPOSE.  See the above copyright notice for more information.
 #include <vtkStreamingDemandDrivenPipeline.h>
 #include <vtkTransform.h>
 
-#include <vtkstd/string>
 #include <vtkmetaio/metaTypes.h>
 #include <vtkmetaio/metaUtils.h>
 #include <vtkmetaio/metaEvent.h>
@@ -642,9 +641,10 @@ void vtkOOCMetaImageReaderUpdate1(vtkOOCMetaImageReader *self, vtkImageData *dat
 //----------------------------------------------------------------------------
 // This function reads a data from a file.  The datas extent/axes
 // are assumed to be the same as the file extent/order.
-void vtkOOCMetaImageReader::ExecuteData(vtkDataObject *output)
+void vtkOOCMetaImageReader::ExecuteData(vtkDataObject *output,
+                                     vtkInformation* outInfo)
 {
-	vtkImageData *data = this->AllocateOutputData(output);
+	vtkImageData *data = this->AllocateOutputData(output, outInfo);
 
 	void *ptr = NULL;
 	int *ext;

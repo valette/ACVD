@@ -179,7 +179,7 @@ public:
 		case '7':
 		{
 			vtkPolyDataWriter * SWriter = vtkPolyDataWriter::New ();
-			SWriter->SetInput (this->Window->GetInput ());
+			SWriter->SetInputData (this->Window->GetInput ());
 			SWriter->SetFileName ("mesh.vtk");
 			SWriter->Write ();
 			SWriter->Delete ();
@@ -197,7 +197,7 @@ public:
 		case '9':
 		{
 			vtkSTLWriter * SWriter = vtkSTLWriter::New ();
-			SWriter->SetInput (this->Window->GetInput ());
+			SWriter->SetInputData (this->Window->GetInput ());
 			SWriter->SetFileName ("mesh.stl");
 			SWriter->Write ();
 			SWriter->Delete ();
@@ -206,7 +206,7 @@ public:
 		case '0':
 		{
 			vtkPLYWriter * Writer = vtkPLYWriter::New ();
-			Writer->SetInput (this->Window->GetInput ());
+			Writer->SetInputData (this->Window->GetInput ());
 			Writer->SetFileName ("mesh.ply");
 			Writer->Write ();
 			Writer->Delete ();
@@ -216,7 +216,7 @@ public:
 		{
 			vtkXMLPolyDataWriter * Writer = vtkXMLPolyDataWriter::New ();
 			Writer->SetDataModeToAscii ();
-			Writer->SetInput (this->Window->GetInput());
+			Writer->SetInputData (this->Window->GetInput());
 			Writer->SetFileName ("mesh.xml");
 			Writer->Write ();
 			Writer->Delete ();
@@ -380,7 +380,7 @@ int RenderWindow :: LoadCamera(const char *filename)
 void RenderWindow::EnableNormalMap()
 {
 	vtkPolyDataNormals *Normals = vtkPolyDataNormals::New ();
-	Normals->SetInput (this->Input);
+	Normals->SetInputData (this->Input);
 	Normals->SetFeatureAngle (60);
 	this->SetInput (Normals->GetOutput ());		
 	Normals->Delete();
@@ -479,7 +479,7 @@ vtkActor* RenderWindow::SetInput (vtkPolyData * Input)
 		this->MeshActor->SetMapper(Mapper);
 		Mapper->Delete();
 	}
-	Mapper->SetInput(Input);
+	Mapper->SetInputData(Input);
 	
 	if (this->lut)
 		Mapper->SetLookupTable (this->lut);
@@ -539,7 +539,7 @@ RenderWindow::Capture (const char *filename)
 	if (terminaison != NULL)
 	{
 		vtkPostScriptWriter *Writer = vtkPostScriptWriter::New ();
-		Writer->SetInput (Capture->GetOutput ());
+		Writer->SetInputData (Capture->GetOutput ());
 		Writer->SetFileName (filename);
 		Writer->Write ();
 		Writer->Delete ();
@@ -549,7 +549,7 @@ RenderWindow::Capture (const char *filename)
 	if (terminaison != NULL)
 	{
 		vtkBMPWriter *Writer = vtkBMPWriter::New ();
-		Writer->SetInput (Capture->GetOutput ());
+		Writer->SetInputData (Capture->GetOutput ());
 		Writer->SetFileName (filename);
 		Writer->Write ();
 		Writer->Delete ();
@@ -559,7 +559,7 @@ RenderWindow::Capture (const char *filename)
 	if (terminaison != NULL)
 	{
 		vtkPNGWriter *Writer = vtkPNGWriter::New ();
-		Writer->SetInput (Capture->GetOutput ());
+		Writer->SetInputData (Capture->GetOutput ());
 		Writer->SetFileName (filename);
 		Writer->Write ();
 		Writer->Delete ();
@@ -569,7 +569,7 @@ RenderWindow::Capture (const char *filename)
 	if (terminaison != NULL)
 	{
 		vtkJPEGWriter *Writer = vtkJPEGWriter::New ();
-		Writer->SetInput (Capture->GetOutput ());
+		Writer->SetInputData (Capture->GetOutput ());
 		Writer->SetFileName (filename);
 		Writer->SetQuality (85);
 		Writer->Write ();
@@ -723,10 +723,10 @@ void RenderWindow::HighLightEdges(vtkIdList *Edges, double Radius)
 		vtkTubeFilter *Tube=vtkTubeFilter::New();
 		Tube->SetRadius(Radius);
 		Tube->SetNumberOfSides(20);
-		Tube->SetInput(EdgesP);
+		Tube->SetInputData(EdgesP);
 
 		vtkPolyDataMapper* mapper = vtkPolyDataMapper::New( );
-		mapper->SetInput( Tube->GetOutput( ) );
+		mapper->SetInputData( Tube->GetOutput( ) );
 
 		if( !this->HighlightedEdgesActor )
 			HighlightedEdgesActor = vtkActor::New( );
@@ -770,12 +770,12 @@ void RenderWindow::HighLightVertices(vtkIdList *Vertices, double Radius)
 		s_sphere->Update( );
 
 		vtkGlyph3D* glyph = vtkGlyph3D::New( );
-		glyph->SetInput( ps );
-		glyph->SetSource( s_sphere->GetOutput( ) );
+		glyph->SetInputData( ps );
+		glyph->SetSourceData ( s_sphere->GetOutput( ) );
 		glyph->Update( );
 
 		vtkPolyDataMapper* mapper = vtkPolyDataMapper::New( );
-		mapper->SetInput( glyph->GetOutput( ) );
+		mapper->SetInputData( glyph->GetOutput( ) );
 
 		if( !this->HighlightedVerticesActor )
 			HighlightedVerticesActor = vtkActor::New( );
@@ -826,7 +826,7 @@ vtkActor *RenderWindow::AddPolyData (vtkPolyData * Input)
 	mapper->SetResolveCoincidentTopologyToPolygonOffset ();
 //	mapper->SetResolveCoincidentTopologyToShiftZBuffer();
 
-	mapper->SetInput (Input);
+	mapper->SetInputData (Input);
 
 	vtkActor *Mactor = vtkActor::New ();
 	Mactor->SetMapper (mapper);
@@ -918,7 +918,7 @@ RenderWindow::SetInputEdges (vtkPolyData * Edges)
 		this->EdgesActor = vtkActor::New ();
 		vtkIntArray *EdgesColor = vtkIntArray::New ();
 
-		EdgesMapper->SetInput (Edges);
+		EdgesMapper->SetInputData (Edges);
 		int i;
 
 		EdgesColor->SetNumberOfValues (Edges->GetNumberOfCells ());
@@ -1072,14 +1072,14 @@ RenderWindow::SetDisplayIdsOn ()
 		selectRect->SetLines (rect);
 
 		vtkPolyDataMapper2D *rectMapper = vtkPolyDataMapper2D::New ();
-		rectMapper->SetInput (selectRect);
+		rectMapper->SetInputData (selectRect);
 
 		rectActor->SetMapper (rectMapper);
 		vtkDataSet *DataSet = this->GetMeshActor()->GetMapper()->GetInput();
 
 		//Generate ids for labeling
 		vtkIdFilter *ids = vtkIdFilter::New ();
-		ids->SetInput (DataSet);
+		ids->SetInputData (DataSet);
 		ids->PointIdsOn ();
 		ids->CellIdsOn ();
 		ids->FieldDataOn ();
@@ -1088,14 +1088,14 @@ RenderWindow::SetDisplayIdsOn ()
 		//Create labels for points
 		vtkSelectVisiblePoints *visPts =
 			vtkSelectVisiblePoints::New ();
-		visPts->SetInput (ids->GetOutput ());
+		visPts->SetInputData (ids->GetOutput ());
 		visPts->SetRenderer (Renderer);
 		visPts->SelectionWindowOn ();
 
 		visPts->SetSelection (xmin, xmax, ymin, ymax);
 		visPts->SelectInvisibleOff();
 		vtkLabeledDataMapper *ldm = vtkLabeledDataMapper::New ();
-		ldm->SetInput (visPts->GetOutput ());
+		ldm->SetInputData (visPts->GetOutput ());
 //		ldm->SetLabelModeToLabelIds ();
 		ldm->SetLabelModeToLabelFieldData ();
 
@@ -1103,11 +1103,11 @@ RenderWindow::SetDisplayIdsOn ()
 
 		//Create labels for cells
 		vtkCellCenters *cc = vtkCellCenters::New ();
-		cc->SetInput (ids->GetOutput ());
+		cc->SetInputData (ids->GetOutput ());
 
 		vtkSelectVisiblePoints *visCells =
 			vtkSelectVisiblePoints::New ();
-		visCells->SetInput (cc->GetOutput ());
+		visCells->SetInputData (cc->GetOutput ());
 		visCells->SetRenderer (this->GetMeshRenderer());
 		visCells->SelectInvisibleOff();
 		visCells->SelectionWindowOn ();
@@ -1115,7 +1115,7 @@ RenderWindow::SetDisplayIdsOn ()
 
 		vtkLabeledDataMapper *cellMapper =
 			vtkLabeledDataMapper::New ();
-		cellMapper->SetInput (visCells->GetOutput ());
+		cellMapper->SetInputData (visCells->GetOutput ());
 //		cellMapper->SetLabelFormat ("%g");
 		cellMapper->SetLabelModeToLabelFieldData ();
 //		cellMapper->SetLabelModeToLabelIds ();

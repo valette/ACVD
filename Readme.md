@@ -27,7 +27,7 @@ This code is distributed under the CeCILL-B license (BSD-compatible)
 	cmake . -DCMAKE_BUILD_TYPE=Release
 	make
 
-the executables (ACVD, ACVDQ and AnisotropicRemeshingQ should be found under the "bin" subdirectory)
+the executables (ACVD, ACVDQ, AnisotropicRemeshingQ and others should be found under the "bin" subdirectory)
 
 ### Note for window$ users ###
 if you get this compilation error :
@@ -37,12 +37,10 @@ you can fix it by unselecting 'build_shared_libs' with the cmake UI
 ### Options ###
 execute ACVD and ACVDQ without arguments to see the available options.
 
-the output of the program is written in the file simplification.ply
+for ACVD, the output is written in the file simplification.ply
 
 additionnally, when running ACVD, a file output_1.ply is also written. It is the output mesh before post-processing using quadrics.
 
 note that to enforce a manifold output mesh, such as explained in [3], you need to use the -m 1 option, and to define a correct number of spare clusters using options -sf or -sc.
 
 comments, suggestions : https://github.com/valette/ACVD/issues
-
-

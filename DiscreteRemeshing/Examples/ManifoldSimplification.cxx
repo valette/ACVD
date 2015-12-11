@@ -81,7 +81,7 @@ int main( int argc, char *argv[] )
 	CleanOutput->DisplayMeshProperties();
 
 	vtkPLYWriter *Writer=vtkPLYWriter::New();
-	Writer->SetInput(CleanOutput);
+	Writer->SetInputData(CleanOutput);
 	Writer->SetFileName("output.ply");
 	Writer->Write();
 	Writer->Delete();

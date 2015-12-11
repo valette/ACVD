@@ -33,34 +33,31 @@ Author:   Sebastien Valette
 // .NAME mesh2vtk 
 // .SECTION Description
 
-#include <vtkPolyData.h>
-#include <vtkPolyDataReader.h>
-#include <vtkPLYWriter.h>
+#include "vtkSurface.h"
+#include <vtkPolyDataWriter.h>
 
 /// a simple mesh consersion tool
-/// Usage : vtk2ply inputfile
+/// Usage : mesh2vtk inputfile
 /// where inputfile is a mesh
-/// the output is mesh.ply
+/// the output is mesh.vtk
 
 int main( int argc, char *argv[] )
 {
-	if (argc<2)
-	{
-		cout<<"Usage : vtk2ply inputmesh"<<endl;
+	vtkSurface *Mesh;
+
+	if (argc < 2) {
+		cout << "Usage : mesh2vtk inputmesh" << endl;
 		exit(1);
 	}
 
-	cout <<"load : "<<argv[1]<<endl;
-
-	vtkPolyDataReader *Reader=vtkPolyDataReader::New();
-	Reader->SetFileName(argv[1]);
-	Reader->Update();
-
 	// Load the mesh and create the vtkSurface data structure
-	vtkPLYWriter *Writer=vtkPLYWriter::New();
-	Writer->SetInput(Reader->GetOutput());
-	Writer->SetFileName("mesh.ply");
+	Mesh = vtkSurface::New();
+	cout << "load : " << argv[1] << endl;
+	Mesh->CreateFromFile(argv[1]);
+	vtkPolyDataWriter *Writer = vtkPolyDataWriter::New();
+	Writer->SetInputData(Mesh);
+	Writer->SetFileName("mesh.vtk");
 	Writer->Write();
-	cout<<"conversion to mesh.ply finished!"<<endl;
+	cout << "conversion to mesh.vtk finished!" << endl;
 	return (0);
 }

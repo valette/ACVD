@@ -78,18 +78,13 @@ vtkVolumeProperties::~vtkVolumeProperties()
 // Specifies the input data...
 void vtkVolumeProperties::SetInput(vtkPolyData *input)
 {
-  this->vtkProcessObject::SetNthInput(0, input);
+  this->SetInputData(0, input);
 }
 
 //----------------------------------------------------------------------------
 vtkPolyData *vtkVolumeProperties::GetInput()
 {
-  if (this->NumberOfInputs < 1)
-    {
-    return NULL;
-    }
-  
-  return (vtkPolyData *)(this->Inputs[0]);
+ return (this->GetPolyDataInput(0));
 }
 
 
@@ -107,14 +102,14 @@ void vtkVolumeProperties::Update()
     return;
     }
 
-  input->Update();
+ // input->Update();
 
   if (input->GetMTime() > this->ExecuteTime || 
       this->GetMTime() > this->ExecuteTime )
     {
     if ( input->GetDataReleased() )
       {
-      input->Update();
+ //     input->Update();
       }
     this->InvokeEvent(vtkCommand::StartEvent,NULL);
 
@@ -130,9 +125,9 @@ void vtkVolumeProperties::Update()
 
     this->InvokeEvent(vtkCommand::EndEvent,NULL);
     }
-  if ( input->ShouldIReleaseData() )
+//  if ( input->ShouldIReleaseData() )
     {
-    input->ReleaseData();
+  //  input->ReleaseData();
     }
 
 }
