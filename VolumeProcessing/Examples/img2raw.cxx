@@ -212,9 +212,7 @@ int main(int argc, char *argv[])
 	else
 		type = VTK_FLOAT;
 	
-	volumeImageData->SetNumberOfScalarComponents(volumeScalarComponents);
-	volumeImageData->SetScalarType(type);
-	volumeImageData->AllocateScalars();
+	volumeImageData->AllocateScalars(type, volumeScalarComponents);
 
 	cout << "Constructing volume... ";
 	cout.flush() ;
@@ -249,7 +247,7 @@ int main(int argc, char *argv[])
 	vtkSmartPointer<vtkMetaImageWriter> volumeWriter = vtkSmartPointer<vtkMetaImageWriter>::New() ;
 	volumeWriter->SetFileName(mhdFileName.c_str()) ;
 	volumeWriter->SetRAWFileName(rawFileName.c_str()) ;
-	volumeWriter->SetInput(volumeImageData) ;
+	volumeWriter->SetInputData(volumeImageData) ;
 	volumeWriter->SetCompression(compressRAW) ;
 	volumeWriter->Write() ;
 
