@@ -29,8 +29,10 @@ This code is distributed under the CeCILL-B license (BSD-compatible)
 
 the executables (ACVD, ACVDQ, AnisotropicRemeshingQ and others should be found under the "bin" subdirectory)
 
-### Options ###
+### Usage ###
 execute ACVD and ACVDQ without arguments to see the available options.
+
+when using graphical display, the 'e' key allows to continue to the next step during interaction
 
 for ACVD, the output is written in the file simplification.ply
 
