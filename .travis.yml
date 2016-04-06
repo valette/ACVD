@@ -1,7 +1,10 @@
+sudo: false
 
-install:
-  - sudo apt-get -qq update
-  - sudo apt-get install -y cmake libvtk-dev
+addons:
+  apt:
+    packages:
+    - cmake
+    - libvtk-dev
 
 language: cpp
 
