@@ -4,8 +4,12 @@ addons:
   apt:
     packages:
     - cmake
-    - libvtk-dev
+install:
+  - wget http://www.vtk.org/files/release/7.0/VTK-7.0.0.tar.gz
+  - tar -xzvf VTK-7.0.0.tar.gz
+  - mkdir VTKBin && cd VTKBin && cmake .
 
 language: cpp
+cache: ccache
 
-script: cmake . && make
+script: cmake . -DVTK_DIR=$HOME/VTKBin -DCMAKE_BUILD_TYPE=Release  && make
