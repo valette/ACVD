@@ -1,6 +1,6 @@
 ACVD 
 ====
-[![Build Status](https://travis-ci.org/valette/ACVD.png)](https://travis-ci.org/valette/ACVD.png)
+[![Build Status](https://travis-ci.org/valette/ACVD.png)](https://travis-ci.org/valette/ACVD)
 
 ### Info ###
 This code is the implementation deriving from those papers:
