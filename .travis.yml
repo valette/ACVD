@@ -1,11 +1,11 @@
 sudo: false
 
 install:
-  - wget http://www.vtk.org/files/release/6.3/VTK-6.3.0.tar.gz
-  - tar -xf VTK-6.3.0.tar.gz
-  - mkdir VTKBin && cd VTKBin && cmake ../VTK-6.3.0 -DCMAKE_BUILD_TYPE=Release
+  - wget http://www.vtk.org/files/release/6.2/VTK-6.2.0.tar.gz
+  - tar -xf VTK-6.2.0.tar.gz
+  - mkdir VTKBin && cd VTKBin && cmake ../VTK-6.2.0 -DCMAKE_BUILD_TYPE=Release && make -j 2
 
 language: cpp
 cache: ccache
 
-script: cmake . -DVTK_DIR=$HOME/VTKBin -DCMAKE_BUILD_TYPE=Release  && make
+script: cmake . -DVTK_DIR=$HOME/VTKBin -DCMAKE_BUILD_TYPE=Release  && make -j 2
