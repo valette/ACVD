@@ -18,7 +18,9 @@ This code is distributed under the CeCILL-B license (BSD-compatible)
 
 
 ###  Dependencies ###
-* VTK www.vtk.org (version 6.x, version 5.x in the vtk5 branch : https://github.com/valette/ACVD/tree/vtk5) 
+* VTK www.vtk.org
+  * Version 6.x and 7.x : use this branch
+  * Version 5.x use the vtk5 branch : https://github.com/valette/ACVD/tree/vtk5
 * CMAKE www.cmake.org
 
 ###  Simple compilation HowTo under Linux ###
