@@ -1,13 +1,9 @@
 sudo: false
 
-addons:
-  apt:
-    packages:
-    - cmake
 install:
   - wget http://www.vtk.org/files/release/7.0/VTK-7.0.0.tar.gz
   - tar -xf VTK-7.0.0.tar.gz
-  - mkdir VTKBin && cd VTKBin && cmake .
+  - mkdir VTKBin && cd VTKBin && cmake ../VTK-7.0.0 -DCMAKE_BUILD_TYPE=Release
 
 language: cpp
 cache: ccache
