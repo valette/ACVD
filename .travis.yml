@@ -6,7 +6,7 @@ addons:
     - cmake
 install:
   - wget http://www.vtk.org/files/release/7.0/VTK-7.0.0.tar.gz
-  - tar -xzvf VTK-7.0.0.tar.gz
+  - tar -xf VTK-7.0.0.tar.gz
   - mkdir VTKBin && cd VTKBin && cmake .
 
 language: cpp
