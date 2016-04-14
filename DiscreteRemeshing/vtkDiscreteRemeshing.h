@@ -964,7 +964,7 @@ template < class Metric >
 		return (-1);
 
 	if (this->Output->IsFace (v1, v2, v3) < 0)
-		return (this->Output->AddFace (v2, v1, v3));
+		return (this->Output->AddFace (v1, v2, v3));
 	else
 		return (-1);
 }
@@ -1067,7 +1067,7 @@ template < class Metric >
 				this->AddFace (CList->GetId(0), CList->GetId(1),CList->GetId(2));
 			if (CList->GetNumberOfIds () == 4)
 			{
-				this->AddFace (CList->GetId(0), CList->GetId(2),CList->GetId(1));
+				this->AddFace (CList->GetId(0), CList->GetId(1),CList->GetId(2));
 				this->AddFace (CList->GetId(0), CList->GetId(2),CList->GetId(3));
 			}
 		}
