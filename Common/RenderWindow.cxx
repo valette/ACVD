@@ -286,6 +286,13 @@ public:
 			((vtkSurface *)this->Window->GetInput())->GetFaceVertices(Face,v1,v2,v3);
 			cout<<"Vertices : "<<v1<<" "<<v2<<" "<<v3<<endl;
 		}
+		case 'c':
+		{
+			bool culling =  this->Window->GetMeshActor()->GetProperty()->GetBackfaceCulling();
+			this->Window->GetMeshActor()->GetProperty()->SetBackfaceCulling(!culling);
+			this->Window->Render();
+			return;
+		}
 		default:
 			cout<<"";
 		}
