@@ -100,6 +100,7 @@ int main( int argc, char *argv[] )
 		cout<<"nvertices is the desired number of vertices"<<endl;
 		cout<<"gradation defines the influence of local curvature (0=uniform meshing)"<<endl;
 		cout<<endl<<"Optionnal arguments : "<<endl;
+		cout << "-b 0/1 : sets mesh boundary fixing off/on (default : 0)" << endl;
 		cout<<"-s threshold : defines the subsampling threshold i.e. the input mesh will be subdivided until its number ";
 		cout<<" of vertices is above nvertices*threshold (default=10)"<<endl;
 		cout<<"-d 0/1/2 : enables display (default : 0)"<<endl;
@@ -146,101 +147,110 @@ int main( int argc, char *argv[] )
 	int ArgumentsIndex=4;
 	while (ArgumentsIndex<argc)
 	{
-		if (strcmp(argv[ArgumentsIndex],"-m")==0)
+		char* key = argv[ArgumentsIndex];
+		char* value = argv[ArgumentsIndex + 1];
+
+		if (strcmp(key,"-m")==0)
 		{
-			Remesh->SetForceManifold(atoi(argv[ArgumentsIndex+1]));
-			cout<<"Force Manifold="<<atoi(argv[ArgumentsIndex+1])<<endl;
+			Remesh->SetForceManifold(atoi(value));
+			cout<<"Force Manifold="<<atoi(value)<<endl;
 		}
 
-		if (strcmp(argv[ArgumentsIndex],"-s")==0)
+		if (strcmp(key,"-s")==0)
 		{
-			SubsamplingThreshold=atoi(argv[ArgumentsIndex+1]);
+			SubsamplingThreshold=atoi(value);
 			cout<<"Subsampling Threshold="<<SubsamplingThreshold<<endl;
 		}
 
-		if (strcmp(argv[ArgumentsIndex],"-d")==0)
+		if (strcmp(key,"-d")==0)
 		{
-			Display=atoi(argv[ArgumentsIndex+1]);
+			Display=atoi(value);
 			cout<<"Display="<<Display<<endl;
 		}
 
 #ifdef DOmultithread
-		if (strcmp(argv[ArgumentsIndex],"-np")==0)
+		if (strcmp(key,"-np")==0)
 		{
-			int NumberOfThreads=atoi(argv[ArgumentsIndex+1]);
+			int NumberOfThreads=atoi(value);
 			cout<<"Number of threads="<<NumberOfThreads<<endl;
 			Remesh->SetNumberOfThreads(NumberOfThreads);
 		}
 #endif
-		if (strcmp(argv[ArgumentsIndex],"-o")==0)
+		if (strcmp(key,"-o")==0)
 		{
 
-			OutputDirectory=argv[ArgumentsIndex+1];
+			OutputDirectory=value;
 			cout<<"OutputDirectory: "<<OutputDirectory<<endl;
-			Remesh->SetOutputDirectory(argv[ArgumentsIndex+1]);
+			Remesh->SetOutputDirectory(value);
 		}
 
-		if (strcmp(argv[ArgumentsIndex],"-l")==0)
+		if (strcmp(key,"-l")==0)
 		{
 
-			Mesh->SplitLongEdges(atof(argv[ArgumentsIndex+1]));
+			Mesh->SplitLongEdges(atof(value));
 			cout<<"Splitting edges longer than "
-			<<atof(argv[ArgumentsIndex+1])<<" times the average edge length"<<endl;
+			<<atof(value)<<" times the average edge length"<<endl;
 		}
-		if (strcmp(argv[ArgumentsIndex],"-w")==0)
+		if (strcmp(key,"-w")==0)
 		{
-			cout<<"Setting writing energy log file to "<<atoi(argv[ArgumentsIndex+1])<<endl;
-			Remesh->SetWriteToGlobalEnergyLog(atoi(argv[ArgumentsIndex+1]));
+			cout<<"Setting writing energy log file to "<<atoi(value)<<endl;
+			Remesh->SetWriteToGlobalEnergyLog(atoi(value));
 		}
 #ifdef DOmultithread
-		if (strcmp(argv[ArgumentsIndex],"-p")==0)
+		if (strcmp(key,"-p")==0)
 		{
-			cout<<"Thread pooling ratio: "<<atoi(argv[ArgumentsIndex+1])<<endl;
-			Remesh->SetPoolingRatio(atoi(argv[ArgumentsIndex+1]));
+			cout<<"Thread pooling ratio: "<<atoi(value)<<endl;
+			Remesh->SetPoolingRatio(atoi(value));
 		}
 #endif
 
-		if (strcmp(argv[ArgumentsIndex],"-q")==0)
+		if (strcmp(key,"-q")==0)
 		{
-			cout<<"Setting number of eigenvalues for quadrics to "<<atoi(argv[ArgumentsIndex+1])<<endl;
-			Remesh->GetMetric()->SetQuadricsOptimizationLevel(atoi(argv[ArgumentsIndex+1]));
+			cout<<"Setting number of eigenvalues for quadrics to "<<atoi(value)<<endl;
+			Remesh->GetMetric()->SetQuadricsOptimizationLevel(atoi(value));
 		}
 
-		if (strcmp(argv[ArgumentsIndex],"-cd")==0)
+		if (strcmp(key,"-cd")==0)
 		{
-			cout<<"Setting number custom file for density info : "<<argv[ArgumentsIndex+1]<<endl;
-			Remesh->SetInputDensityFile(argv[ArgumentsIndex+1]);
+			cout<<"Setting number custom file for density info : "<<value<<endl;
+			Remesh->SetInputDensityFile(value);
 		}
 
-		if (strcmp(argv[ArgumentsIndex],"-cmax")==0)
+		if (strcmp(key,"-cmax")==0)
 		{
-			cout<<"Setting maximum custom density to : "<<argv[ArgumentsIndex+1]<<endl;
-			Remesh->SetMaxCustomDensity(atof(argv[ArgumentsIndex+1]));
+			cout<<"Setting maximum custom density to : "<<value<<endl;
+			Remesh->SetMaxCustomDensity(atof(value));
 		}
 
-		if (strcmp(argv[ArgumentsIndex],"-cmin")==0)
+		if (strcmp(key,"-cmin")==0)
 		{
-			cout<<"Setting minimum custom density to : "<<argv[ArgumentsIndex+1]<<endl;
-			Remesh->SetMinCustomDensity(atof(argv[ArgumentsIndex+1]));
+			cout<<"Setting minimum custom density to : "<<value<<endl;
+			Remesh->SetMinCustomDensity(atof(value));
 		}
 
-		if (strcmp(argv[ArgumentsIndex],"-cf")==0)
+		if (strcmp(key,"-cf")==0)
 		{
-			cout<<"Setting custom density multiplication factor to : "<<argv[ArgumentsIndex+1]<<endl;
-			Remesh->SetCustomDensityMultiplicationFactor(atof(argv[ArgumentsIndex+1]));
+			cout<<"Setting custom density multiplication factor to : "<<value<<endl;
+			Remesh->SetCustomDensityMultiplicationFactor(atof(value));
 		}
 
-		if (strcmp(argv[ArgumentsIndex],"-sc")==0)
+		if (strcmp(key,"-sc")==0)
 		{
-			cout<<"Setting number of spare clusters to : "<<argv[ArgumentsIndex+1]<<endl;
-			Remesh->SetMinNumberOfSpareClusters(atoi(argv[ArgumentsIndex+1]));
+			cout<<"Setting number of spare clusters to : "<<value<<endl;
+			Remesh->SetMinNumberOfSpareClusters(atoi(value));
 		}
 
-		if (strcmp(argv[ArgumentsIndex],"-sf")==0)
+		if (strcmp(key,"-sf")==0)
 		{
-			cout<<"Setting spare factor to : "<<argv[ArgumentsIndex+1]<<endl;
-			Remesh->SetSpareFactor(atof(argv[ArgumentsIndex+1]));
+			cout<<"Setting spare factor to : "<<value<<endl;
+			Remesh->SetSpareFactor(atof(value));
 		}
+
+		if (strcmp(key, "-b") == 0) {
+			cout << "Setting boundary fixing to : " << value << endl;
+			Remesh->SetBoundaryFixing(atoi(value));
+		}
+
 		ArgumentsIndex+=2;
 	}
 
