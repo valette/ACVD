@@ -30,6 +30,8 @@
 #ifndef _VTKSURFACECLUSTERING_H_
 #define _VTKSURFACECLUSTERING_H_
 
+#include <vtkTriangleFilter.h>
+
 #include "vtkUniformClustering.h"
 #include "vtkThreadedClustering.h"
 #include "vtkLloydClustering.h"
@@ -178,6 +180,29 @@ void vtkSurfaceClustering<Metric>::SetInput(vtkSurface *Input)
 {
 	if (this->Input)
 		this->Input->UnRegister(this);
+
+	vtkIdType NV, *Vertices;
+	bool trianglesOnly = true;
+	for (vtkIdType i = 0; i < Input->GetNumberOfCells(); i++) {
+		if (Input->IsFaceActive(i)) {
+			Input->GetCellPoints(i, NV, Vertices);
+			if (NV != 3) {
+				trianglesOnly = false;
+				break;
+			}
+		}
+	}
+
+	if (!trianglesOnly) {
+		// triangulate the mesh if it contains polygons
+		vtkTriangleFilter *triangulate = vtkTriangleFilter::New();
+		triangulate->SetInputData(Input);
+		triangulate->PassVertsOff ();
+		triangulate->Update();
+		Input = vtkSurface::New();
+		Input->CreateFromPolyData(triangulate->GetOutput());
+		triangulate->Delete();
+	}
 
 	this->Input=Input;
 	if (Input)
