@@ -283,17 +283,10 @@ vtkSinglePolynomialMeasure::ComputeFitting (vtkIdList * FList,
 			VandermondeMatrix[j][5] /= h * h;
 		}
 /*
-#if ( (VTK_MAJOR_VERSION >= 5))
 		if (vtkMath::
 		    SolveLeastSquares (FList->GetNumberOfIds (),
 				       VandermondeMatrix, 6, SecondMember, 1,
 				       Quadric, 0) == 0)
-#else
-		if (vtkMath::
-		    SolveLeastSquares (FList->GetNumberOfIds (),
-				       VandermondeMatrix, 6, SecondMember, 1,
-				       Quadric) == 0)
-#endif
 		*/
 
 		if (this->SolveLeastSquares (FList->GetNumberOfIds (),
@@ -689,11 +682,7 @@ vtkCurvatureMeasure::ThreadedCurvatureComputation (void *arg)
 		if ((Cell % DISPLAYINTERVAL == 0) && (Cell != 0))
 		{
 			char CarriageReturn = 13;
-#if ( (VTK_MAJOR_VERSION >= 5))
 			ElapsedTime =CurvatureMeasure->Timer->GetUniversalTime () -StartTime;
-#else
-			ElapsedTime =CurvatureMeasure->Timer->GetCurrentTime () - StartTime;
-#endif
 			TotalTimeEstimated =ElapsedTime * NumberOfCells / Cell;
 			cout << CarriageReturn << (int) (TotalTimeEstimated -ElapsedTime) <<
 				" s remaining." << " Total time: " << (int)
@@ -942,11 +931,7 @@ vtkCurvatureMeasure::ComputeCurvatureIndicatorWithPolynomialFitting ()
 	else
 		NumberOfElements = this->Input->GetNumberOfPoints ();
 
-#if ( (VTK_MAJOR_VERSION >= 5))
 	this->StartTime = this->Timer->GetUniversalTime ();
-#else
-	this->StartTime = this->Timer->GetCurrentTime ();
-#endif
 	vtkMultiThreader *Threader=vtkMultiThreader::New();
 		
 	Threader->SetSingleMethod (ThreadedCurvatureComputation, (void *) this);
