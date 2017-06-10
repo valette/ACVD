@@ -61,10 +61,7 @@
 		            "text":"-d 0"
 		        }
 		    ],
-		    "attributes":
-		    {
-		        "executable":"ACVD"
-		    }
+	        "executable":"ACVD"
 		},
 		"acvdq" : {
 			"description" : "Performs simplification/remeshing of 3D triangular meshes (usin QEM, more accurate but slower)",
@@ -94,10 +91,7 @@
 		            "text":"-d 0"
 		        }
 		    ],
-		    "attributes":
-		    {
-		        "executable":"ACVDQ"
-		    }
+	        "executable":"ACVDQ"
 		},
 		"extract_meshes" : {
 			"description" : "Generates meshes from labeled volume data : marching cubes + simplification + smoothing",
@@ -180,10 +174,7 @@
 		            "prefix":"-x "
 		        }
 		    ],
-		    "attributes":
-		    {
-		        "executable":"VolumeAnalysis"
-		    }
+			"executable":"VolumeAnalysis"
 		},
 		"mesh2vtk" : {
 			"description" : "Converts a mesh into a vtk format",
@@ -194,10 +185,7 @@
 		            "required":"true"
 		        }
 		    ],
-		    "attributes":
-		    {
-		        "executable":"mesh2vtk"
-		    }
+	        "executable":"mesh2vtk"
 		},
 		"slice_volume" : {
 			"description" : "Computes slices from volume data",
@@ -223,11 +211,11 @@
 		            "max":"2"
 		        }
 		    ],
-		    "attributes":
-		    {
-		        "executable":"VolumeSlice",
-		        "permissions":"0"
-		    }
+		    "output" : {
+				"XML" : "volume.xml"
+			},
+	        "executable":"VolumeSlice",
+	        "permissions":"0"
 		},
 		"volume_median_filtering" : {
 			"description" : "Computes median filtering for volume data",
@@ -246,10 +234,7 @@
 		            "max":"10"
 		        }
 		    ],
-		    "attributes":
-		    {
-		        "executable":"VolumeMedian"
-		    }
+	        "executable":"VolumeMedian"
 		},
 		"volume_anisotropic_diffusion" : {
 		    "parameters":[
@@ -275,10 +260,7 @@
 		            "type":"float"
 		        }
 		    ],
-		    "attributes":
-		    {
-		        "executable":"VolumeAnisotropicDiffusion"
-		    }
+	        "executable":"VolumeAnisotropicDiffusion"
 		},
 		"img2raw": {
 			"parameters": [
