@@ -23,7 +23,7 @@ void vtkManifoldSimplification::Simplify()
 	vtkIdList *Neighbours1=vtkIdList::New();
 	vtkIdList *Neighbours2=vtkIdList::New();
 	vtkSurfaceVertexRingRandomIterator Iterator;
-	Iterator.SetInput(this->Input);
+	Iterator.SetInputData(this->Input);
 
 	int NextNumberOfPoints=this->Input->GetNumberOfPoints();
 	int CurrentNumberOfPoints=this->Input->GetNumberOfPoints();
@@ -38,7 +38,7 @@ void vtkManifoldSimplification::Simplify()
 	if (this->Display)
 	{
 		this->Window=RenderWindow::New();
-		this->Window->SetInput(this->Input);
+		this->Window->SetInputData(this->Input);
 		this->Window->SetWindowName("Simplification");	
 	}
 

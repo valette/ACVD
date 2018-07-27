@@ -116,7 +116,7 @@ void vtkSurfaceClustering<Metric>::CreateWindows()
 	if (this->Display)
 	{
 		Window=RenderWindow::New();
-		Window->SetInput(this->Input);
+		Window->SetInputData(this->Input);
 		if (this->AnchorRenderWindow)
 			Window->AttachToRenderWindow(this->AnchorRenderWindow);
 		else

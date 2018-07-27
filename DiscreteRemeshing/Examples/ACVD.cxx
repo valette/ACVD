@@ -201,7 +201,7 @@ int main( int argc, char *argv[] )
 		Window = RenderWindow::New();
 		vtkPolyData *Visu=vtkPolyData::New();
 		Visu->ShallowCopy(Mesh);
-		Window->SetInput(Visu);
+		Window->SetInputData(Visu);
 		Visu->Delete();
 		Remesh->SetAnchorRenderWindow(Window);
 		Window->Render();
@@ -288,7 +288,7 @@ int main( int argc, char *argv[] )
 		if (Display) {
 			RenderWindow *OptimizedMeshWindow = RenderWindow::New();
 			OptimizedMeshWindow->AttachToRenderWindow(Remesh->GetDisplayWindow());
-			OptimizedMeshWindow->SetInput(Remesh->GetOutput());
+			OptimizedMeshWindow->SetInputData(Remesh->GetOutput());
 			OptimizedMeshWindow->SetWindowName("Coarsened model (quadric based placement)");
 			OptimizedMeshWindow->Render ();
 			OptimizedMeshWindow->Interact ();

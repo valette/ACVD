@@ -187,7 +187,7 @@ int main( int argc, char *argv[] )
 		Window=RenderWindow::New();
 		vtkPolyData *Visu=vtkPolyData::New();
 		Visu->ShallowCopy(Mesh);
-		Window->SetInput(Visu);
+		Window->SetInputData(Visu);
 		Remesh->SetAnchorRenderWindow(Window);
 		Window->Render();
 		Window->SetWindowName(filename);

@@ -62,7 +62,7 @@ int main( int argc, char *argv[] )
 	// display mesh
 
 	RenderWindow *Window=RenderWindow::New();
-	Window->SetInput(test);
+	Window->SetInputData(test);
 	Window->Render();
 	Window->Interact();
 
