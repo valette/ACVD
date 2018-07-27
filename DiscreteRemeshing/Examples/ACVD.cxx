@@ -85,6 +85,7 @@ int main( int argc, char *argv[] )
 		cout << "-of file : sets the output file name " << endl;
 		cout << " of vertices is above nvertices*threshold (default=10)" << endl;
 		cout << "-d 0/1/2 : enables display (default : 0)" << endl;
+		cout << "-l ratio : split the edges longer than ( averageLength * ratio )" << endl;
 		cout << "-q 0/1/2 : set the number of eigenvalues for quadrics post-processing (default : 3)" << endl;
 		cout << "-cd file : set custom imagedata file containing density information" << endl;
 		cout << "-cmin value : set minimum custom indicator value" << endl;
