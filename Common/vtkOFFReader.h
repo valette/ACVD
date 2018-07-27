@@ -76,8 +76,8 @@ protected:
   int NumberOfPoints;
   int NumberOfCells;
   
-  void RequestInformation();
-  void RequestData();
+  void ExecuteInformation();
+  void Execute();
 
 private:
   vtkOFFReader(const vtkOFFReader&);  // Not implemented.

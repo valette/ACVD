@@ -57,7 +57,7 @@ using namespace std;
 int main( int argc, char *argv[] )
 {
 
-	int Display=1;				// defines whether there will be a graphic display (0: No, 1: yes)
+	int Display=0;				// defines whether there will be a graphic display (0: No, 1: yes)
 
 	int NumberOfSamples = 0;	// number of desired vertices
 	double Gradation = 0;		// gamma parameter for simplification (if gamma=0: uniform)

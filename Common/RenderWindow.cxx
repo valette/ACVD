@@ -56,7 +56,6 @@
 #include <vtkTubeFilter.h>
 #include <vtkTextProperty.h>
 #include <vtkVRMLExporter.h>
-#include <vtkXMLPolyDataWriter.h>
 
 #include "RenderWindow.h"
 #include "vtkSurfaceIterators.h"
@@ -214,10 +213,9 @@ public:
 		}
 		case '_':
 		{
-			vtkXMLPolyDataWriter * Writer = vtkXMLPolyDataWriter::New ();
-			Writer->SetDataModeToAscii ();
-			Writer->SetInputData (this->Window->GetInput());
-			Writer->SetFileName ("mesh.xml");
+			vtkVRMLExporter * Writer = vtkVRMLExporter::New ();
+			Writer->SetInput (this->Window->GetvtkRenderWindow());
+			Writer->SetFileName ("mesh.wrl");
 			Writer->Write ();
 			Writer->Delete ();
 			return;
@@ -285,13 +283,6 @@ public:
 			cin>>Face;
 			((vtkSurface *)this->Window->GetInput())->GetFaceVertices(Face,v1,v2,v3);
 			cout<<"Vertices : "<<v1<<" "<<v2<<" "<<v3<<endl;
-		}
-		case 'c':
-		{
-			bool culling =  this->Window->GetMeshActor()->GetProperty()->GetBackfaceCulling();
-			this->Window->GetMeshActor()->GetProperty()->SetBackfaceCulling(!culling);
-			this->Window->Render();
-			return;
 		}
 		default:
 			cout<<"";
@@ -389,7 +380,7 @@ void RenderWindow::EnableNormalMap()
 	vtkPolyDataNormals *Normals = vtkPolyDataNormals::New ();
 	Normals->SetInputData (this->Input);
 	Normals->SetFeatureAngle (60);
-	this->SetInput (Normals->GetOutput ());		
+	this->SetInputData (Normals->GetOutput ());
 	Normals->Delete();
 	this->Render();
 }
@@ -473,7 +464,7 @@ RenderWindow::SetText (const char *text)
 	}
 }
 
-vtkActor* RenderWindow::SetInput (vtkPolyData * Input)
+vtkActor* RenderWindow::SetInputData (vtkPolyData * Input)
 {
 	vtkPolyDataMapper *Mapper=(vtkPolyDataMapper *) this->MeshActor->GetMapper();
 	
@@ -502,12 +493,12 @@ vtkActor* RenderWindow::SetInput (vtkPolyData * Input)
 	return (MeshActor);
 }
 
-vtkActor* RenderWindow::SetInput (vtkSurface * Input)
+vtkActor* RenderWindow::SetInputData (vtkSurface * Input)
 {
 	if (Input==0)
 		return(0);
 	this->SInput = Input;
-	return (this->SetInput((vtkPolyData *)Input));
+	return (this->SetInputData((vtkPolyData *)Input));
 }
 
 void
@@ -778,7 +769,7 @@ void RenderWindow::HighLightVertices(vtkIdList *Vertices, double Radius)
 
 		vtkGlyph3D* glyph = vtkGlyph3D::New( );
 		glyph->SetInputData( ps );
-		glyph->SetSourceData ( s_sphere->GetOutput( ) );
+		glyph->SetSourceData( s_sphere->GetOutput( ) );
 		glyph->Update( );
 
 		vtkPolyDataMapper* mapper = vtkPolyDataMapper::New( );

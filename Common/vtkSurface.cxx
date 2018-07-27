@@ -161,7 +161,7 @@ void vtkSurface::EnsureOutwardsNormals()
 {
 	vtkVolumeProperties *Volume=vtkVolumeProperties::New();
 	
-	Volume->SetInput(this);
+	Volume->SetInputData(this);
 	if (Volume->GetSignedVolume()<0)
 		this->SwitchOrientation();
 	Volume->Delete();
@@ -679,104 +679,115 @@ void vtkSurface::DisplayMeshProperties()
 
 void vtkSurface::GetMeshProperties(std::stringstream &stream)
 {
-	stream << "*****************************************************************************" <<
-		endl << "Mesh with " << this->GetNumberOfCells() << " polygons, " <<
-		this->GetNumberOfPoints() << " points, " << 
-		this->GetNumberOfEdges() << " edges" << endl;
-
+	vtkIdType i;
+	stream<<"*****************************************************************************"<<endl;
+	stream<<"Mesh with "
+		<<this->GetNumberOfCells()<<" polygons, "
+		<<this->GetNumberOfPoints()<<" points, "
+		<<this->GetNumberOfEdges()<<" edges"<<endl;
 	double bounds[6];
 	this->GetBounds( bounds );
-	stream << "Bounding Box: ["  << bounds[0] << ", " << bounds[2] <<
-		", " << bounds[4] << "]" << endl << "              ["  <<
-		bounds[1] << ", " << bounds[3] <<", " <<bounds[5] <<"] " << endl;
+	stream<<"Bounding Box: [" <<bounds[0] <<", " <<bounds[2] <<", " <<bounds[4] <<"]"<<endl;
+	stream<<"              [" <<bounds[1] <<", " <<bounds[3] <<", " <<bounds[5] <<"] " <<endl;
 	
-	vtkIdType nPoly = 0,nTri = 0,nQuad = 0;
-	vtkIdType NV, *Vertices;
-	vtkIdType NumberOfEmptySlots = 0;
-	for (vtkIdType i = 0; i < this->GetNumberOfCells(); i++) {
-		if (this->IsFaceActive(i)) {
-			this->GetCellPoints(i, NV, Vertices);
-			switch (NV) {
-				case 3:
-					nTri++;
-					break;
-				case 4:
+	vtkIdType nPoly=0,nTri=0,nQuad=0;
+	vtkIdType NV,*Vertices;
+	vtkIdType NumberOfEmptySlots=0;
+	for (i=0;i<this->GetNumberOfCells();i++)
+	{
+		if (this->IsFaceActive(i)==1)
+		{
+			this->GetCellPoints(i,NV,Vertices);
+			if (NV==3)
+				nTri++;
+			else
+			{
+				if (NV==4)
 					nQuad++;
-					break;
-				default: 
+				else
 					nPoly++;
-					break;
 			}
-		} else {
-			NumberOfEmptySlots++;
 		}
-	}
-
-	if (nPoly || nQuad) {
-		stream << "The mesh is made of " << nTri << " triangles, " <<
-			nQuad << " quads and " << nPoly << " other polygons" << endl;
-	} else {
-		stream << "The mesh is made of " << nTri << " triangles" << endl;
-	}
-
-	if (NumberOfEmptySlots > 0) {
-		stream << NumberOfEmptySlots << " cells are not used (not active)" << endl;
-	}
-
-	int NonManifold = 0;
-	int Boundary = 0;
-	vtkIdType f1, f2;
-	NumberOfEmptySlots = 0;
-	for (vtkIdType i = 0; i < this->GetNumberOfEdges(); i++) {
-		if (this->IsEdgeActive(i)) {
-			if (this->IsEdgeManifold(i) == 0) NonManifold++;
-			this->GetEdgeFaces(i, f1, f2);
-			if (f2 < 0) Boundary++;
-		} else {
+		else
 			NumberOfEmptySlots++;
+
+	}
+	if (nPoly||nQuad)
+	{
+		stream<<"The mesh is made of "<<nTri<<" triangles, "<<nQuad<<" quads and "<<nPoly<<" other polygons"<<endl;
+	}
+	else
+	{
+		stream<<"The mesh is made only of "<<nTri<<" triangles"<<endl;
+	}
+
+	if (NumberOfEmptySlots>0)
+		stream<<NumberOfEmptySlots<<" cells are not used (not active)"<<endl;
+
+	int NonManifold=0;
+	int Boundary=0;
+	vtkIdType f1,f2;
+	NumberOfEmptySlots=0;
+	for (i=0;i<this->GetNumberOfEdges();i++)
+	{
+		if (this->IsEdgeActive(i)==1)
+		{
+			if (this->IsEdgeManifold(i)==0)
+				NonManifold++;
+			this->GetEdgeFaces(i,f1,f2);
+			if (f2<0)
+				Boundary++;
 		}
+		else
+			NumberOfEmptySlots++;
 	}
-	stream << NonManifold << " non-manifold edges and " <<
-		Boundary << " boundary edges" << endl;
+	stream<<NonManifold<<" non-manifold edges and "
+		<<Boundary<<" boundary edges"<<endl;
+	if (NumberOfEmptySlots)
+		stream<<NumberOfEmptySlots<<" edges cells are not used (not active)"<<endl;
 
-	if (NumberOfEmptySlots) {
-		stream << NumberOfEmptySlots << " edges cells are not used (not active)" << endl;
-	}
-
-	vtkIdListCollection *Components = this->GetConnectedComponents();
-	stream << "The mesh has " << Components->GetNumberOfItems() << " connected components" << endl;
+	vtkIdListCollection *Components=this->GetConnectedComponents();
+	stream<<"The mesh has "<<Components->GetNumberOfItems()<<" connected components"<<endl;
     this->DeleteConnectedComponents();
 
-	stream << "Valences entropy: " << this->GetValenceEntropy() << endl;
+
+	stream<<" Valences entropy: "<<this->GetValenceEntropy()<<endl;
 	double a,b,c,number;
-	a = b = c = 0;
+	a=0;
+	b=0;
+	c=0;
+	for (i=0;i<this->GetNumberOfPoints();i++)
+	{
+		number=this->GetValence(i);
 
-	for (vtkIdType i = 0; i < this->GetNumberOfPoints(); i++) {
-		number = this->GetValence(i);
-
-		if (number==0) {
+		if (number==0)
+		{
 			b++;
-		} else {
+		}
+		else
+		{
 			a++;
-			if (number!=6) c++;
+			if (number!=6)
+				c++;
 		}
 	}
+	stream<<b<<" disconnected vertices, "
+		<<a<<" connected vertices"<<endl;
+	stream<<100.0*c/a<<" percent of irregular vertices"<<endl;
 
-	stream << b << " disconnected vertices, " << a << " connected vertices" << endl;
-	stream << 100.0* c / a << " percent of irregular vertices" << endl;
-
-	if ((nPoly == 0) && (nQuad == 0)) {
-		double Amin, Aav, Qmin, Qav, P30;
-		this->ComputeTrianglesStatistics(Amin, Aav, Qmin, Qav, P30);
-		stream << "Mesh geometry quality:" << endl <<
-			"  AngleMin=" << Amin <<endl <<
-			"  AverageMinAngle=" << Aav << endl <<
-			"  Qmin=" << Qmin << endl <<
-			"  Qav=" << Qav << endl <<
-			"  P30=" << P30 << endl;
+	if ((nPoly==0)&&(nQuad==0))
+	{
+		double Amin,Aav,Qmin,Qav,P30;
+		this->ComputeTrianglesStatistics(Amin,Aav,Qmin,Qav,P30);
+		stream<<"Mesh geometry qualitity:" <<
+			endl<<"  AngleMin="<<Amin<<endl
+			<<"  AverageMinAngle="<<Aav<<endl
+			<<"  Qmin="<<Qmin<<endl
+			<<"  Qav="<<Qav<<endl
+			<<"  P30="<<P30<<endl;
 	}
 
-	stream << "*****************************************************************************" << endl;
+	stream<<"*****************************************************************************"<<endl;
 }
 void vtkSurface::PrintVerticesCoordinates()
 {
@@ -889,7 +900,7 @@ vtkSurface* vtkSurface::CleanConnectivity(double tolerance)
 
 	// Here we merge the points within the relative tolerance together
 	vtkCleanPolyData *Cleaner=vtkCleanPolyData::New();
-	Cleaner->SetInputData (this);
+	Cleaner->SetInputData(this);
 	Cleaner->SetTolerance(tolerance*BBoxDiag);
 	Cleaner->Update();
 
@@ -901,7 +912,7 @@ vtkSurface* vtkSurface::CleanConnectivity(double tolerance)
 	// Here is the delaunay triangulation of the resulting points
 
 	vtkDelaunay3D *Delaunay=vtkDelaunay3D::New();
-	Delaunay->SetInputData (CleanedMesh);
+	Delaunay->SetInputData(CleanedMesh);
 
 	vtkIdListCollection *Components;
 	Components=CleanedMesh->GetConnectedComponents();
@@ -1030,16 +1041,16 @@ vtkSurface* vtkSurface::CleanConnectivity(double tolerance)
 	}
 
 #ifdef 	DISPLAYMESHCLEANING
-	RenderWindow *Window = RenderWindow::New();
+	RenderWindow *Window=RenderWindow::New();
 	Window->SetInputEdges(EdgesP);
-	Window->SetInput(this);
+	Window->SetInputData(this);
 	Window->Render();
 	Window->SetWindowName("1");
 	Window->Interact();
 
 	RenderWindow *Window2=RenderWindow::New();
-	Window2->SetInputEdges(EdgesP2);
-	Window2->SetInput(this);
+	Window2->SetInputData(EdgesP2);
+	Window2->SetInputData(this);
 	Window2->Render();
 	Window2->SetWindowName("2");
 	Window2->AttachToRenderWindow(Window);
@@ -1047,7 +1058,7 @@ vtkSurface* vtkSurface::CleanConnectivity(double tolerance)
 
 
 	RenderWindow *Window3=RenderWindow::New();
-	Window3->SetInput(CleanedMesh);
+	Window3->SetInputData(CleanedMesh);
 	Window3->DisplayInputEdges();
 	Window3->Render();
 	Window3->SetWindowName("3");
@@ -1867,42 +1878,58 @@ void vtkSurface::QuantizeCoordinates(double Factor, double Tx, double Ty, double
 	}
 }
 
-void vtkSurface::WriteToFile (const char *FileName) {
-	char filename[5000];
+void vtkSurface::WriteToFile (const char *FileName)
+{
+	char filename[500];
+
 	strcpy(filename,FileName);
+	if (filename != NULL) {
+		char *p;
+		for (p = filename; *p; ++p)
+			*p = tolower(*p);
+	}
 
-	for (char *p = filename; *p; ++p)
-		*p = tolower(*p);
-
-	vtkDataWriter *Writer;
-
-	if (strstr(filename,".vtk")) {
+	if (strstr(filename,".vtk") != NULL) {
 		vtkPolyDataWriter *Writer = vtkPolyDataWriter::New();
 		Writer->SetInputData(this);
 		Writer->SetFileName(FileName);
 		Writer->Write();
 	}
 
-	if (strstr(filename,".ply")) {
+	if (strstr(filename,".ply") != NULL) {
 		vtkPLYWriter *Writer = vtkPLYWriter::New();
 		Writer->SetInputData(this);
 		Writer->SetFileName(FileName);
 		Writer->Write();
 	}
-
 }
 
+// ****************************************************************
+// ****************************************************************
 void vtkSurface::CreateFromFile(const char *FileName)
 {
-	char filename[1000];
+
+	int ch;
+	char *terminaison;
+	char fin[180];
+	char filename[180];
+
 	strcpy(filename,FileName);
 
-	if (filename) {
-		for (char *p = filename; *p; ++p)
+	if (filename != NULL)
+	{
+		char *p;
+
+		for (p = filename; *p; ++p)
 			*p = tolower(*p);
 	}
 
-	if (strstr(filename, ".vtk")) {
+
+	ch='.';
+	strcpy (fin,".vtk");
+	terminaison = strstr(filename,fin);
+	if (terminaison!=NULL)
+	{
 		vtkPolyDataReader *Reader = vtkPolyDataReader::New();
 		Reader->SetFileName(FileName);
 		Reader->Update();
@@ -1911,7 +1938,11 @@ void vtkSurface::CreateFromFile(const char *FileName)
 		return;
 	}
 
-	if (strstr(filename, ".vtp")) {
+	ch='.';
+	strcpy (fin,".vtp");
+	terminaison = strstr(filename,fin);
+	if (terminaison!=NULL)
+	{
 		vtkPolyDataReader *Reader = vtkPolyDataReader::New();
 		Reader->SetFileName(FileName);
 		Reader->Update();
@@ -1920,16 +1951,26 @@ void vtkSurface::CreateFromFile(const char *FileName)
 		return;
 	}
 
-	if (strstr(filename, ".ply")) {
+	ch='.';
+	strcpy (fin,".ply");
+	terminaison = strstr(filename,fin);
+	if (terminaison!=NULL)
+	{
 		vtkPLYReader *Reader = vtkPLYReader::New();
 		Reader->SetFileName(FileName);
-        Reader->Update();
+		Reader->Update();
 		this->CreateFromPolyData(Reader->GetOutput());
 		Reader->Delete();
 		return;
 	}
 
-	if (strstr(filename, ".wrl")) {
+	ch='.';
+	strcpy (fin,".wrl");
+	terminaison=strstr(filename,fin);
+	if (terminaison!=NULL)
+	{
+		cout<<"wrl"<<endl;
+
 		vtkRenderer *vrmlrenderer1=vtkRenderer::New();
 		vtkRenderWindow *vrmlrenWin=vtkRenderWindow::New();
 		vrmlrenWin->AddRenderer(vrmlrenderer1);
@@ -1946,18 +1987,24 @@ void vtkSurface::CreateFromFile(const char *FileName)
 		vrmlrenderer1->Delete();
 		importer->Delete();
 	}
-
-
-	if (strstr(filename, ".off")) {
+	ch='.';
+	strcpy (fin,".off");
+	terminaison = strstr(filename,fin);
+	if (terminaison!=NULL)
+	{
 		vtkOFFReader *Reader = vtkOFFReader::New();
 		Reader->SetFileName(FileName);
+//		Reader->SetInfoOnCellsOn();
 		Reader->Update();
 		this->CreateFromPolyData(Reader->GetOutput());
 		Reader->Delete();
 		return;
 	}
-
-	if (strstr(filename, ".obj")) {
+	ch='.';
+	strcpy (fin,".obj");
+	terminaison = strstr(filename,fin);
+	if (terminaison!=NULL)
+	{
 		vtkOBJReader *Reader = vtkOBJReader::New();
 		Reader->SetFileName(FileName);
 		Reader->Update();
@@ -1965,8 +2012,11 @@ void vtkSurface::CreateFromFile(const char *FileName)
 		Reader->Delete();
 		return;
 	}
-
-	if (strstr(filename, ".stl")) {
+	ch='.';
+	strcpy (fin,".stl");
+	terminaison = strstr(filename,fin);
+	if (terminaison!=NULL)
+	{
 		vtkSTLReader *Reader = vtkSTLReader::New();
 		Reader->SetFileName(FileName);
 		Reader->Update();
@@ -1975,7 +2025,11 @@ void vtkSurface::CreateFromFile(const char *FileName)
 		return;
 	}
 
-	if (strstr(filename, ".smf")) {
+	ch='.';
+	strcpy (fin,".smf");
+	terminaison = strstr(filename,fin);
+	if (terminaison!=NULL)
+	{
 		vtkSMFReader *Reader = vtkSMFReader::New();
 		Reader->SetFileName(FileName);
 		Reader->Update();
@@ -1985,17 +2039,24 @@ void vtkSurface::CreateFromFile(const char *FileName)
 	}
 }
 
-vtkSurface::vtkSurface() {
-	this->SharpVertices = 0;
-	this->VerticesAreas = 0;
-	this->TrianglesAreas = 0;
-	this->TrianglesNormals = 0;
+// ****************************************************************
+// ****************************************************************
+vtkSurface::vtkSurface()
+:vtkSurfaceBase()
+{
+	this->SharpVertices=0;
+	this->VerticesAreas=0;
+	this->TrianglesAreas=0;
+	this->TrianglesNormals=0;
 
-	this->EdgeLengths = 0;
-	this->ConnectedComponents = 0;
+	this->EdgeLengths=0;
+	this->ConnectedComponents=0;
 }
 
-vtkSurface::~vtkSurface() {
+// ****************************************************************
+// ****************************************************************
+vtkSurface::~vtkSurface()
+{
 	this->DeleteSharpVertices();
 	this->DeleteVerticesAreas();
 	this->DeleteTrianglesAreas();
@@ -2004,3 +2065,5 @@ vtkSurface::~vtkSurface() {
 	this->DeleteConnectedComponents();
 }
 
+// ****************************************************************
+// ****************************************************************

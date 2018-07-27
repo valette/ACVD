@@ -50,7 +50,7 @@ bool vtkDelaunay::IsEdgeFlippable(vtkIdType Edge)
     }
 }
 
-void vtkDelaunay::SetInput(vtkSurface *Input)
+void vtkDelaunay::SetInputData(vtkSurface *Input)
 {
 	if (this->Mesh)
 		this->Mesh->UnRegister(this);

@@ -58,7 +58,7 @@ int main( int argc, char *argv[] )
 
 		// Create a renderwindow
 		if (i==0)
-			Window->SetInput(Mesh);
+			Window->SetInputData(Mesh);
 		else
 			Window->AddPolyData(Mesh);
 

@@ -45,7 +45,7 @@ class vtkSinglePolynomialMeasure:public vtkObject
 {
 public:
 
-	void SetInput (vtkSurface * Input)
+	void SetInputData (vtkSurface * Input)
 	{
 		this->Input = Input;
 	};
@@ -283,10 +283,17 @@ vtkSinglePolynomialMeasure::ComputeFitting (vtkIdList * FList,
 			VandermondeMatrix[j][5] /= h * h;
 		}
 /*
+#if ( (VTK_MAJOR_VERSION >= 5))
 		if (vtkMath::
 		    SolveLeastSquares (FList->GetNumberOfIds (),
 				       VandermondeMatrix, 6, SecondMember, 1,
 				       Quadric, 0) == 0)
+#else
+		if (vtkMath::
+		    SolveLeastSquares (FList->GetNumberOfIds (),
+				       VandermondeMatrix, 6, SecondMember, 1,
+				       Quadric) == 0)
+#endif
 		*/
 
 		if (this->SolveLeastSquares (FList->GetNumberOfIds (),
@@ -636,11 +643,11 @@ vtkCurvatureMeasure::ThreadedCurvatureComputation (void *arg)
 	vtkNeighbourhoodComputation *Neighbourhood =
 		vtkNeighbourhoodComputation::New ();
 	Neighbourhood->SetCellType (CurvatureMeasure->ElementsType);
-	Neighbourhood->SetInput (CurvatureMeasure->Input);
+	Neighbourhood->SetInputData (CurvatureMeasure->Input);
 
 	vtkSinglePolynomialMeasure *Measure =
 		vtkSinglePolynomialMeasure::New ();
-	Measure->SetInput (CurvatureMeasure->Input);
+	Measure->SetInputData (CurvatureMeasure->Input);
 
 	RingSize = CurvatureMeasure->RingSize;
 	DistanceMax = CurvatureMeasure->NeighbourhoodSize;
@@ -682,7 +689,11 @@ vtkCurvatureMeasure::ThreadedCurvatureComputation (void *arg)
 		if ((Cell % DISPLAYINTERVAL == 0) && (Cell != 0))
 		{
 			char CarriageReturn = 13;
+#if ( (VTK_MAJOR_VERSION >= 5))
 			ElapsedTime =CurvatureMeasure->Timer->GetUniversalTime () -StartTime;
+#else
+			ElapsedTime =CurvatureMeasure->Timer->GetCurrentTime () - StartTime;
+#endif
 			TotalTimeEstimated =ElapsedTime * NumberOfCells / Cell;
 			cout << CarriageReturn << (int) (TotalTimeEstimated -ElapsedTime) <<
 				" s remaining." << " Total time: " << (int)
@@ -790,7 +801,7 @@ vtkCurvatureMeasure::GetCurvatureIndicator ()
 			Mesh2->GetCellData ()->SetScalars (0);
 		}
 
-		Window->SetInput (Mesh2);
+		Window->SetInputData (Mesh2);
 
 		vtkLookupTable *bwLut = vtkLookupTable::New ();
 		bwLut->SetTableRange (0, 1);
@@ -931,7 +942,11 @@ vtkCurvatureMeasure::ComputeCurvatureIndicatorWithPolynomialFitting ()
 	else
 		NumberOfElements = this->Input->GetNumberOfPoints ();
 
+#if ( (VTK_MAJOR_VERSION >= 5))
 	this->StartTime = this->Timer->GetUniversalTime ();
+#else
+	this->StartTime = this->Timer->GetCurrentTime ();
+#endif
 	vtkMultiThreader *Threader=vtkMultiThreader::New();
 		
 	Threader->SetSingleMethod (ThreadedCurvatureComputation, (void *) this);

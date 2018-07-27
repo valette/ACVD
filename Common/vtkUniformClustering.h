@@ -1177,6 +1177,7 @@ void vtkUniformClustering<Metric,EdgeType>::InitSamples(vtkIdList *List)
 	switch (this->InitialSamplingType)
 	{
 	case 0:
+	case -1:
 		// Randomly pick one item for each cluster
 		for	(i=0;i<RealNumberOfClusters;i++)
 		{
@@ -1190,6 +1191,9 @@ void vtkUniformClustering<Metric,EdgeType>::InitSamples(vtkIdList *List)
 
 				number=(int)floor(test+0.5);
 
+				if (this->InitialSamplingType == -1) {
+					number = i;
+				}
 				if (List)
 					number=List->GetId(number);			
 				if (this->Clustering->GetValue(number)==NumberOfClusters)

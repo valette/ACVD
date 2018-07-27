@@ -24,16 +24,15 @@
 #define __vtkVolumeProperties_h
 
 #include <vtkPolyData.h>
-#include <vtkPolyDataAlgorithm.h>
 
-class VTK_EXPORT vtkVolumeProperties : public vtkPolyDataAlgorithm
+class VTK_EXPORT vtkVolumeProperties : public vtkObject
 {
 public:
   // Description:
   // Constructs with initial values of zero.
   static vtkVolumeProperties *New();
 
-  vtkTypeMacro(vtkVolumeProperties, vtkObject);
+  vtkTypeMacro(vtkVolumeProperties,vtkObject);
   //void PrintSelf(ostream& os, vtkIndent indent);
 
   // Description:
@@ -60,14 +59,16 @@ public:
   void Execute();
   void Update();
   
-  void SetInput(vtkPolyData *input);
-  vtkPolyData *GetInput();
+  vtkSetObjectMacro(InputData, vtkPolyData);
+  vtkGetObjectMacro(InputData, vtkPolyData);
 
 protected:
   vtkVolumeProperties();
   ~vtkVolumeProperties();
   vtkVolumeProperties(const vtkVolumeProperties&) {};
   void operator=(const vtkVolumeProperties&) {};
+
+  vtkPolyData *InputData;
 
   double  SurfaceArea;
   double  Volume;

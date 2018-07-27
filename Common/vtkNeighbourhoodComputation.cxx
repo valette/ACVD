@@ -218,7 +218,7 @@ void vtkNeighbourhoodComputation::IncreaseTime()
 		this->Time++;
 }
 
-void vtkNeighbourhoodComputation::SetInput(vtkSurface *Mesh)
+void vtkNeighbourhoodComputation::SetInputData(vtkSurface *Mesh)
 {
 	this->Input=Mesh;
 	

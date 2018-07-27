@@ -53,7 +53,7 @@ int main( int argc, char *argv[] )
 
 //******************************************************************************************
 	// Inside input parameters:
-	int Display=1;			// defines whether there will be a graphic
+	int Display=0;			// defines whether there will be a graphic
 					// display (0: No, 1: yes)
 
 	int NumberOfSamples=200;	// the number of desired vertices

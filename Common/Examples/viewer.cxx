@@ -59,7 +59,7 @@ int main( int argc, char *argv[] )
 
 		// Create a renderwindow
 		Window[i]=RenderWindow::New();
-		Window[i]->SetInput(Mesh);
+		Window[i]->SetInputData(Mesh);
 
 		// synchronize the viewport with the first created window		
 		if (i>0)
