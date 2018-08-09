@@ -58,7 +58,7 @@ int main( int argc, char *argv[] )
 	Mesh->DisplayMeshProperties();
 	
 	RenderWindow *Window=RenderWindow::New();
-	Window->SetInput(Mesh);
+	Window->SetInputData(Mesh);
 	Window->Render();
 	Window->Interact();
 	

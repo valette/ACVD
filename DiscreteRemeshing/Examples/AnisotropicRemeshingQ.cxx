@@ -53,7 +53,7 @@ int main( int argc, char *argv[] )
 
 //******************************************************************************************
 	// Inside input parameters:
-	int Display=1;			// defines whether there will be a graphic
+	int Display=0;			// defines whether there will be a graphic
 					// display (0: No, 1: yes)
 
 	int NumberOfSamples=200;	// the number of desired vertices
@@ -90,8 +90,17 @@ int main( int argc, char *argv[] )
 	}
 	else
 	{
-		strcpy(filename,"../Datas/hand.vtk");
-		strcpy(filename,"/home/sebastien/CVSROOT/datas/horse.vtk");
+		cout<<"Usage : AnisotropicRemeshingQ file nvertices gradation [options]"<<endl;
+		cout<<"nvertices is the desired number of vertices"<<endl;
+		cout<<"gradation defines the influence of local curvature (0=uniform meshing)"<<endl;
+		cout<<endl<<"Optionnal arguments : "<<endl;
+		cout << "-b 0/1 : sets mesh boundary fixing off/on (default : 0)" << endl;
+		cout<<"-d 0/1/2 : enables display (default : 0)"<<endl;
+		cout << "-l ratio : split the edges longer than ( averageLength * ratio )" << endl;
+		cout << "-b 0/1 : sets mesh boundary fixing off/on (default : 0)" << endl;
+		cout << "-q 1/2/3 : qets number of eigenvalues used for quadric-based vertex relocation to 0/1/2 (default : 3)"<< endl;
+		cout<<"-sf spare_factor : sets the spare factor"<<endl;
+		return (0);
 	}
 
 	Mesh->CreateFromFile(filename);
@@ -178,6 +187,12 @@ int main( int argc, char *argv[] )
 			cout<<"Setting number of eigenvalues for quadrics to "<<atoi(argv[ArgumentsIndex+1])<<endl;
 			Remesh->GetMetric()->SetQuadricsOptimizationLevel(atoi(argv[ArgumentsIndex+1]));
 		}
+
+		if (strcmp(argv[ArgumentsIndex], "-b") == 0) {
+			cout << "Setting boundary fixing to : " << argv[ArgumentsIndex+1] << endl;
+			Remesh->SetBoundaryFixing(atoi(argv[ArgumentsIndex+1]));
+		}
+
 		ArgumentsIndex+=2;
 	}
 
@@ -187,7 +202,7 @@ int main( int argc, char *argv[] )
 		Window=RenderWindow::New();
 		vtkPolyData *Visu=vtkPolyData::New();
 		Visu->ShallowCopy(Mesh);
-		Window->SetInput(Visu);
+		Window->SetInputData(Visu);
 		Remesh->SetAnchorRenderWindow(Window);
 		Window->Render();
 		Window->SetWindowName(filename);

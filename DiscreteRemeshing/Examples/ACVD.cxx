@@ -57,7 +57,7 @@ using namespace std;
 int main( int argc, char *argv[] )
 {
 
-	int Display=1;				// defines whether there will be a graphic display (0: No, 1: yes)
+	int Display=0;				// defines whether there will be a graphic display (0: No, 1: yes)
 
 	int NumberOfSamples = 0;	// number of desired vertices
 	double Gradation = 0;		// gamma parameter for simplification (if gamma=0: uniform)
@@ -85,6 +85,7 @@ int main( int argc, char *argv[] )
 		cout << "-of file : sets the output file name " << endl;
 		cout << " of vertices is above nvertices*threshold (default=10)" << endl;
 		cout << "-d 0/1/2 : enables display (default : 0)" << endl;
+		cout << "-l ratio : split the edges longer than ( averageLength * ratio )" << endl;
 		cout << "-q 0/1/2 : set the number of eigenvalues for quadrics post-processing (default : 3)" << endl;
 		cout << "-cd file : set custom imagedata file containing density information" << endl;
 		cout << "-cmin value : set minimum custom indicator value" << endl;
@@ -201,7 +202,7 @@ int main( int argc, char *argv[] )
 		Window = RenderWindow::New();
 		vtkPolyData *Visu=vtkPolyData::New();
 		Visu->ShallowCopy(Mesh);
-		Window->SetInput(Visu);
+		Window->SetInputData(Visu);
 		Visu->Delete();
 		Remesh->SetAnchorRenderWindow(Window);
 		Window->Render();
@@ -288,7 +289,7 @@ int main( int argc, char *argv[] )
 		if (Display) {
 			RenderWindow *OptimizedMeshWindow = RenderWindow::New();
 			OptimizedMeshWindow->AttachToRenderWindow(Remesh->GetDisplayWindow());
-			OptimizedMeshWindow->SetInput(Remesh->GetOutput());
+			OptimizedMeshWindow->SetInputData(Remesh->GetOutput());
 			OptimizedMeshWindow->SetWindowName("Coarsened model (quadric based placement)");
 			OptimizedMeshWindow->Render ();
 			OptimizedMeshWindow->Interact ();

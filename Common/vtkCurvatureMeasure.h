@@ -44,7 +44,7 @@ public:
 	static vtkCurvatureMeasure* New();
 
 	/// To define the input Mesh
-	void SetInput(vtkSurface *Input) {this->Input=Input;};
+	void SetInputData(vtkSurface *Input) {this->Input=Input;};
 
 	/// Returns the Input Mesh
 	vtkSurface *GetInput() {return this->Input;};

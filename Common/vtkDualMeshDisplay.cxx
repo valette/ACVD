@@ -29,7 +29,7 @@ RenderWindow* vtkDualMeshDisplay::GetRenderWindow()
 	return (this->Window);
 }
 
-void vtkDualMeshDisplay::SetInput(vtkSurface *Input)
+void vtkDualMeshDisplay::SetInputData(vtkSurface *Input)
 {
 	if (this->Input)
 	{
@@ -97,7 +97,7 @@ void vtkDualMeshDisplay::CreateDual()
 	double Point3[3];
 
 	this->Dual=vtkSurface::New();
-	this->Window->SetInput(this->Dual);
+	this->Window->SetInputData(this->Dual);
 
 	for( i = 0; i < NumPoints; i++ )
 	{

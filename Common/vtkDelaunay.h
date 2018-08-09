@@ -51,7 +51,7 @@ public:
 	static vtkDelaunay *New();
 
 	// Sets the mesh to modify
-	void SetInput(vtkSurface *Input);
+	void SetInputData(vtkSurface *Input);
 
 	// This method flips the edges of the input mesh until all its edges meet the Delaunay criterion
 	void DelaunayConform();

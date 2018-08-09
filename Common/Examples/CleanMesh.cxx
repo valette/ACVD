@@ -95,11 +95,11 @@ int main( int argc, char *argv[] )
 	CleanMesh->DisplayMeshProperties();
 
 	RenderWindow *Window=RenderWindow::New();
-	Window->SetInput(OriginalMesh);
+	Window->SetInputData(OriginalMesh);
 	Window->Render();
 
 	RenderWindow *Window2=RenderWindow::New();
-	Window2->SetInput(CleanMesh);
+	Window2->SetInputData(CleanMesh);
 	Window2->AttachToRenderWindow(Window);
 	Window2->Render();
 	Window2->Interact();

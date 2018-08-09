@@ -77,7 +77,7 @@ int main( int argc, char *argv[] )
 
 	//******************************************************************************************
 	// Inside input parameters:
-	int Display=1;				// defines whether there will be a graphic display (0: No, 1: yes)
+	int Display=0;				// defines whether there will be a graphic display (0: No, 1: yes)
 
 
 	int NumberOfSamples=500;	// the number of desired vertices
@@ -104,6 +104,8 @@ int main( int argc, char *argv[] )
 		cout<<"-s threshold : defines the subsampling threshold i.e. the input mesh will be subdivided until its number ";
 		cout<<" of vertices is above nvertices*threshold (default=10)"<<endl;
 		cout<<"-d 0/1/2 : enables display (default : 0)"<<endl;
+		cout << "-l ratio : split the edges longer than ( averageLength * ratio )" << endl;
+		cout << "-q 1/2/3 : qets number of eigenvalues used for quadric-based vertex relocation to 0/1/2 (default : 3)"<< endl;
 		cout<<"-cd file : set custom imagedata file containing density information"<<endl;
 		cout<<"-cmin value : set minimum custom indicator value"<<endl;
 		cout<<"-cmax value : set maximum custom indicator value"<<endl;
@@ -260,7 +262,7 @@ int main( int argc, char *argv[] )
 		Window=RenderWindow::New();
 		vtkPolyData *Visu=vtkPolyData::New();
 		Visu->ShallowCopy(Mesh);
-		Window->SetInput(Visu);
+		Window->SetInputData(Visu);
 		Visu->Delete();
 		Remesh->SetAnchorRenderWindow(Window);
 		Window->Render();

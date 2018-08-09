@@ -38,7 +38,7 @@
 class vtkSurfaceVertexRingOrientedIterator
 {
 public:
-	void SetInput(vtkSurface *Input)
+	void SetInputData(vtkSurface *Input)
 	{
 		this->Input=Input;
 	}
@@ -129,7 +129,7 @@ private:
 class vtkSurfaceVertexRingRandomIterator
 {
 public:
-	void SetInput(vtkSurface *Input)
+	void SetInputData(vtkSurface *Input)
 	{
 		this->Input=Input;
 	}

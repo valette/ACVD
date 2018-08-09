@@ -623,9 +623,9 @@ template < class Metric >
 			{
 				vtkCurvatureMeasure *Curvature =vtkCurvatureMeasure::New ();
 				if (this->OriginalInput)
-					Curvature->SetInput (this->OriginalInput);
+					Curvature->SetInputData (this->OriginalInput);
 				else
-					Curvature->SetInput (this->Input);
+					Curvature->SetInputData (this->Input);
 			
 				Curvature->SetComputationMethod (1);
 				Curvature->SetElementsType (this->ClusteringType);
@@ -786,7 +786,7 @@ template < class Metric >
 				Mesh2->GetCellData ()->SetScalars (0);
 			}
 
-			Window->SetInput (Mesh2);
+			Window->SetInputData (Mesh2);
 			Mesh2->Delete();
 			if (PrincipalDirectionsPolyData)
 			{
@@ -1106,7 +1106,7 @@ template < class Metric >
 	{
 		if (this->OutputMeshWindow==0)
 			this->OutputMeshWindow = RenderWindow::New ();
-		this->OutputMeshWindow->SetInput (this->Output);
+		this->OutputMeshWindow->SetInputData (this->Output);
 		this->OutputMeshWindow->DisplayInputEdges ();
 		this->OutputMeshWindow->Render ();
 		this->OutputMeshWindow->SetWindowName ("Coarsened model");

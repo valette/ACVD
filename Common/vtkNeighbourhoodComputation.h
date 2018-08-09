@@ -43,7 +43,7 @@ public:
 	static vtkNeighbourhoodComputation* New();
 
 	/// Method to initialize the class for a specific Input
-	void SetInput(vtkSurface *Mesh);
+	void SetInputData(vtkSurface *Mesh);
 
 	/// Compute the NRing around the Cell.
 	void ComputeNRingCells(vtkIdType Cell,int RingSize,vtkIdList *FList);

@@ -44,7 +44,7 @@ public:
 	static vtkDualMeshDisplay *New();
 	vtkTypeMacro(vtkDualMeshDisplay,vtkObject);
 
-	void SetInput(vtkSurface *Input);
+	void SetInputData(vtkSurface *Input);
 
 	void SetColors(vtkIntArray *Colors);
 

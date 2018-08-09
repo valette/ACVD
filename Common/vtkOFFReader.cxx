@@ -91,17 +91,17 @@ vtkOFFReader::~vtkOFFReader()
 
 //----------------------------------------------------------------------------
 // 
-void vtkOFFReader::RequestInformation()
+void vtkOFFReader::ExecuteInformation()
 {
   vtkPolyData *output = this->GetOutput();
 
- // output->SetMaximumNumberOfPieces(-1);
+  //output->SetMaximumNumberOfPieces(-1); vtk6
 }
 
 
 //----------------------------------------------------------------------------
 // 
-void vtkOFFReader::RequestData()
+void vtkOFFReader::Execute()
 {
 	vtkPoints *temp_points=vtkPoints::New();
 	vtkPolyData *output_mesh=this->GetOutput();
@@ -197,10 +197,8 @@ void vtkOFFReader::RequestData()
 		// boucle sur les cellules : lecture des coordonnees 
 		for (i=0;i<this->NumberOfCells;i++)
 		{
-			int intValue;
 			// lecture du nombre de points de la cellule
-			UnusedResult=fscanf( stream, "%d", &intValue);
-			CellType = intValue;
+			UnusedResult=fscanf( stream, "%Ld", &CellType);
 
 #if ALEX_DEBUG
 			cout << "cellule a " << CellType << " points" << endl;
@@ -209,8 +207,7 @@ void vtkOFFReader::RequestData()
 			// lecture des IDs des points de la cellule
 			for (j=0;j<CellType;j++) 
 			{
-				UnusedResult=fscanf( stream, "%d", &intValue);
-				Temp_Cell[j] = intValue;
+				UnusedResult=fscanf( stream, "%Ld", &Temp_Cell[j]);
 
 #if ALEX_DEBUG
 				cout << "point # " << j << " Id " << Temp_Cell[j] << "; "; 

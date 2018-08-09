@@ -136,10 +136,10 @@ public:
 	void SetWindowName(const char *Name){this->renWin->SetWindowName(Name);};
 
 	/// Sets the input PolyData
-	vtkActor* SetInput(vtkPolyData *Input);
+	vtkActor* SetInputData(vtkPolyData *Input);
 
 	/// Sets the input VtkSurface
-	vtkActor* SetInput(vtkSurface *Input);
+	vtkActor* SetInputData(vtkSurface *Input);
 
 	/// Returns the input mesh (Warning: its is returned as a vtkPolyData but it may be a vtkSurface!)
 	vtkPolyData *GetInput()

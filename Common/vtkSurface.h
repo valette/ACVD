@@ -101,7 +101,7 @@ public:
 	vtkDoubleArray *GetTrianglesNormals();
 	void DeleteTrianglesNormals();
 
-	/// returns the area of a given cell and its barycenter
+	// returns the area of a given cell and its barycenter
 	void GetCellMassProperties(vtkIdType CellId, double &Area, double *Baricenter);
 
 	/// Computes the Triangles Areas
@@ -258,7 +258,7 @@ private:
 	vtkDoubleArray *EdgeLengths;
 
 
-	// parameters used for quantization
+	/// parameters used for quantization
    double Tx;
    double Ty;
    double Tz;
