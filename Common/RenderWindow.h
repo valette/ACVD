@@ -3,18 +3,18 @@
 * Copyright (c) CREATIS-LRMN (Centre de Recherche en Imagerie Medicale)
 * Author : Sebastien Valette
 *
-*  This software is governed by the CeCILL-B license under French law and 
-*  abiding by the rules of distribution of free software. You can  use, 
-*  modify and/ or redistribute the software under the terms of the CeCILL-B 
-*  license as circulated by CEA, CNRS and INRIA at the following URL 
-*  http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.html 
+*  This software is governed by the CeCILL-B license under French law and
+*  abiding by the rules of distribution of free software. You can  use,
+*  modify and/ or redistribute the software under the terms of the CeCILL-B
+*  license as circulated by CEA, CNRS and INRIA at the following URL
+*  http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.html
 *  or in the file LICENSE.txt.
 *
 *  As a counterpart to the access to the source code and  rights to copy,
 *  modify and redistribute granted by the license, users are provided only
 *  with a limited warranty  and the software's author,  the holder of the
 *  economic rights,  and the successive licensors  have only  limited
-*  liability. 
+*  liability.
 *
 *  The fact that you are presently reading this means that you have had
 *  knowledge of the CeCILL-B license and that you accept its terms.
@@ -39,7 +39,7 @@
 /**
  * An efficient class for 3D triangular mesh display.
  * It can display vtkPolyData and vtkSurface
- * 
+ *
  *  Custom interactions:
  *  - "0"			Save input mesh to "mesh.ply"
  *  - "9"			Save input mesh to "mesh.stl"
@@ -51,7 +51,7 @@
  *  - "1"			Capture window to "capure.jpg" image file
  *  - "2"			Capture window to "capture.eps" image file
  *  - "3"			Capture window to "capture.png" image file
- *  - "4"			Set the window size multiplication factor (>=1) to create high quality capture images	
+ *  - "4"			Set the window size multiplication factor (>=1) to create high quality capture images
  *  - "A"			Set the Anti-aliasing factor (>=1)
  *
  *  - "E"			Set the number of times Interact() will be skipped (usefull for debuging)
@@ -76,7 +76,7 @@ public:
 	// R, G and B are the colors components
 	// Size is the text Size
 	void AddText(char *text,float x, float y, float z, float R, float G, float B, int Size, int Justification=1);
-	
+
 	// write 2D text on the screen;
 	void SetText (const char *text);
 
@@ -101,7 +101,7 @@ public:
 
 	/// Saves the current camera view to file (only the camera, not the object)
 	void SaveCamera(const char *filename);
-	
+
 	/// Loads the camera view from file
 	int LoadCamera(const char *filename);
 
@@ -117,7 +117,7 @@ public:
 	void SetSize (int x, int y) {this->renWin->SetSize( x,y );};
 
 	/// sets antialiasing (the higher the more antialiased and the slower)
-	void SetAntiAliasing (int n) {this->renWin->SetAAFrames(n);};
+	void SetAntiAliasing (int n) {}; //this->renWin->SetAAFrames(n);};
 
 	/// renders the scene
 	void Render() {this->renWin->Render();};
@@ -127,14 +127,14 @@ public:
 
 	/// Starts interactive rendering (viewport control with the mouse)
 	void Interact();
-	
+
 	/// Set the number of times a call to RenderWindow::Interact() will be skipped
 	void SkipInteractions (int NumberOfInteractionsToSkip)
 	{ this->NumberOfInteractionsToSkip=NumberOfInteractionsToSkip;};
 
 	/// Sets the name of the window
 	void SetWindowName(const char *Name){this->renWin->SetWindowName(Name);};
-	
+
 	/// Sets the input PolyData
 	vtkActor* SetInputData(vtkPolyData *Input);
 
@@ -152,10 +152,10 @@ public:
 
 	/// Displays the Ids of the vertices and cells into a sub-window
 	void SetDisplayIdsOn();
-	
+
 	/// stops displaying the Ids of the vertices and cells
 	void SetDisplayIdsOff();
-	
+
 	/// switch between Off/On modes for Ids display
 	void SwitchDisplayIds();
 
@@ -165,16 +165,16 @@ public:
 
 	/// Adds a set of custom edges to the window
 	void SetInputEdges(vtkPolyData *Edges);
-	
+
 	// Enables Normal Mapping (to display smooth meshes)
 	void EnableNormalMap();
-	
+
 	/// Returns the vtkIntArray defining which edges are visible
 	vtkIntArray* GetEdgesVisibilityArray();
 
 	/// replace the default LookUpTable by a custom one
 	void SetLookupTable(vtkLookupTable *Colors=0);
-	
+
 	/// returns the used vtkLoopupTable for coloring
 	vtkLookupTable *GetLookupTable() {return (this->lut);};
 
@@ -198,15 +198,15 @@ public:
 
 	/// returns the Actor containing the mesh edges
 	vtkActor *GetEdgesActor() {return (this->EdgesActor);};
-	
+
 	vtkActor *GetMeshActor() {return (this->MeshActor);};
 
 	/// returns the underlying vtkRenderWindow
 	vtkRenderWindow *GetvtkRenderWindow() {return (this->renWin);};
-	
-	/// Switches the orientation of the input mesh	
+
+	/// Switches the orientation of the input mesh
 	void SwitchOrientation();
-	
+
 	// method to set the interactor style to allow additionnal function keys
 	virtual void SetCustomInteractorStyle();
 
@@ -218,24 +218,24 @@ protected:
 	// The window
 	vtkRenderWindow *renWin;
 
-	// The parameter defining how many times Interaction will be skiped (usually 0)	
+	// The parameter defining how many times Interaction will be skiped (usually 0)
 	int NumberOfInteractionsToSkip;
 
 	// The actor for the mesh
 	vtkActor *MeshActor;
-	
+
 	// The Actor for the input edges
 	vtkActor *EdgesActor;
 
     vtkActor *HighlightedVerticesActor;
     vtkActor *HighlightedEdgesActor;
-	
+
 	// The input mesh (when it is a vtkPolyData)
 	vtkPolyData *Input;
 
 	// The input mesh (when it is a vtkSurface)
 	vtkSurface *SInput;
-	
+
 	// The lookup table used to store colors
 	vtkLookupTable *lut;
 
@@ -251,7 +251,7 @@ protected:
 
 	bool ImmediateMode;
 
-	RenderWindow(); 
+	RenderWindow();
 	virtual ~RenderWindow();
 
 };

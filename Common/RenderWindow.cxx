@@ -3,22 +3,22 @@
 * Copyright (c) CREATIS-LRMN (Centre de Recherche en Imagerie Medicale)
 * Author : Sebastien Valette
 *
-*  This software is governed by the CeCILL-B license under French law and 
-*  abiding by the rules of distribution of free software. You can  use, 
-*  modify and/ or redistribute the software under the terms of the CeCILL-B 
-*  license as circulated by CEA, CNRS and INRIA at the following URL 
-*  http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.html 
+*  This software is governed by the CeCILL-B license under French law and
+*  abiding by the rules of distribution of free software. You can  use,
+*  modify and/ or redistribute the software under the terms of the CeCILL-B
+*  license as circulated by CEA, CNRS and INRIA at the following URL
+*  http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.html
 *  or in the file LICENSE.txt.
 *
 *  As a counterpart to the access to the source code and  rights to copy,
 *  modify and redistribute granted by the license, users are provided only
 *  with a limited warranty  and the software's author,  the holder of the
 *  economic rights,  and the successive licensors  have only  limited
-*  liability. 
+*  liability.
 *
 *  The fact that you are presently reading this means that you have had
 *  knowledge of the CeCILL-B license and that you accept its terms.
-* ------------------------------------------------------------------------ */  
+* ------------------------------------------------------------------------ */
 
 #include <vtkObjectFactory.h>
 #include <vtkPolyDataMapper.h>
@@ -96,19 +96,19 @@ public:
 			return;
 		case '3':
 			this->Window->Capture ("Capture.png");
-			return;		
+			return;
 		case '4' :
 			int Factor;
 			cout<<"Enter new magnification factor :";
 			cin>>Factor;
 			this->Window->SetCaptureMagnificationFactor(Factor);
-			return;	
+			return;
 		case 'A' :
 			int AntiAliasingFactor;
 			cout<<"Enter anti-aliasing factor :";
 			cin>>AntiAliasingFactor;
 			this->Window->SetAntiAliasing(AntiAliasingFactor);
-			return;	
+			return;
 		case 'E' :
 			int Number;
 			cout<<"Enter number of interactions to skip :";
@@ -119,7 +119,7 @@ public:
 		case 'n':
 			this->Window->EnableNormalMap();
 			return;
-				
+
 		case 'x':
 		case 'X':
 			if (this->EdgesDisplay == 0)
@@ -172,7 +172,7 @@ public:
 			cout<<"Load "<<name<<"	->	[OK]"<<endl;
 			else
 			cout<<"Load"<<name<<"	->	[BUG]"<<endl;
-	
+
 			return;
 		}
 		case '7':
@@ -183,7 +183,7 @@ public:
 			SWriter->Write ();
 			SWriter->Delete ();
 			return;
-		}		
+		}
 		case '8':
 		{
 			vtkOBJExporter * SWriter = vtkOBJExporter::New ();
@@ -260,7 +260,7 @@ public:
 				vtkIdType Neighbour=Iterator.GetNextVertex();
 				if (Neighbour==-1)
 					break;
-				cout<<" "<<Neighbour;				
+				cout<<" "<<Neighbour;
 			}
 			cout<<endl;
 			Iterator.InitTraversal(Vertex);
@@ -270,7 +270,7 @@ public:
 				vtkIdType Edge=Iterator.GetNextEdge();
 				if (Edge==-1)
 					break;
-				cout<<" "<<Edge;				
+				cout<<" "<<Edge;
 			}
 			cout<<endl;
 			*/
@@ -304,7 +304,7 @@ private:
 
 };
 
-void RenderWindow::Interact() 
+void RenderWindow::Interact()
 {
 	if (this->NumberOfInteractionsToSkip>0)
 		this->NumberOfInteractionsToSkip--;
@@ -314,7 +314,7 @@ void RenderWindow::Interact()
 
 void RenderWindow :: SaveCamera(const char *filename)
 {
-	
+
         vtkCamera *camera=this->GetMeshRenderer()->GetActiveCamera();
 
 	std::ofstream camera_file;
@@ -370,7 +370,7 @@ int RenderWindow :: LoadCamera(const char *filename)
 	camera->SetViewUp(ViewUp);
 	camera->SetViewAngle(ViewAngle);
 	file.close();
-	
+
 	return(1);
 }
 
@@ -394,17 +394,17 @@ void RenderWindow::SetCustomInteractorStyle()
 		this->renWin->GetInteractor()->SetInteractorStyle(CustomInteractorStyle);
 	else
 		cout<<"No Interactor"<<endl;
-		
+
 	CustomInteractorStyle->Window = this;
 	CustomInteractorStyle->Delete();
 }
 
 void RenderWindow::SwitchOrientation()
 {
-	if (this->SInput) 
+	if (this->SInput)
 		this->SInput->SwitchOrientation();
 }
-	
+
 void
 RenderWindow::AddText (char *text, float x, float y, float z, float R,
 		       float G, float B, int Size, int Justification)
@@ -467,26 +467,26 @@ RenderWindow::SetText (const char *text)
 vtkActor* RenderWindow::SetInputData (vtkPolyData * Input)
 {
 	vtkPolyDataMapper *Mapper=(vtkPolyDataMapper *) this->MeshActor->GetMapper();
-	
+
 	if (Mapper==0)
 	{
-		Mapper=vtkPolyDataMapper::New();		
+		Mapper=vtkPolyDataMapper::New();
 		Mapper->SetResolveCoincidentTopologyToPolygonOffset ();
 		if (this->ImmediateMode)
-			Mapper->ImmediateModeRenderingOn ();
+			//Mapper->ImmediateModeRenderingOn ();
 		this->MeshActor->SetMapper(Mapper);
 		Mapper->Delete();
 	}
 	Mapper->SetInputData(Input);
-	
+
 	if (this->lut)
 		Mapper->SetLookupTable (this->lut);
-	
+
 	this->Input = Input;
 
 //	this->MeshActor->GetProperty()->SetDiffuse(0.5);
 //	this->MeshActor->GetProperty()->SetSpecular(0.5);
-//	this->MeshActor->GetProperty()->SetColor(0.8,0.9,0);	
+//	this->MeshActor->GetProperty()->SetColor(0.8,0.9,0);
 
 //	this->MeshActor->GetProperty()->SetAmbient(0.5);
 //	this->MeshActor->GetProperty()->SetAmbientColor(0,0,0.9);
@@ -521,7 +521,7 @@ RenderWindow::Capture (const char *filename)
 					this->EdgesActor->GetProperty ()->SetLineWidth (backuplinewidth * CaptureMagnificationFactor);
 		}
 	}
-	Capture->SetMagnification(this->CaptureMagnificationFactor);	
+	Capture->SetMagnification(this->CaptureMagnificationFactor);
 
 	strcpy (FileName, filename);
 	if (FileName != NULL)
@@ -611,12 +611,12 @@ RenderWindow::SetLookupTable (vtkLookupTable * Colors)
 		x[3] = 1;
 		this->lut->SetTableValue (1, x);
 		x[0] = 0;
-		x[1] = 0;	
+		x[1] = 0;
 		x[2] = 1;
 		x[3] = 0.1;
-		this->lut->SetTableValue (2, x);	
+		this->lut->SetTableValue (2, x);
 	}
-	
+
 	if (this->Input)
 	{
 		vtkPolyDataMapper *Mapper=(vtkPolyDataMapper *) this->MeshActor->GetMapper();
@@ -639,7 +639,7 @@ RenderWindow::DisplayVerticesColors (vtkIntArray * Scalars)
 		if (max < Scalars->GetValue (i))
 			max = Scalars->GetValue (i);
 	}
-	this->DisplayRandomColors(max);	
+	this->DisplayRandomColors(max);
 }
 
 void
@@ -656,7 +656,7 @@ RenderWindow::DisplayCellsColors (vtkIntArray * Scalars)
 		if (max < Scalars->GetValue (i))
 			max = Scalars->GetValue (i);
 	}
-	this->DisplayRandomColors(max);	
+	this->DisplayRandomColors(max);
 }
 
 void
@@ -665,9 +665,9 @@ RenderWindow::DisplayRandomColors (int NumberOfColors)
 	vtkMath *Math = vtkMath::New ();
 	Math->RandomSeed (_RANDOM_SEED);
 	double x[4];
-	
-	vtkLookupTable *lut=vtkLookupTable::New();	
-	
+
+	vtkLookupTable *lut=vtkLookupTable::New();
+
 	lut->SetRange (0.0, NumberOfColors - 1);
 
 	lut->SetNumberOfTableValues (NumberOfColors);
@@ -677,7 +677,7 @@ RenderWindow::DisplayRandomColors (int NumberOfColors)
 //		x[2] = 0.8;
 //		x[3] = 0.3;
 //		this->lut->SetTableValue (0, x);
-	
+
 	for (int i = 0; i < NumberOfColors - 1; i++)
 	{
 		x[0] = x[1] = x[2] = Math->Random ();
@@ -717,7 +717,7 @@ void RenderWindow::HighLightEdges(vtkIdList *Edges, double Radius)
 
 		EdgesP->Modified();
 		vl->Delete();
-		
+
 		vtkTubeFilter *Tube=vtkTubeFilter::New();
 		Tube->SetRadius(Radius);
 		Tube->SetNumberOfSides(20);
@@ -739,7 +739,7 @@ void RenderWindow::HighLightEdges(vtkIdList *Edges, double Radius)
 		Tube->Delete();
 		EdgesP->Delete();
 	}
-	else 
+	else
 		if( this->HighlightedEdgesActor )
 			this->GetMeshRenderer()->RemoveActor( HighlightedEdgesActor );
 }
@@ -754,7 +754,7 @@ void RenderWindow::HighLightVertices(vtkIdList *Vertices, double Radius)
 		for( vtkIdType i = 0; i < Vertices->GetNumberOfIds(); i++ )
 		{
 			this->SInput->GetPointCoordinates( Vertices->GetId(i), p );
-			points->InsertNextPoint( p );            
+			points->InsertNextPoint( p );
 		}
 
 		vtkUnstructuredGrid* ps = vtkUnstructuredGrid::New( );
@@ -769,7 +769,7 @@ void RenderWindow::HighLightVertices(vtkIdList *Vertices, double Radius)
 
 		vtkGlyph3D* glyph = vtkGlyph3D::New( );
 		glyph->SetInputData( ps );
-		glyph->SetSourceData( s_sphere->GetOutput( ) );
+		glyph->SetSourceData ( s_sphere->GetOutput( ) );
 		glyph->Update( );
 
 		vtkPolyDataMapper* mapper = vtkPolyDataMapper::New( );
@@ -791,7 +791,7 @@ void RenderWindow::HighLightVertices(vtkIdList *Vertices, double Radius)
 		mapper->Delete( );
 		points->Delete( );
 	}
-	else 
+	else
 		if( this->HighlightedVerticesActor )
 			this->GetMeshRenderer()->RemoveActor( HighlightedVerticesActor );
 }
@@ -820,7 +820,7 @@ vtkActor *RenderWindow::AddPolyData (vtkPolyData * Input)
 
 	vtkPolyDataMapper *mapper = vtkPolyDataMapper::New ();
 	if (this->ImmediateMode)
-		mapper->ImmediateModeRenderingOn ();
+		//mapper->ImmediateModeRenderingOn ();
 	mapper->SetResolveCoincidentTopologyToPolygonOffset ();
 //	mapper->SetResolveCoincidentTopologyToShiftZBuffer();
 
@@ -852,7 +852,7 @@ RenderWindow::DisplayInputEdges ()
 	{
 		if (!this->Input)
 			return;
-			
+
 		// The input is a PolyData : we have to manually build the edge list.
 		int i,j,NPoints=this->Input->GetNumberOfPoints();
 		vtkEdgeTable *Table=vtkEdgeTable::New();
@@ -865,9 +865,9 @@ RenderWindow::DisplayInputEdges ()
 			{
 				if (Table->IsEdge(VList->GetId(j), VList->GetId((j+1)%VList->GetNumberOfIds()))<0)
 					Table->InsertEdge(VList->GetId(j), VList->GetId((j+1)%VList->GetNumberOfIds()));
-			}			
+			}
 		}
-		
+
 		vtkIdType v1,v2;
 		VList->SetNumberOfIds(2);
 
@@ -888,7 +888,7 @@ RenderWindow::DisplayInputEdges ()
 		VList->Delete();
 		Table->Delete();
 		return;
-		
+
 	}
 
 	vtkPolyData *Edges = this->SInput->GetEdgesPolyData ();
@@ -904,14 +904,14 @@ RenderWindow::SetInputEdges (vtkPolyData * Edges)
 			this->GetMeshRenderer()->RemoveActor (EdgesActor);
 			this->EdgesActor=0;
 	}
-	
+
 	if (Edges)
 	{
-	
+
 		vtkPolyDataMapper *EdgesMapper = vtkPolyDataMapper::New ();
 		EdgesMapper->SetResolveCoincidentTopologyToPolygonOffset ();
 		if (this->ImmediateMode)
-			EdgesMapper->ImmediateModeRenderingOn ();
+			//EdgesMapper->ImmediateModeRenderingOn ();
 
 		this->EdgesActor = vtkActor::New ();
 		vtkIntArray *EdgesColor = vtkIntArray::New ();
@@ -920,7 +920,7 @@ RenderWindow::SetInputEdges (vtkPolyData * Edges)
 		int i;
 
 		EdgesColor->SetNumberOfValues (Edges->GetNumberOfCells ());
-						     
+
 		for (i = 0; i < Edges->GetNumberOfCells (); i++)
 			EdgesColor->SetValue (i, 1);
 
@@ -953,13 +953,13 @@ RenderWindow::SetInputEdges (vtkPolyData * Edges)
 		x[1] = 0;
 		x[2] = 0;
 		x[3] = 1;
-		lut->SetTableValue (3, x);		
+		lut->SetTableValue (3, x);
 		EdgesMapper->SetLookupTable (lut);
 		EdgesMapper->SetScalarRange (lut ->GetTableRange ());
 		lut->Delete();
 		this->GetMeshRenderer()->AddActor (EdgesActor);
 		EdgesActor->Delete();
-		
+
 		EdgesActor->SetOrientation(this->MeshActor->GetOrientation());
 
 	}
@@ -1007,14 +1007,14 @@ RenderWindow::SetDisplayIdsOff ()
 {
 
 	vtkRenderer *Renderer=this->GetMeshRenderer();
-	
+
 	if (!this->rectActor)
 		return;
 
 	Renderer->RemoveActor (rectActor);
 	Renderer->RemoveActor (pointLabels);
 	Renderer->RemoveActor (cellLabels);
-	
+
 	rectActor->Delete();
 	rectActor=0;
 	pointLabels->Delete();
@@ -1126,7 +1126,7 @@ RenderWindow::SetDisplayIdsOn ()
 	Renderer->AddActor2D (rectActor);
 	Renderer->AddActor2D (pointLabels);
 	Renderer->AddActor2D (cellLabels);
-	
+
 
 	renWin->Render ();
 
@@ -1149,17 +1149,17 @@ RenderWindow::New ()
 RenderWindow::RenderWindow () : HighlightedVerticesActor( 0 ),HighlightedEdgesActor (0)	//constructeur
 {
 	vtkRenderer *Renderer=vtkRenderer::New();
-	
+
 	this->MeshActor = vtkActor::New ();
 	this->MeshActor->GetProperty ()->SetEdgeColor (0, 0, 0);
 	this->MeshActor->GetProperty ()->SetPointSize (10);
-	
+
 //     this->Renderer->SetBackground( 0.1, 0.2, 0.4 );
 	Renderer->SetBackground (1.0, 1.0, 1.0);
 	vtkLight *Light = vtkLight::New ();
 	Light->SetLightTypeToCameraLight ();
 	Light->SetPosition (0.2, 0.2, 1);
-	
+
 	Renderer->AddLight (Light);
 	Light->Delete();
 
