@@ -472,8 +472,10 @@ vtkActor* RenderWindow::SetInputData (vtkPolyData * Input)
 	{
 		Mapper=vtkPolyDataMapper::New();		
 		Mapper->SetResolveCoincidentTopologyToPolygonOffset ();
+#if VTK_MAJOR_VERSION <= 7
 		if (this->ImmediateMode)
 			Mapper->ImmediateModeRenderingOn ();
+#endif
 		this->MeshActor->SetMapper(Mapper);
 		Mapper->Delete();
 	}
@@ -819,8 +821,10 @@ vtkActor *RenderWindow::AddPolyData (vtkPolyData * Input)
 {
 
 	vtkPolyDataMapper *mapper = vtkPolyDataMapper::New ();
+#if VTK_MAJOR_VERSION <= 7
 	if (this->ImmediateMode)
 		mapper->ImmediateModeRenderingOn ();
+#endif
 	mapper->SetResolveCoincidentTopologyToPolygonOffset ();
 //	mapper->SetResolveCoincidentTopologyToShiftZBuffer();
 
@@ -910,9 +914,10 @@ RenderWindow::SetInputEdges (vtkPolyData * Edges)
 	
 		vtkPolyDataMapper *EdgesMapper = vtkPolyDataMapper::New ();
 		EdgesMapper->SetResolveCoincidentTopologyToPolygonOffset ();
+#if VTK_MAJOR_VERSION <= 7
 		if (this->ImmediateMode)
 			EdgesMapper->ImmediateModeRenderingOn ();
-
+#endif
 		this->EdgesActor = vtkActor::New ();
 		vtkIntArray *EdgesColor = vtkIntArray::New ();
 
