@@ -117,7 +117,13 @@ public:
 	void SetSize (int x, int y) {this->renWin->SetSize( x,y );};
 
 	/// sets antialiasing (the higher the more antialiased and the slower)
-	void SetAntiAliasing (int n) {this->renWin->SetAAFrames(n);};
+	void SetAntiAliasing (int n) {
+#if VTK_MAJOR_VERSION <= 7
+          this->renWin->SetAAFrames(n);
+#else
+          std::cerr <<"SetAAFrames is deprecated in VTK-8+";
+#endif
+};
 
 	/// renders the scene
 	void Render() {this->renWin->Render();};
