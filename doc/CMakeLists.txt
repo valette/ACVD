@@ -8,10 +8,10 @@ set(PROJECT_DOC_INPUT
    ${PROJECT_SOURCE_DIR}/doc/DoxyMainPage.txt
 )
 
-set(PROJECT_DOC_INPUT 
-${PROJECT_SOURCE_DIR}/Common
-${PROJECT_SOURCE_DIR}/DiscreteRemeshing
-${PROJECT_SOURCE_DIR}/VolumeProcessing
+set(PROJECT_DOC_INPUT
+     ${PROJECT_SOURCE_DIR}/vtkSurface
+     ${PROJECT_SOURCE_DIR}/vtkDiscreteRemeshing
+     ${PROJECT_SOURCE_DIR}/vtkVolumeProcessing
 )
 string(REGEX REPLACE ";" " " PROJECT_DOC_INPUT "${PROJECT_DOC_INPUT}")
 

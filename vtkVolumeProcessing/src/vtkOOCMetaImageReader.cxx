@@ -158,7 +158,7 @@ void vtkOOCMetaImageReader::ReadImageParameters ( ) {
 		return;
 	}
 
-	//The cout qui montre la dimensionalité du fichier
+	//The cout qui montre la dimensionalite du fichier
 	vtkDebugMacro(<< "* This image has " << FileDimensionality << " dimensions");
 
 	int i;

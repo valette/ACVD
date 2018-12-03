@@ -20,7 +20,6 @@ foreach(loop_var ${VolumeProcessing_EXAMPLES})
 endforeach(loop_var)
 
 install( TARGETS ${VolumeProcessing_EXAMPLES}
-  EXPORT ACVDTargets
   RUNTIME DESTINATION ${INSTALL_BIN_DIR}
   LIBRARY DESTINATION ${INSTALL_LIB_DIR}
   ARCHIVE DESTINATION ${INSTALL_LIB_DIR}
