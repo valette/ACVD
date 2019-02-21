@@ -2,3 +2,6 @@
 build/
 CMakeLists.txt.user*
 *.kdev*
+
+.idea/
+cmake-build-debug/

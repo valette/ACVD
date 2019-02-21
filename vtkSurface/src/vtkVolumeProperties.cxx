@@ -130,7 +130,7 @@ void vtkVolumeProperties::Execute()
 	for ( idx =0; idx < 3 ; idx++ ) 
 		bary[idx]  = 0.0;
 
-	//coordonnées du barycentre du maillage
+	//coordonnees du barycentre du maillage
 	for ( idx=0; idx < numPts ; idx++)
 	{
 		p = input->GetPoint(idx);
