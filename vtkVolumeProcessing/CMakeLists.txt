@@ -11,10 +11,6 @@ target_include_directories(vtkVolumeProcessing
       $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
       $<INSTALL_INTERFACE:${INSTALL_INCLUDE_DIR}/ACVD/VolumeProcessing>
 )
-target_link_libraries(vtkVolumeProcessing
-    PUBLIC
-        ${VTK_LIBRARIES}
-)
 
 set_target_properties(vtkVolumeProcessing
   PROPERTIES

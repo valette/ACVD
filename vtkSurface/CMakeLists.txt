@@ -26,8 +26,23 @@ target_include_directories(vtkSurface
       $<INSTALL_INTERFACE:${INSTALL_INCLUDE_DIR}/ACVD/Common>
 )
 target_link_libraries(vtkSurface
-    PUBLIC
-        ${VTK_LIBRARIES}
+    PRIVATE
+        vtkCommonCore
+        vtkIOExport
+        vtkIOExportOpenGL2
+        vtkIOExportPDF
+        vtkIOGeometry
+        vtkIOImport
+        vtkIOLegacy
+        vtkIOMINC
+        vtkIOPLY
+        vtkInteractionStyle
+        vtkRenderingCore
+        vtkRenderingFreeType
+        vtkRenderingLabel
+        vtkRenderingOpenGL2
+        vtkRenderingContextOpenGL2
+        vtkViewsContext2D
 )
 
 set_target_properties(vtkSurface
