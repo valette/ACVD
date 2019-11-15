@@ -472,10 +472,8 @@ vtkActor* RenderWindow::SetInputData (vtkPolyData * Input)
 	{
 		Mapper=vtkPolyDataMapper::New();		
 		Mapper->SetResolveCoincidentTopologyToPolygonOffset ();
-#if VTK_MAJOR_VERSION <= 7
 		if (this->ImmediateMode)
 			Mapper->ImmediateModeRenderingOn ();
-#endif
 		this->MeshActor->SetMapper(Mapper);
 		Mapper->Delete();
 	}
@@ -539,7 +537,7 @@ RenderWindow::Capture (const char *filename)
 	if (terminaison != NULL)
 	{
 		vtkPostScriptWriter *Writer = vtkPostScriptWriter::New ();
-		Writer->SetInputData (Capture->GetOutput ());
+		Writer->SetInputConnection (Capture->GetOutputPort ());
 		Writer->SetFileName (filename);
 		Writer->Write ();
 		Writer->Delete ();
@@ -549,7 +547,7 @@ RenderWindow::Capture (const char *filename)
 	if (terminaison != NULL)
 	{
 		vtkBMPWriter *Writer = vtkBMPWriter::New ();
-		Writer->SetInputData (Capture->GetOutput ());
+		Writer->SetInputConnection (Capture->GetOutputPort ());
 		Writer->SetFileName (filename);
 		Writer->Write ();
 		Writer->Delete ();
@@ -559,7 +557,7 @@ RenderWindow::Capture (const char *filename)
 	if (terminaison != NULL)
 	{
 		vtkPNGWriter *Writer = vtkPNGWriter::New ();
-		Writer->SetInputData (Capture->GetOutput ());
+		Writer->SetInputConnection (Capture->GetOutputPort ());
 		Writer->SetFileName (filename);
 		Writer->Write ();
 		Writer->Delete ();
@@ -569,7 +567,7 @@ RenderWindow::Capture (const char *filename)
 	if (terminaison != NULL)
 	{
 		vtkJPEGWriter *Writer = vtkJPEGWriter::New ();
-		Writer->SetInputData (Capture->GetOutput ());
+		Writer->SetInputConnection (Capture->GetOutputPort ());
 		Writer->SetFileName (filename);
 		Writer->SetQuality (85);
 		Writer->Write ();
@@ -821,10 +819,8 @@ vtkActor *RenderWindow::AddPolyData (vtkPolyData * Input)
 {
 
 	vtkPolyDataMapper *mapper = vtkPolyDataMapper::New ();
-#if VTK_MAJOR_VERSION <= 7
 	if (this->ImmediateMode)
 		mapper->ImmediateModeRenderingOn ();
-#endif
 	mapper->SetResolveCoincidentTopologyToPolygonOffset ();
 //	mapper->SetResolveCoincidentTopologyToShiftZBuffer();
 
@@ -914,10 +910,9 @@ RenderWindow::SetInputEdges (vtkPolyData * Edges)
 	
 		vtkPolyDataMapper *EdgesMapper = vtkPolyDataMapper::New ();
 		EdgesMapper->SetResolveCoincidentTopologyToPolygonOffset ();
-#if VTK_MAJOR_VERSION <= 7
 		if (this->ImmediateMode)
 			EdgesMapper->ImmediateModeRenderingOn ();
-#endif
+
 		this->EdgesActor = vtkActor::New ();
 		vtkIntArray *EdgesColor = vtkIntArray::New ();
 
