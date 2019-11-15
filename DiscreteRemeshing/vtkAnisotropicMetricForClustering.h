@@ -292,14 +292,14 @@ public:
 		this->Object->Delete();
 	};
 
-	void BuildMetric(Cluster *&Clusters,vtkSurface *Mesh,int NumberOfClusters,int ClusteringType)
+	void BuildMetric(std::vector< Cluster > &Clusters,vtkSurface *Mesh,int NumberOfClusters,int ClusteringType)
 	{
 				
 		vtkIdType i;
 		// Build the clusters
-		Clusters=new Cluster[NumberOfClusters];
+		Clusters.resize(NumberOfClusters);
 		for (i=0;i<NumberOfClusters;i++)
-			this->ResetCluster(Clusters+i);
+			this->ResetCluster(&Clusters[i]);
 		
 		cout<<"Gradation= "<<this->Gradation;
 

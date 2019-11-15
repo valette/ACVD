@@ -288,14 +288,14 @@ public:
 		C->EnergyValue=0;
 	}
 
-	void BuildMetric(Cluster *&Clusters,vtkSurface *Mesh,vtkIdType
+	void BuildMetric(std::vector< Cluster > &Clusters,vtkSurface *Mesh,vtkIdType
 NumberOfClusters,int ClusteringType)
 	{
 		vtkIdType i;
 		// Build the clusters
-		Clusters=new Cluster[NumberOfClusters];
+		Clusters.resize(NumberOfClusters);
 		for (i=0;i<NumberOfClusters;i++)
-			this->ResetCluster(Clusters+i);
+			this->ResetCluster( &Clusters[i]);
 
 		if (ClusteringType==0)
 		{

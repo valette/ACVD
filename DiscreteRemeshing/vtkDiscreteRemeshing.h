@@ -1000,9 +1000,9 @@ template < class Metric >
 	for (i = 0; i < this->NumberOfClusters-this->NumberOfSpareClusters; i++)
 	{
 		if (this->ClustersSizes->GetValue (i) == 0)
-			this->MetricContext.GetClusterCentroid (this->Clusters +Valid, P);
+			this->MetricContext.GetClusterCentroid (&this->Clusters[ Valid ], P);
 		else
-			this->MetricContext.GetClusterCentroid (this->Clusters + i,P);
+			this->MetricContext.GetClusterCentroid (&this->Clusters[ i ],P);
 		this->Output->AddVertex (P[0], P[1], P[2]);
 	}
 
