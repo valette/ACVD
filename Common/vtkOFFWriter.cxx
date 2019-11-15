@@ -65,11 +65,13 @@ void vtkOFFWriter::WriteData()
 	for (i = 0; i <nbcls;i++)
 	{
 		polydata->GetCellPoints(i,nbPtsCell,ptIdList);
-		fprintf (fp,"%d ",nbPtsCell);
+		int temp = nbPtsCell;
+		fprintf (fp,"%d ", temp);
 		
 		for (j=0; j<nbPtsCell ;j++)
 		{
-			fprintf (fp,"%d ",ptIdList[j]);
+			temp = ptIdList[j];
+			fprintf (fp,"%d ", temp);
 		}
 		
 		fprintf (fp,"\n");
