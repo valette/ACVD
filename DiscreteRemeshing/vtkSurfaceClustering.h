@@ -107,7 +107,13 @@ protected:
 template <class Metric>
 void vtkSurfaceClustering<Metric>::BuildMetric()
 {
-	this->MetricContext.BuildMetric(this->Clusters,this->Input,this->NumberOfClusters,this->ClusteringType);
+	// Build the clusters
+	this->Clusters.resize( this->NumberOfClusters );
+	for ( vtkIdType i = 0; i < this->NumberOfClusters; i++)
+		this->MetricContext.ResetCluster( &this->Clusters[ i ] );
+
+	this->MetricContext.BuildMetric( this->Input, this->ClusteringType );
+
 }
 
 template <class Metric>
