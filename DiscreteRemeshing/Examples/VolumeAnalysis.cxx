@@ -246,7 +246,6 @@ VTK_THREAD_RETURN_TYPE ThreadedSurfaceExtraction (void *arg)
 				if (Helper->ForceManifold!=0)
 				{
 					Remesh->SetForceManifold(1);
-					Remesh->SetSpareFactor(4);
 				}
 				Remesh->SetNumberOfClusters(WantedNumberOfIsotropicVertices);
 				Remesh->SetConsoleOutput(0);
@@ -310,7 +309,6 @@ VTK_THREAD_RETURN_TYPE ThreadedSurfaceExtraction (void *arg)
 					if (Helper->ForceManifold!=0)
 					{
 						AnisoRemesh->SetForceManifold(1);
-						AnisoRemesh->SetSpareFactor(4);
 					}
 					AnisoRemesh->SetNumberOfClusters(WantedNumberOfVertices);
 					AnisoRemesh->SetConsoleOutput(0);

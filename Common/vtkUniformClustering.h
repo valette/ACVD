@@ -57,21 +57,8 @@ public:
 	/// Sets the number of clusters to create
 	void SetNumberOfClusters(int N)
 	{
-		this->NumberOfSpareClusters=std::max ((int) (N*this->SpareFactor), this->MinNumberOfSpareClusters);
-		this->NumberOfClusters=N+this->NumberOfSpareClusters;
+		this->NumberOfClusters=N;
 	};
-
-	// the spare factor is used when computing the number of reserve clusters when enforcing manifold output
-	// formula : reserve clusters=spare_factor*number_of_clusters
-	void SetSpareFactor(double Factor)
-	{
-		this->SpareFactor=Factor;
-	}
-
-	void SetMinNumberOfSpareClusters(int N)
-	{
-		this->MinNumberOfSpareClusters=N;
-	}
 
 	void SetMinimizeUsingDistances(bool YesNo)
 	{this->MinimizeUsingEnergy=YesNo;}
@@ -246,16 +233,6 @@ protected:
 	/// the number of wanted clusters
 	int NumberOfClusters;
 
-	/// the number of clusters that will not be used in the clustering
-	int NumberOfSpareClusters;
-
-	/// when setting the number of clusters, a proportion of clusters will be allocated in supplement
-	/// the spare factor determines this proportion.
-	double SpareFactor;
-
-	/// this number defines the minimum number of spare clusters
-	int MinNumberOfSpareClusters;
-
 	/// detects the clusters made of several disconnected components
 	/// their number is the returned integer. for each of these clusters
 	/// only the component with the biggest area is kept. The other components
@@ -293,7 +270,7 @@ protected:
 	unsigned char RelativeNumberOfLoops;
 
 	/// array containing the last time a cluster was modified (usefull for speed improvement)
-	int *ClustersLastModification;
+	std::vector< int > ClustersLastModification;
 	
 	/// clears the optimization context 
 	/// (usefull when the boundary edges list was modified externally e.g. after initialization etc...)
@@ -409,7 +386,7 @@ void vtkUniformClustering<Metric,EdgeType>::ReComputeStatistics()
 				cout<<"Warning! : item "<<i<<" belongs to cluster "<<Cluster<<endl;
 		}
 	}
-	for	(vtkIdType i=0;i!=this->NumberOfClusters-this->NumberOfSpareClusters;i++)
+	for	(vtkIdType i=0;i!=this->NumberOfClusters;i++)
 	{
 
 		Cluster *Cluster = GetCluster( i );
@@ -1176,8 +1153,6 @@ void vtkUniformClustering<Metric,EdgeType>::InitSamples(vtkIdList *List)
 	float test;
 	int	number;
 
-	int RealNumberOfClusters=this->NumberOfClusters-this->NumberOfSpareClusters;
-
 	// reset all items to the Null cluster
 	for	(i=0;i<this->GetNumberOfItems();i++)
 		this->Clustering->SetValue(i,NumberOfClusters);
@@ -1187,7 +1162,7 @@ void vtkUniformClustering<Metric,EdgeType>::InitSamples(vtkIdList *List)
 	case 0:
 	case -1:
 		// Randomly pick one item for each cluster
-		for	(i=0;i<RealNumberOfClusters;i++)
+		for	(i=0;i<NumberOfClusters;i++)
 		{
 			ok=0;
 			while (ok==0)
@@ -1213,7 +1188,7 @@ void vtkUniformClustering<Metric,EdgeType>::InitSamples(vtkIdList *List)
 		}
 		break;
 	case 1:
-		this->ComputeInitialRandomSampling(List,Clustering,RealNumberOfClusters);
+		this->ComputeInitialRandomSampling(List,Clustering,NumberOfClusters);
 		break;
 	case 2:
 		for (i=0;i<this->GetNumberOfItems();i++)
@@ -1379,7 +1354,7 @@ void vtkUniformClustering<Metric,EdgeType>::Allocate()
 	this->Clustering=vtkIntArray::New();
 	this->Clustering->SetNumberOfValues(this->GetNumberOfItems());
 
-	this->ClustersLastModification=new int [this->NumberOfClusters];
+	this->ClustersLastModification.resize( this->NumberOfClusters );
 
 	this->EdgesLastLoop=new	unsigned char[this->GetNumberOfEdges()];
 
@@ -1428,14 +1403,11 @@ vtkUniformClustering<Metric,EdgeType>::vtkUniformClustering()
 	this->InitialClustering=0;
 	this->ClustersSizes=0;
 	this->EdgesLastLoop=0;
-	this->ClustersLastModification=0;
 	this->Display=0;
 	this->ConsoleOutput=0;
 	this->MaxNumberOfConvergences=1000000000;
 	this->MaxNumberOfLoops=5000000;
 	this->NumberOfClusters=0;
-	this->NumberOfSpareClusters=0;
-	this->SpareFactor=0;
 	this->InitialSamplingType=1;
 	this->ConnexityConstraint=0;
 	this->ComputeAndSaveEnergy=0;
@@ -1443,7 +1415,6 @@ vtkUniformClustering<Metric,EdgeType>::vtkUniformClustering()
 	this->UnconstrainedInitializationFlag=0;
 	this->EdgeList=vtkIdList::New();
 	this->IsClusterFreezed=0;
-	this->MinNumberOfSpareClusters=0;
 	this->MinimizeUsingEnergy=true;
 }
 
@@ -1464,9 +1435,6 @@ vtkUniformClustering<Metric,EdgeType>::~vtkUniformClustering()
 
 	if (this->EdgesLastLoop)
 		delete [] this->EdgesLastLoop;
-
-	if (this->ClustersLastModification)
-		delete [] this->ClustersLastModification;
 
 	while (this->EdgeQueue.size())
 		this->EdgeQueue.pop();

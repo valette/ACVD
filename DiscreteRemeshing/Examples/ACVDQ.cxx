@@ -111,7 +111,6 @@ int main( int argc, char *argv[] )
 		cout<<"-cmax value : set maximum custom indicator value"<<endl;
 		cout<<"-cf value : set custom indicator multiplication factor"<<endl;
 		cout<<"-m 0/1 : enforce a manifold output ON/OFF (default : 0)"<<endl;
-		cout<<"-sf spare_factor : sets the spare factor"<<endl;
 		return (0);
 	}
 
@@ -234,18 +233,6 @@ int main( int argc, char *argv[] )
 		{
 			cout<<"Setting custom density multiplication factor to : "<<value<<endl;
 			Remesh->SetCustomDensityMultiplicationFactor(atof(value));
-		}
-
-		if (strcmp(key,"-sc")==0)
-		{
-			cout<<"Setting number of spare clusters to : "<<value<<endl;
-			Remesh->SetMinNumberOfSpareClusters(atoi(value));
-		}
-
-		if (strcmp(key,"-sf")==0)
-		{
-			cout<<"Setting spare factor to : "<<value<<endl;
-			Remesh->SetSpareFactor(atof(value));
 		}
 
 		if (strcmp(key, "-b") == 0) {

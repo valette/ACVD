@@ -183,10 +183,10 @@ protected:
 template < class Metric >
 	int vtkDiscreteRemeshing < Metric >::DetectNonManifoldOutputVertices (double Factor)
 {
-	vtkIdType RealNumberOfClusters=this->NumberOfClusters-this->NumberOfSpareClusters;
 
 	// initialize items contained in clusters
-	vtkIdList **ClusterItems=new vtkIdList *[this->NumberOfClusters];
+	std::vector< vtkIdList *> ClusterItems;
+	ClusterItems.resize( this->NumberOfClusters );
 	for (vtkIdType i=0;i!=this->NumberOfClusters;i++)
 	{
 		ClusterItems[i]=0;
@@ -215,7 +215,7 @@ template < class Metric >
 	int NumberOfTopologyIssues=0;
 	vtkIdList *ClustersWithIssues=vtkIdList::New();
 	vtkIdList *CList=vtkIdList::New();
-	for (int Cluster=0;Cluster!=RealNumberOfClusters;Cluster++)
+	for (int Cluster=0;Cluster!=this->NumberOfClusters;Cluster++)
 	{
 		if (!this->Output->IsVertexManifold(Cluster))
 		{
@@ -269,22 +269,28 @@ template < class Metric >
 //			for (vtkIdType j=0;j!=Items->GetNumberOfIds();j++)
 //				this->MetricContext.MultiplyItemWeight(Items->GetId(j),Factor);
 		}
-		vtkIdType FirstSpareCluster=this->NumberOfClusters-this->NumberOfSpareClusters;
-		if (this->NumberOfSpareClusters==0)
-		{
-			cout<<endl<<"Not enough spare clusters! allocate more!"<<endl;
-			exit(1);
-		}
-		this->IsClusterFreezed->SetValue(FirstSpareCluster,0);
-//		cout<<"Adding cluster "<<FirstSpareCluster<<" near cluster "<<Cluster<<endl;
+
+		int newSize = this->NumberOfClusters + 1;
+		this->Clusters.resize( newSize );
+		vtkIdType newCluster = this->NumberOfClusters;
+		this->MetricContext.ResetCluster( &this->Clusters[ newCluster ] );
+		ClusterItems.resize( newSize );
+		ClusterItems[ newCluster ] = 0;
+		this->IsClusterFreezed->Resize( newSize );
+		this->IsClusterFreezed->SetValue( newCluster, false );
+		this->ClustersLastModification.resize( newSize );
+		this->ClustersLastModification[ newCluster ] = this->NumberOfLoops;
+		this->ClustersSizes->Resize( newSize );
+		this->ClustersSizes->SetValue( newCluster, 0 );
+//		cout<<"Adding cluster "<<newCluster<<" near cluster "<<Cluster<<endl;
+		this->NumberOfClusters++;
 		if (Items->GetNumberOfIds()>1)
 		{
 			vtkIdType ItemToMove=Items->GetId(0);
-			this->Clustering->SetValue(ItemToMove,FirstSpareCluster);
-			ClusterItems[FirstSpareCluster]=vtkIdList::New();
-			ClusterItems[FirstSpareCluster]->InsertNextId(ItemToMove);
+			this->Clustering->SetValue(ItemToMove,newCluster);
+			ClusterItems[newCluster]=vtkIdList::New();
+			ClusterItems[newCluster]->InsertNextId(ItemToMove);
 			Items->DeleteId(ItemToMove);
-			this->NumberOfSpareClusters--;
 		}
 		else
 		{
@@ -308,19 +314,18 @@ template < class Metric >
 				vtkIdType NeighbourCluster=this->Clustering->GetValue(Neighbour);
 				if (ClusterItems[NeighbourCluster]->GetNumberOfIds()>1)
 				{
-					this->Clustering->SetValue(Neighbour,FirstSpareCluster);
+					this->Clustering->SetValue(Neighbour,newCluster);
 					ClusterItems[NeighbourCluster]->DeleteId(Neighbour);
 //					cout<<"Took 1 item from cluster "<<NeighbourCluster<<endl;
-					ClusterItems[FirstSpareCluster]=vtkIdList::New();
-					ClusterItems[FirstSpareCluster]->InsertNextId(Neighbour);
+					ClusterItems[newCluster]=vtkIdList::New();
+					ClusterItems[newCluster]->InsertNextId(Neighbour);
 					found=true;
-					this->NumberOfSpareClusters--;
 					break;
 				}
 			}
 			if (!found)
 			{
-//				cout<<"Could not find a place to add cluster "<<FirstSpareCluster
+//				cout<<"Could not find a place to add cluster "<<newCluster
 //				<<" near cluster "<<Cluster<<endl;
 				for (int j=0;j<IList->GetNumberOfIds();j++)
 				{
@@ -328,10 +333,10 @@ template < class Metric >
 					vtkIdType NeighbourCluster=this->Clustering->GetValue(Neighbour);
 					if (ClusterItems[NeighbourCluster]->GetNumberOfIds()>1)
 					{
-						this->Clustering->SetValue(Neighbour,FirstSpareCluster);
+						this->Clustering->SetValue(Neighbour,newCluster);
 						ClusterItems[NeighbourCluster]->DeleteId(Neighbour);
-						ClusterItems[FirstSpareCluster]=vtkIdList::New();
-						ClusterItems[FirstSpareCluster]->InsertNextId(Neighbour);
+						ClusterItems[newCluster]=vtkIdList::New();
+						ClusterItems[newCluster]->InsertNextId(Neighbour);
 					}
 					else
 					{
@@ -344,6 +349,10 @@ template < class Metric >
 		}
 	}
 
+	if ( this->Window ) 
+		this->Window->DisplayRandomColors( this->NumberOfClusters + 1 );
+
+
 	// free memory
 	ClustersWithIssues->Delete();
 	IList->Delete();
@@ -352,7 +361,6 @@ template < class Metric >
 		if (ClusterItems[i]!=0)
 			ClusterItems[i]->Delete();
 	}
-	delete [] ClusterItems;
 	return NumberOfTopologyIssues;
 }
 
@@ -837,7 +845,7 @@ template < class Metric >
 	}
 
 	while (Levels[NumberOfSubdivisionsBeforeClustering]->GetNumberOfPoints () 
-				<this->SubsamplingThreshold * (this->NumberOfClusters-this->NumberOfSpareClusters))
+				<this->SubsamplingThreshold * this->NumberOfClusters )
 	{
 		if (this->ConsoleOutput)
 			cout << "Subdividing mesh" << endl;
@@ -997,7 +1005,7 @@ template < class Metric >
 	}
 
 	// We compute the vertices as inertia centers of each Cluster
-	for (i = 0; i < this->NumberOfClusters-this->NumberOfSpareClusters; i++)
+	for (i = 0; i < this->NumberOfClusters; i++)
 	{
 		if (this->ClustersSizes->GetValue (i) == 0)
 			this->MetricContext.GetClusterCentroid (&this->Clusters[ Valid ], P);
