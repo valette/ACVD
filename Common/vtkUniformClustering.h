@@ -833,9 +833,9 @@ int vtkUniformClustering<Metric,EdgeType>::ProcessOneLoop()
 
 	}
 
-	vtkIdType Edge,I1,I2;
-	int	Val1,Val2,*Size1,*Size2;
-	Cluster *clust1,*clust2,*clust21,*clust22,*clust31,*clust32;
+	vtkIdType Edge, I1, I2;
+	int	Val1, Val2, *Size1, *Size2;
+	Cluster *clust1, *clust2, *clust21, *clust22, *clust31, *clust32;
 	clust21 = new Cluster;
 	clust22 = new Cluster;
 	clust31 = new Cluster;
@@ -844,25 +844,32 @@ int vtkUniformClustering<Metric,EdgeType>::ProcessOneLoop()
 	// Those variables will contain the energy values for the three possible cases.
 	// The "volatile" statement is here to fix some numerical issues
 	// (see : http://gcc.gnu.org/bugzilla/show_bug.cgi?id=323)
-	volatile double Try1,Try2,Try3;
-	volatile double Try11,Try12,Try21,Try22,Try31,Try32;
-	int NumberOfModifications=0;
+	volatile double Try1, Try2, Try3;
+	int NumberOfModifications = 0;
 
-	while (1) {
+	while ( 1 ) {
 
-		Edge=this->EdgeQueue.front();
+		Edge = this->EdgeQueue.front();
 		this->EdgeQueue.pop();
 		
-		if (Edge==-1)
-			break;
+		if ( Edge == -1 ) {
 
-		this->GetEdgeItems(Edge,I1,I2);
+			this->EdgeQueue.push( -1 );
+			delete clust21;
+			delete clust22;
+			delete clust31;
+			delete clust32;
+			return NumberOfModifications;
+
+		}
+
+		this->GetEdgeItems( Edge, I1, I2 );
 
 		// Check if	this edge was not already visited. 
 		if ( ( this->EdgesLastLoop[ Edge ] == this->RelativeNumberOfLoops )
 			|| ( I2 < 0 ) ) continue;
 
-		this->EdgesLastLoop[Edge]=this->RelativeNumberOfLoops;
+		this->EdgesLastLoop[ Edge ] = this->RelativeNumberOfLoops;
 		Val1 = this->Clustering->GetValue( I1 );
 		Val2 = this->Clustering->GetValue( I2 );
 		if ( Val1 == Val2 ) continue;
@@ -880,6 +887,7 @@ int vtkUniformClustering<Metric,EdgeType>::ProcessOneLoop()
 			NumberOfModifications++;
 			this->Clustering->SetValue( I1, Val2 );
 			this->ClustersLastModification[ Val2 ] = this->NumberOfLoops;
+			continue;
 
 		} else if ( Val2 == NumberOfClusters ) {
 
@@ -892,106 +900,96 @@ int vtkUniformClustering<Metric,EdgeType>::ProcessOneLoop()
 			NumberOfModifications++;
 			this->Clustering->SetValue( I2,Val1 );
 			this->ClustersLastModification[ Val1 ] = this->NumberOfLoops;
+			continue;
 
 		}
 
 		// determine whether one of	the	two	adjacent clusters was modified,
 		// or whether any of the clusters is freezed
 		//	If not,	the	test is	useless, and the speed improved	:)
-		else if (((this->ClustersLastModification[Val1]>=this->NumberOfLoops-1)
-				||(this->ClustersLastModification[Val2]>=this->NumberOfLoops-1))
-					&&((this->IsClusterFreezed->GetValue(Val1)==0)
-						&&(this->IsClusterFreezed->GetValue(Val2)==0))) {
+		if ( ( ( this->ClustersLastModification[ Val1 ] < this->NumberOfLoops - 1 )
+			&& ( this->ClustersLastModification[ Val2 ] < this->NumberOfLoops - 1 ) )
+				|| this->IsClusterFreezed->GetValue( Val1 )
+				|| this->IsClusterFreezed->GetValue( Val2 ) ) {
 
-			Size1 = this->ClustersSizes->GetPointer( Val1 );
-			Size2 = this->ClustersSizes->GetPointer( Val2 );
+			//Do nothing!
+			this->EdgeQueue.push( Edge );
+			continue;
+		}
 
-			// Compute the initial energy
-			Try11 = this->MetricContext.GetClusterEnergy( clust1 );
-			Try12 = this->MetricContext.GetClusterEnergy( clust2 );
-			Try1 = Try11 + Try12;
+		// Compute the initial energy
+		Size1 = this->ClustersSizes->GetPointer( Val1 );
+		Size2 = this->ClustersSizes->GetPointer( Val2 );
+		Try1 = this->MetricContext.GetClusterEnergy( clust1 )
+			+ this->MetricContext.GetClusterEnergy( clust2 );
 
-			// Compute the energy when setting I1 to the same cluster as I2;
-			if ((*Size1==1)||(this->ConnexityConstraintProblem(I1,Edge,Val1,Val2)==1))
-				Try2=100000000.0;
-			else {
+		// Compute the energy when setting I1 to the same cluster as I2;
+		if ((*Size1==1)||(this->ConnexityConstraintProblem(I1,Edge,Val1,Val2)==1))
+			Try2=100000000.0;
+		else {
 
-				this->MetricContext.Sub( clust1, I1, clust21 );
-				this->MetricContext.Add( clust2, I1, clust22 );
-				this->MetricContext.ComputeClusterCentroid( clust21 );
-				this->MetricContext.ComputeClusterCentroid( clust22 );
-				this->MetricContext.ComputeClusterEnergy( clust21 );
-				this->MetricContext.ComputeClusterEnergy( clust22 );
-				Try21=this->MetricContext.GetClusterEnergy( clust21 );
-				Try22=this->MetricContext.GetClusterEnergy( clust22 );
-				Try2 = Try21 + Try22;
+			this->MetricContext.Sub( clust1, I1, clust21 );
+			this->MetricContext.Add( clust2, I1, clust22 );
+			this->MetricContext.ComputeClusterCentroid( clust21 );
+			this->MetricContext.ComputeClusterCentroid( clust22 );
+			this->MetricContext.ComputeClusterEnergy( clust21 );
+			this->MetricContext.ComputeClusterEnergy( clust22 );
+			Try2 = this->MetricContext.GetClusterEnergy( clust21 )
+				+ this->MetricContext.GetClusterEnergy( clust22 );
 
-			}
+		}
 
-			// Compute the energy when setting I2 to the same cluster as I1;
-			if ((*Size2==1)||(this->ConnexityConstraintProblem(I2,Edge,Val2,Val1)==1))
-				Try3=1000000000.0;
-			else {
+		// Compute the energy when setting I2 to the same cluster as I1;
+		if ((*Size2==1)||(this->ConnexityConstraintProblem(I2,Edge,Val2,Val1)==1))
+			Try3=1000000000.0;
+		else {
 
-				this->MetricContext.Sub( clust2, I2, clust32 );
-				this->MetricContext.Add( clust1, I2, clust31 );
-				this->MetricContext.ComputeClusterCentroid( clust31 );
-				this->MetricContext.ComputeClusterCentroid( clust32 );
-				this->MetricContext.ComputeClusterEnergy( clust31 );
-				this->MetricContext.ComputeClusterEnergy( clust32 );
+			this->MetricContext.Sub( clust2, I2, clust32 );
+			this->MetricContext.Add( clust1, I2, clust31 );
+			this->MetricContext.ComputeClusterCentroid( clust31 );
+			this->MetricContext.ComputeClusterCentroid( clust32 );
+			this->MetricContext.ComputeClusterEnergy( clust31 );
+			this->MetricContext.ComputeClusterEnergy( clust32 );
+			Try3 = this->MetricContext.GetClusterEnergy( clust31 )
+				+ this->MetricContext.GetClusterEnergy( clust32 );
 
-				Try31=this->MetricContext.GetClusterEnergy( clust31 );
-				Try32=this->MetricContext.GetClusterEnergy( clust32 );
-				Try3 = Try31 + Try32;
+		}
 
-			}
+		if ( ( Try1 <= Try2 ) && ( Try1 <= Try3 ) ) {
 
-			if ((Try1 <= Try2) && (Try1 <= Try3)) {
+			//Do nothing!
+			this->EdgeQueue.push( Edge );
 
-				//Do nothing!
-				this->EdgeQueue.push(Edge);
+		} else if ( ( Try2 < Try1 ) && ( Try2 < Try3 ) ) {
 
-			} else if ((Try2 < Try1) && (Try2 < Try3)) {
-
-				// Set I1 in the same cluster as I2
-				this->Clustering->SetValue(I1,Val2);
-				(*Size2)++;
-				(*Size1)--;
-				this->MetricContext.DeepCopy(clust21,clust1);
-				this->MetricContext.DeepCopy(clust22,clust2);
-				this->AddItemRingToProcess(I1);
-				NumberOfModifications++;
-				this->ClustersLastModification[Val1]=this->NumberOfLoops;
-				this->ClustersLastModification[Val2]=this->NumberOfLoops;
-
-			} else {
-
-				// Set I2 in the same cluster as I1
-				this->Clustering->SetValue(I2,Val1);
-				(*Size1)++;
-				(*Size2)--;
-				this->MetricContext.DeepCopy(clust31,clust1);
-				this->MetricContext.DeepCopy(clust32,clust2);
-				this->AddItemRingToProcess(I2);
-				NumberOfModifications++;
-				this->ClustersLastModification[Val1]=this->NumberOfLoops;
-				this->ClustersLastModification[Val2]=this->NumberOfLoops;
-
-			}
+			// Set I1 in the same cluster as I2
+			this->Clustering->SetValue( I1, Val2 );
+			(*Size2)++;
+			(*Size1)--;
+			this->MetricContext.DeepCopy( clust21, clust1 );
+			this->MetricContext.DeepCopy( clust22, clust2 );
+			this->AddItemRingToProcess( I1 );
+			NumberOfModifications++;
+			this->ClustersLastModification[ Val1 ] = this->NumberOfLoops;
+			this->ClustersLastModification[ Val2 ] = this->NumberOfLoops;
 
 		} else {
-			//Do nothing!
-			this->EdgeQueue.push(Edge);
+
+			// Set I2 in the same cluster as I1
+			this->Clustering->SetValue( I2, Val1 );
+			(*Size1)++;
+			(*Size2)--;
+			this->MetricContext.DeepCopy( clust31, clust1 );
+			this->MetricContext.DeepCopy( clust32, clust2 );
+			this->AddItemRingToProcess( I2 );
+			NumberOfModifications++;
+			this->ClustersLastModification[ Val1 ] = this->NumberOfLoops;
+			this->ClustersLastModification[ Val2 ] = this->NumberOfLoops;
+
 		}
 
 	}
 
-	this->EdgeQueue.push( -1 );
-	delete clust21;
-	delete clust22;
-	delete clust31;
-	delete clust32;
-	return NumberOfModifications;
 }
 
 template <class Metric, class EdgeType>

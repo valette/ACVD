@@ -675,9 +675,7 @@ RenderWindow::DisplayRandomColors (int NumberOfColors)
 	}
 	lut->SetRange (0.0, NumberOfColors - 1);
 	int oldSize = lut->GetNumberOfTableValues();
-	cout<< oldSize << endl;
 	if ( oldSize > 0 ) oldSize--;
-	cout<< oldSize << endl;
 	lut->SetNumberOfTableValues (NumberOfColors);
 
 	for (int i = oldSize; i < NumberOfColors - 1; i++)
