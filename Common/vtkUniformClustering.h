@@ -827,31 +827,29 @@ void vtkUniformClustering<Metric,EdgeType>::MinimizeEnergy()
 template <class Metric, class EdgeType>
 int vtkUniformClustering<Metric,EdgeType>::ProcessOneLoop()
 {
-	if (!this->MinimizeUsingEnergy){
-		cout<< "Error!" << endl;
-		exit(1);
-//		return(this->ProcessOneLoopWithDistances());
+	if ( !this->MinimizeUsingEnergy ) {
+
+		return this->ProcessOneLoopWithDistances();
+
 	}
 
 	vtkIdType Edge,I1,I2;
 	int	Val1,Val2,*Size1,*Size2;
-
 	Cluster *clust1,*clust2,*clust21,*clust22,*clust31,*clust32;
-
-	clust21=new Cluster;
-	clust22=new Cluster;
-	clust31=new Cluster;
-	clust32=new Cluster;
+	clust21 = new Cluster;
+	clust22 = new Cluster;
+	clust31 = new Cluster;
+	clust32 = new Cluster;
 
 	// Those variables will contain the energy values for the three possible cases.
 	// The "volatile" statement is here to fix some numerical issues
 	// (see : http://gcc.gnu.org/bugzilla/show_bug.cgi?id=323)
 	volatile double Try1,Try2,Try3;
 	volatile double Try11,Try12,Try21,Try22,Try31,Try32;
-
 	int NumberOfModifications=0;
-	while (1)
-	{		
+
+	while (1) {
+
 		Edge=this->EdgeQueue.front();
 		this->EdgeQueue.pop();
 		
@@ -999,12 +997,13 @@ int vtkUniformClustering<Metric,EdgeType>::ProcessOneLoop()
 			}
 		}
 	}
-	this->EdgeQueue.push(-1);
+
+	this->EdgeQueue.push( -1 );
 	delete clust21;
 	delete clust22;
 	delete clust31;
 	delete clust32;
-	return (NumberOfModifications);
+	return NumberOfModifications;
 }
 
 template <class Metric, class EdgeType>
@@ -1013,7 +1012,7 @@ int vtkUniformClustering<Metric,EdgeType>::ProcessOneLoopWithDistances()
 	vtkIdType Edge,I1,I2;
 	int	Val1,Val2,*Size1,*Size2;
 
-	typename Metric::Cluster *Cluster1,*Cluster2;
+	typename Metric::Cluster *cluster1,*cluster2;
 
 	int NumberOfModifications=0;
 	while (1)
@@ -1039,8 +1038,9 @@ int vtkUniformClustering<Metric,EdgeType>::ProcessOneLoopWithDistances()
 					if (Val1==this->NumberOfClusters)
 					{
 						// I1 is not associated. Give it to the same cluster as I2
-						this->MetricContext.AddItemToCluster(I1,this->Clusters+Val2);
-						this->MetricContext.ComputeClusterCentroid(this->Clusters+Val2);
+						cluster2 = &this->Clusters[ Val2 ];
+						this->MetricContext.AddItemToCluster( I1, cluster2 );
+						this->MetricContext.ComputeClusterCentroid( cluster2 );
 						(*this->ClustersSizes->GetPointer(Val2))++;
 						this->AddItemRingToProcess(I1);
 						NumberOfModifications++;
@@ -1052,8 +1052,9 @@ int vtkUniformClustering<Metric,EdgeType>::ProcessOneLoopWithDistances()
 						if (Val2==this->NumberOfClusters)
 						{
 							// I2 is not associated. Give it to the same cluster as I1
-							this->MetricContext.AddItemToCluster(I2,this->Clusters+Val1);
-							this->MetricContext.ComputeClusterCentroid(this->Clusters+Val1);
+							cluster1 = &this->Clusters[ Val1 ];
+							this->MetricContext.AddItemToCluster( I2, cluster1 );
+							this->MetricContext.ComputeClusterCentroid( cluster1);
 							(*this->ClustersSizes->GetPointer(Val1))++;
 							this->AddItemRingToProcess(I2);
 							NumberOfModifications++;
@@ -1071,16 +1072,15 @@ int vtkUniformClustering<Metric,EdgeType>::ProcessOneLoopWithDistances()
 									&&((this->IsClusterFreezed->GetValue(Val1)==0)
 									&&(this->IsClusterFreezed->GetValue(Val2)==0)))
 							{
-								Cluster1=this->Clusters+Val1;
-								Cluster2=this->Clusters+Val2;
-
+								cluster1 = &this->Clusters[ Val1 ];
+								cluster2 = &this->Clusters[ Val2 ];
 								Size1=this->ClustersSizes->GetPointer(Val1);
 								Size2=this->ClustersSizes->GetPointer(Val2);
 
 								// Compute the initial energy
 								double C1[3],C2[3];
-								this->MetricContext.GetClusterCentroid(Cluster1,C1);
-								this->MetricContext.GetClusterCentroid(Cluster2,C2);
+								this->MetricContext.GetClusterCentroid(cluster1,C1);
+								this->MetricContext.GetClusterCentroid(cluster2,C2);
 
 								double P[3];
 								// Compute the energy when setting I1 to the same cluster as I2;
@@ -1095,8 +1095,8 @@ int vtkUniformClustering<Metric,EdgeType>::ProcessOneLoopWithDistances()
 										this->Clustering->SetValue(I1,Val2);
 										(*Size2)++;
 										(*Size1)--;
-										this->MetricContext.AddItemToCluster(I1,Cluster2);
-										this->MetricContext.SubstractItemFromCluster(I1,Cluster1);
+										this->MetricContext.AddItemToCluster(I1,cluster2);
+										this->MetricContext.SubstractItemFromCluster(I1,cluster1);
 										this->AddItemRingToProcess(I1);
 										NumberOfModifications++;
 										this->ClustersLastModification[Val1]=this->NumberOfLoops;
@@ -1116,8 +1116,8 @@ int vtkUniformClustering<Metric,EdgeType>::ProcessOneLoopWithDistances()
 										this->Clustering->SetValue(I2,Val1);
 										(*Size2)--;
 										(*Size1)++;
-										this->MetricContext.AddItemToCluster(I2,Cluster1);
-										this->MetricContext.SubstractItemFromCluster(I2,Cluster2);
+										this->MetricContext.AddItemToCluster(I2,cluster1);
+										this->MetricContext.SubstractItemFromCluster(I2,cluster2);
 										this->AddItemRingToProcess(I2);
 										NumberOfModifications++;
 										this->ClustersLastModification[Val1]=this->NumberOfLoops;
