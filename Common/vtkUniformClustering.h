@@ -545,153 +545,142 @@ int	vtkUniformClustering<Metric,EdgeType>::CleanClustering()
 }
 
 template <class Metric, class EdgeType>
-void vtkUniformClustering<Metric,EdgeType>::FillHolesInClustering(vtkIntArray *Clustering)
-{
-	std::queue<int>	IQueue;
-	vtkIdType	i;
-	int	Cluster1,Cluster2;
-	vtkIdType I1,I2;
-	int	Edge;
-	int	TempValue;
-	int	InitialNumberOfProblems=0,NumberOfProblems;
+void vtkUniformClustering<Metric,EdgeType>::FillHolesInClustering(vtkIntArray *Clustering) {
 
-	for	(i=0;i<this->GetNumberOfItems();i++)
-	{
-		Cluster1=Clustering->GetValue(i);
-		if ((Cluster1<0)||(Cluster1>=this->NumberOfClusters))
+	std::queue< int > IQueue;
+	vtkIdType I1,I2;
+	int	InitialNumberOfProblems=0;
+
+	for( vtkIdType i = 0; i < this->GetNumberOfItems(); i++ ) {
+
+		int Cluster1 = Clustering->GetValue( i );
+		if ( ( Cluster1 < 0 ) || ( Cluster1 >= this->NumberOfClusters ) )
 			InitialNumberOfProblems++;
+
 	}
 
-	for (i=0;i<this->GetNumberOfEdges();i++)
-	{
-		this->GetEdgeItems(i,I1,I2);
-		if ((I2>=0)&&(I1>=0))
-		{
-			Cluster1=Clustering->GetValue(I1);		
-			Cluster2=Clustering->GetValue(I2);	
-			if ((Cluster1<0)||(Cluster1>=this->NumberOfClusters))
-			{
-				if ((Cluster2>=0)&&(Cluster2<this->NumberOfClusters))
-					IQueue.push(i);
-			}
-			else
-			{
-				if ((Cluster2<0)||(Cluster2>=this->NumberOfClusters))
-					IQueue.push(i);
-			}
+	for (vtkIdType i = 0; i < this->GetNumberOfEdges(); i++ ) {
+
+		this->GetEdgeItems( i, I1, I2 );
+		if ( ( I2 < 0) || ( I1 < 0 ) ) continue;
+		int Cluster1 = Clustering->GetValue( I1 );		
+		int Cluster2 = Clustering->GetValue( I2 );	
+		if ( ( Cluster1 < 0 ) || ( Cluster1 >= this->NumberOfClusters ) ) {
+
+			if ( ( Cluster2 >= 0 ) && ( Cluster2 < this->NumberOfClusters )) 
+				IQueue.push( i );
+
+		} else {
+
+			if ( ( Cluster2 < 0 ) || ( Cluster2 >= this->NumberOfClusters ) )
+				IQueue.push( i );
 		}
+
 	}
 
 	vtkIdList *EList=vtkIdList::New();
 
-	while (IQueue.size()!=0)
-	{
-		Edge=IQueue.front();
-		IQueue.pop();
-		this->GetEdgeItems(Edge,I1,I2);
-		if ((I1>=0)&&(I2>=0))
-		{
-			Cluster1=Clustering->GetValue(I1);
-			Cluster2=Clustering->GetValue(I2);
+	while ( IQueue.size() != 0 ) {
 
-			if ((Cluster1==this->NumberOfClusters))
-			{
-				TempValue=I1;
-				I1=I2;
-				I2=TempValue;
-				Cluster1=Cluster2;
-				Cluster2=this->NumberOfClusters;
-			}
-			
-			if ((Cluster1!=this->NumberOfClusters)&&(Cluster2==this->NumberOfClusters)
-					&&(this->ConnexityConstraintProblem(I2,Edge,Cluster2,Cluster1)==0))
-			{
-				Clustering->SetValue(I2,Cluster1);
-				this->GetItemEdges(I2,EList);
-				int j;
-				for	(j=0;j<EList->GetNumberOfIds();j++)
-				{
-					IQueue.push(EList->GetId(j));
-				}
-			}
+		int Edge = IQueue.front();
+		IQueue.pop();
+		this->GetEdgeItems( Edge, I1, I2 );
+		if ( ( I1 < 0 ) && ( I2 < 0 ) ) continue;
+		int Cluster1 = Clustering->GetValue( I1 );
+		int Cluster2 = Clustering->GetValue( I2 );
+
+		if ( ( Cluster1 == this->NumberOfClusters ) ) {
+
+			int TempValue = I1;
+			I1 = I2;
+			I2 = TempValue;
+			Cluster1 = Cluster2;
+			Cluster2 = this->NumberOfClusters;
+
 		}
+		
+		if ( ( Cluster1 != this->NumberOfClusters ) && ( Cluster2 == this->NumberOfClusters )
+				&& ( this->ConnexityConstraintProblem( I2, Edge, Cluster2, Cluster1 ) == 0 ) ) {
+
+			Clustering->SetValue( I2, Cluster1 );
+			this->GetItemEdges( I2, EList );
+			for	(int j = 0; j < EList->GetNumberOfIds(); j++ )
+				IQueue.push( EList->GetId( j ) );
+
+		}
+
 	}
 
 	EList->Delete();
-	EList=0;
-	NumberOfProblems=0;
+	int NumberOfProblems = 0;
 
-	for	(i=0;i<this->GetNumberOfItems();i++)
-	{
-		Cluster1=Clustering->GetValue(i);
-		if ((Cluster1<0)||(Cluster1>=this->NumberOfClusters))
+	for	(int i = 0; i < this->GetNumberOfItems(); i++ ) {
+
+		int Cluster1 = Clustering->GetValue( i );
+		if ( ( Cluster1 < 0 ) || ( Cluster1 >= this->NumberOfClusters ) )
 			NumberOfProblems++;
+
 	}
 	
-	if ((this->ConsoleOutput>0)&&(NumberOfProblems>0))
-		cout<<endl<<"WARNING : The number	of uncorrectly assigned	Items was reduced from "<<
-		InitialNumberOfProblems<<" to "<<NumberOfProblems<<" Problems"<<endl;
+	if ( this->ConsoleOutput && NumberOfProblems )
+		cout << endl << "WARNING : The number	of uncorrectly assigned	Items was reduced from "
+			<< InitialNumberOfProblems << " to " << NumberOfProblems << " Problems" << endl;
+
 }
 
 template <class Metric, class EdgeType>
-void vtkUniformClustering<Metric,EdgeType>::FillQueuesFromClustering()
-{
-	vtkIdType Cluster1,Cluster2;
-	vtkIdType I1,I2;
+void vtkUniformClustering<Metric,EdgeType>::FillQueuesFromClustering() {
 
-	while (this->EdgeQueue.size())
-		this->EdgeQueue.pop();
+	while ( this->EdgeQueue.size() ) this->EdgeQueue.pop();
 
-	for	(int i=0;i<this->GetNumberOfEdges();i++)
-	{
-		this->GetEdgeItems(i,I1,I2);
-		if (I2>=0)
-		{
-			Cluster1=this->Clustering->GetValue(I1);
-			Cluster2=this->Clustering->GetValue(I2);
-			if (Cluster1!=Cluster2)
-				this->EdgeQueue.push(i);
-		}
+	for	( int i = 0; i < this->GetNumberOfEdges(); i++ ) {
+
+		vtkIdType I1,I2;
+		this->GetEdgeItems( i, I1, I2 );
+		if ( I2 < 0 ) continue;
+		vtkIdType Cluster1 = this->Clustering->GetValue( I1 );
+		vtkIdType Cluster2 = this->Clustering->GetValue( I2 );
+		if ( Cluster1 != Cluster2 ) this->EdgeQueue.push( i );
+
 	}
-	this->EdgeQueue.push(-1);
+
+	this->EdgeQueue.push( -1 );
 }
 
 template <class Metric, class EdgeType>
-vtkIntArray* vtkUniformClustering<Metric,EdgeType>::ProcessClustering(vtkIdList *List)
-{
-	vtkTimerLog	*Timer=vtkTimerLog::New();
-	if (this->NumberOfClusters==0)
-	{
+vtkIntArray* vtkUniformClustering<Metric,EdgeType>::ProcessClustering(vtkIdList *List) {
+
+	vtkTimerLog	*Timer = vtkTimerLog::New();
+
+	if( this->NumberOfClusters == 0 ) {
+
 		cout<<"Problem!!! must set NumberOfClusters	to more	than zero!"<<endl;
-		return (0);
+		return 0;
+
 	}
 
 	this->Init();
-	this->InitSamples(List);
-	
+	this->InitSamples( List );
 	char FileName[1000];
-	if (this->OutputDirectory)
-	{
-		strcpy(FileName,this->OutputDirectory);
-		strcat(FileName,"energy.txt");
-	}
-	else
-		strcpy(FileName,"energy.txt");
-		
-	
-	if (this->ComputeAndSaveEnergy)
-		this->GlobalEnergyLog.open (FileName, ofstream::out | ofstream::trunc);
+
+	if ( this->OutputDirectory ) {
+
+		strcpy( FileName, this->OutputDirectory );
+		strcat( FileName, "energy.txt" );
+
+	} else strcpy( FileName, "energy.txt" );
+
+	if ( this->ComputeAndSaveEnergy )
+		this->GlobalEnergyLog.open( FileName, ofstream::out | ofstream::trunc );
 
 	this->CreateWindows();
+	if (this->ConsoleOutput) cout << "Clustering......" << endl;
 
-	if (this->ConsoleOutput)
-		cout<<"Clustering......"<<endl;
+	if ( this->UnconstrainedInitialization ) {
 
-	if (this->UnconstrainedInitialization)
-	{
-		if (this->ConsoleOutput)
-			cout<<"Performing unconstrained initialization"<<endl;
-		this->MetricContext.SetConstrainedClustering(0);
+		if ( this->ConsoleOutput ) cout << "Performing unconstrained initialization" << endl;
+		this->MetricContext.SetConstrainedClustering( 0 );
+
 	}
 	
 	this->StartTime=Timer->GetUniversalTime();
@@ -700,124 +689,135 @@ vtkIntArray* vtkUniformClustering<Metric,EdgeType>::ProcessClustering(vtkIdList 
 	this->MinimizeEnergy();
 	Timer->StopTimer();
 	
-	if (this->ComputeAndSaveEnergy)
-	{
+	if ( this->ComputeAndSaveEnergy ) {
+
 		this->ReComputeStatistics();
-		GlobalEnergyLog<<"Final Energy :"<<setprecision(15)<<this->ComputeGlobalEnergy()<<endl;		
+		GlobalEnergyLog << "Final Energy :" << setprecision(15) << this->ComputeGlobalEnergy() << endl;		
 		this->GlobalEnergyLog.close();
+
 	}
 
-	if (this->ConsoleOutput!=0)
-	{
-		cout<<"The clustering took :"<<Timer->GetElapsedTime()<<" seconds."<<endl;
-		cout<<"Number of loops:	"<<this->NumberOfLoops<<endl;
+	if ( this->ConsoleOutput ) {
+
+		cout << "The clustering took :" << Timer->GetElapsedTime() << " seconds." << endl;
+		cout << "Number of loops:	" << this->NumberOfLoops << endl;
+
 	}
 
 	Timer->Delete();
 	this->Snapshot();
-	return (this->Clustering);
+	return this->Clustering;
+
 }
 
 template <class Metric, class EdgeType>
-void vtkUniformClustering<Metric,EdgeType>::SetAllClustersToModified()
-{
-	for	(int i=0;i<this->NumberOfClusters;i++)
-		this->ClustersLastModification[i]=this->NumberOfLoops;
+void vtkUniformClustering<Metric,EdgeType>::SetAllClustersToModified() {
+
+	for	( int i = 0; i < this->NumberOfClusters; i++)
+		this->ClustersLastModification[ i ] = this->NumberOfLoops;
+
 }
 
 template <class Metric, class EdgeType>
-void vtkUniformClustering<Metric,EdgeType>::MinimizeEnergy()
-{
-	int NumberOfModifications;
-	int NumberOfDisconnectedClusters;
+void vtkUniformClustering<Metric,EdgeType>::MinimizeEnergy() {
 
-	this->FillHolesInClustering(this->Clustering);
+	this->FillHolesInClustering( this->Clustering );
 	this->FillQueuesFromClustering();
 	this->ReComputeStatistics();
 	this->SetAllClustersToModified();
-	vtkTimerLog *Timer=vtkTimerLog::New();
+	vtkTimerLog *Timer = vtkTimerLog::New();
 	
-	while (1)
-	{
+	while (1) {
+
 		Timer->StartTimer();
 		this->SwapQueues();
-		NumberOfModifications=this->ProcessOneLoop();
+		int NumberOfModifications = this->ProcessOneLoop();
 		Timer->StopTimer();
 
 		// Display the clustering if wanted
-		if (this->Display>1)
-			this->Snapshot();
+		if (this->Display>1) this->Snapshot();
 
 		// Write Energy value and computing times to file if wanted
 		this->WriteToGlobalEnergyLog();
 		
-		if (this->ConsoleOutput>1)
-		{
-			cout<<(char) 13;
-			if (this->ConnexityConstraint==1)
-				cout<<"*";
-					
-			cout<<"Loop "<<this->NumberOfLoops<<", duration : "<<(int) Timer->GetElapsedTime()
-				<<" s., "<<NumberOfModifications<<" Modifications            "<<std::flush;
-		}
-		this->NumberOfLoops++;
-		if (this->RelativeNumberOfLoops==255)
-		{
-			//	reset the EdgesLastLoop array to cope with overflow
-			for (int i=0;i<this->GetNumberOfEdges();i++)
-				this->EdgesLastLoop[i]=0;
-			this->RelativeNumberOfLoops=1;
-		}
-		else
-			this->RelativeNumberOfLoops++;
-		
-		if ((NumberOfModifications==0)
-			||(this->NumberOfLoops>this->MaxNumberOfLoops)
-			||((NumberOfModifications<this->GetNumberOfItems()/1000)&&(NumberOfConvergences==0)))
-		{
-			if ((this->UnconstrainedInitialization)&&(NumberOfConvergences==0))
-			{
-				cout<<endl<<"Unconstrained initialization done"<<endl;
-				this->MetricContext.SetConstrainedClustering(1);
-			}
-			else
-			{
-				if ((NumberOfModifications)&&(this->ConsoleOutput))
-					cout<<endl<<"Trigerring early convergence for speed increase";
-			}
-			this->ConnexityConstraint=1;		
-			NumberOfConvergences++;
+		if ( this->ConsoleOutput > 1 ) {
 
-			NumberOfDisconnectedClusters=this->CleanClustering();
-			this->FillHolesInClustering(this->Clustering);
+			cout << (char) 13;
+			if ( this->ConnexityConstraint ==1 ) cout<<"*";
+			cout << "Loop " << this->NumberOfLoops << ", duration : "
+			<< (int) Timer->GetElapsedTime() << " s., "
+			<< NumberOfModifications << " Modifications            "<< std::flush;
+
+		}
+
+		this->NumberOfLoops++;
+
+		if ( this->RelativeNumberOfLoops == 255 ) {
+
+			//	reset the EdgesLastLoop array to cope with overflow
+			for ( int i = 0; i < this->GetNumberOfEdges(); i++ )
+				this->EdgesLastLoop[ i ] = 0;
+			this->RelativeNumberOfLoops = 1;
+
+		} else this->RelativeNumberOfLoops++;
+		
+		if ( ( NumberOfModifications == 0 )
+			|| ( this->NumberOfLoops > this->MaxNumberOfLoops )
+			|| ( ( NumberOfModifications < this->GetNumberOfItems() /1000 )
+				&& ( NumberOfConvergences == 0 ) ) ) {
+
+			if ( ( this->UnconstrainedInitialization ) && ( NumberOfConvergences == 0 ) ) {
+
+				cout << endl << "Unconstrained initialization done" << endl;
+				this->MetricContext.SetConstrainedClustering( 1 );
+
+			} else {
+
+				if ( NumberOfModifications && this->ConsoleOutput )
+					cout<<endl<<"Trigerring early convergence for speed increase";
+
+			}
+
+			this->ConnexityConstraint = 1;
+			NumberOfConvergences++;
+			int NumberOfDisconnectedClusters = this->CleanClustering();
+			this->FillHolesInClustering( this->Clustering );
 			this->ReComputeClustersSize();
 
-			if (this->ConsoleOutput)
-				cout<<endl<<"Convergence: "<<NumberOfDisconnectedClusters<<" disconnected classes	  "<<endl;
+			if ( this->ConsoleOutput )
+				cout << endl << "Convergence: " << NumberOfDisconnectedClusters
+					<< " disconnected classes	  " << endl;
 
-			if ((NumberOfDisconnectedClusters==0)&&(NumberOfModifications==0))
+			if ( ( NumberOfDisconnectedClusters == 0 ) && ( NumberOfModifications == 0 ) )
 				break;
 
-			if (this->NumberOfLoops>=this->MaxNumberOfLoops)
-			{
-				if (this->ConsoleOutput)
-					cout<<"Maximum allowed number of loops reached, exiting minimization"<<endl;
+			if ( this->NumberOfLoops >= this->MaxNumberOfLoops ) {
+
+				if ( this->ConsoleOutput )
+					cout << "Maximum allowed number of loops reached, exiting minimization" << endl;
+
 				break;
+
 			}
 			
-			if(NumberOfConvergences>=MaxNumberOfConvergences)
-			{
-				if (this->ConsoleOutput)
-					cout<<"Maximum allowed number of convergences reached, exiting minimization"<<endl;
+			if( NumberOfConvergences >= MaxNumberOfConvergences ) {
+
+				if ( this->ConsoleOutput )
+					cout << "Maximum allowed number of convergences reached, exiting minimization" << endl;
 				break;
+
 			}
 			
 			this->ReComputeStatistics();			
 			this->FillQueuesFromClustering();
 			this->SetAllClustersToModified();
+
 		}	
+
 	}
+
 	Timer->Delete();
+
 }
 
 template <class Metric, class EdgeType>
