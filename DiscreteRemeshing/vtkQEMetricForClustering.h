@@ -82,17 +82,14 @@ public:
 
 	}
 
-	void SetGradation(double Gradation) {
+
+	void SetGradation( double Gradation ) {
 
 		this->Gradation = Gradation;
 
 	}
 
-	double GetGradation() {
-
-		return this->Gradation;
-
-	}
+	vtkGetMacro( Gradation, double )
 
 	// each item is represented by a quadric matrix
 	struct Item {
@@ -127,7 +124,8 @@ public:
 		/// gives the number of quadric eigenvalues equal to zero (could be 0, 1 or 2)
 		char RankDeficiency;
 
-		vtkIdType AnchorVertex;
+		Cluster () { AnchorItem = -1; }
+		vtkIdType AnchorItem;
 	};
 
 	int GetClusterRankDeficiency( Cluster *C ) {
@@ -150,8 +148,10 @@ public:
 
 	}
 
-	void ComputeVertexQuadric( Item *I, vtkSurface *Mesh, int Vertex, double Weight ) {
+	void ComputeVertexQuadric( int Vertex ) {
 
+		Item *I = this->Items + Vertex;
+		double Weight = I->Weight;
 		this->ResetItem( I );
 		vtkIdList *FList=vtkIdList::New();
 		Mesh->GetVertexNeighbourFaces(Vertex,FList);
@@ -166,11 +166,13 @@ public:
 
 	}
 
-	void ComputeTriangleQuadric( Item *I,vtkSurface *Mesh, int Face, double Weight ) {
+	void ComputeTriangleQuadric( int Face ) {
 
 		double x1[ 3 ], x2[ 3 ], x3[ 3 ];
 		vtkIdType V1, V2, V3;
-		this->ResetItem(I);
+		Item *I = this->Items + Face;
+		double Weight = I->Weight;
+		this->ResetItem( I );
 		vtkQuadricTools::AddTriangleQuadric( I->Quadric, Mesh, Face, false);
 		Mesh->GetFaceVertices( Face, V1, V2, V3 );
 		Mesh->GetPointCoordinates( V1, x1 );
@@ -189,7 +191,14 @@ public:
 
 	}
 
-	void ComputeClusterEnergy(Cluster *C) {
+	void ComputeClusterEnergy( Cluster *C ) {
+
+		if ( C->AnchorItem == -2 ) {
+
+			C->EnergyValue = 1e100;
+			return;
+
+		}
 
 		C->EnergyValue= (
 			C->Centroid[ 0 ] * C->Centroid[ 0 ]
@@ -214,6 +223,7 @@ public:
 
 		Destination->EnergyValue = Source->EnergyValue;
 		Destination->RankDeficiency = Source->RankDeficiency;
+		Destination->AnchorItem = Source->AnchorItem;
 
 	}
 
@@ -246,6 +256,8 @@ public:
 		for ( int i = 0; i < 9; i++ ) C->SQuadric[ i ] -= I->Quadric[ i ];
 		C->SWeight -= I->Weight;
 
+		if ( C->AnchorItem == ItemId ) C->AnchorItem = -2; // broken constraint
+
 	}
 
 	void GetClusterCentroid( Cluster *C, double *P ) {
@@ -254,6 +266,13 @@ public:
 	}
 
 	void ComputeClusterCentroid( Cluster *C ) {
+
+		if ( C->AnchorItem >= 0 ) {
+
+			Mesh->GetPointCoordinates( C->AnchorItem, C->Centroid );
+			return;
+
+		}
 
 		for ( int i = 0; i < 3; i++) C->Centroid[ i ] = C->SValue[ i ] / C->SWeight;
 		
@@ -277,6 +296,8 @@ public:
 
 	void BuildMetric( vtkSurface *Mesh, int ClusteringType ) {
 
+		this->Mesh = Mesh;
+
 		if ( ClusteringType == 0 ) {
 			// Items are triangles
 			vtkIdType v1,v2,v3;
@@ -298,7 +319,7 @@ public:
 
 			this->ClampWeights( Items, Mesh->GetNumberOfCells(), 10000 );
 			for ( vtkIdType i = 0; i < Mesh->GetNumberOfCells(); i++ )
-				this->ComputeTriangleQuadric( Items + i, Mesh, i, Items[ i ].Weight );
+				this->ComputeTriangleQuadric( i );
 
 		} else {
 
@@ -310,13 +331,13 @@ public:
 				Items[i].Weight = VerticesAreas->GetValue(i);
 
 				if ( Gradation > 0 ) Items[i].Weight *=
-					pow(CustomWeights->GetValue( i ), Gradation );
+					pow( CustomWeights->GetValue( i ), Gradation );
 
 			}
 
 			this->ClampWeights( Items,Mesh->GetNumberOfPoints(), 10000 );
 			for ( vtkIdType i = 0; i < Mesh->GetNumberOfPoints();i++ )
-				this->ComputeVertexQuadric( Items + i, Mesh, i, Items[ i ].Weight );
+				this->ComputeVertexQuadric( i );
 
 		}
 
@@ -359,6 +380,7 @@ public:
 
 private:
 
+	vtkSurface *Mesh;
 	int	ActiveConstraintsFlag;
 	vtkDoubleArray *CustomWeights;
 	int QuadricsOptimizationLevel;

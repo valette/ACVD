@@ -79,7 +79,6 @@ template < class Metric > class vtkDiscreteRemeshing:public vtkSurfaceClustering
 	vtkSetMacro( MinCustomDensity, double )
 	vtkSetMacro( CustomDensityMultiplicationFactor, double )
 
-
 protected:
 
 	vtkDiscreteRemeshing();

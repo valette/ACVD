@@ -258,14 +258,14 @@ int main( int argc, char *argv[] )
 		Window->Interact();
 	}
 
-	Remesh->SetInput(Mesh);
-	Remesh->SetFileLoadSaveOption(0);
-	Remesh->SetNumberOfClusters(NumberOfSamples);
-	Remesh->SetConsoleOutput(2);
-	Remesh->SetSubsamplingThreshold(SubsamplingThreshold);
+	Remesh->SetInput( Mesh );
+	Remesh->SetFileLoadSaveOption( 0 );
+	Remesh->SetNumberOfClusters( NumberOfSamples );
+	Remesh->SetConsoleOutput( 2 );
+	Remesh->SetSubsamplingThreshold( SubsamplingThreshold );
 	Remesh->GetMetric()->SetGradation(Gradation);
-	Remesh->SetDisplay(Display);
-	Remesh->SetConstrainedInitialization(1);
+	Remesh->SetDisplay( Display );
+	Remesh->SetUnconstrainedInitialization( 1 );
 	Remesh->Remesh();
 
 	// save the output mesh to .ply format
