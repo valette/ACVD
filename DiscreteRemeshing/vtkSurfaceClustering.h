@@ -58,35 +58,36 @@ public:
 	void SetInput(vtkSurface *Input);
 	
 	/// Returns the Input mesh
-	vtkSurface* GetInput() {return (this->Input);};
+	vtkGetMacro( Input, vtkSurface* );
 
 	/// Returns the Rendering window used for display
-	RenderWindow* GetDisplayWindow(){return(this->Window);};
+	RenderWindow* GetDisplayWindow(){ return this->Window; };
 
-	vtkIdType GetNumberOfEdges() {return this->Input->GetNumberOfEdges();}
+	vtkIdType GetNumberOfEdges() { return this->Input->GetNumberOfEdges(); }
 
-	void GetEdgeItemsSure (vtkIdType Item, vtkIdList * VList)
-	{
-		if (this->ClusteringType == 0)
-			this->GetInput ()->GetEdgeFaces (Item, VList);
-		else
-		{
+	void GetEdgeItemsSure (vtkIdType Item, vtkIdList * VList) {
+
+		if ( this->ClusteringType == 0 )
+			this->GetInput()->GetEdgeFaces( Item, VList );
+		else {
+
 			vtkIdType v1, v2;
-			VList->Reset ();
-			this->Input->GetEdgeVertices (Item, v1, v2);
-			VList->InsertNextId (v1);
-			VList->InsertNextId (v2);
+			VList->Reset();
+			this->Input->GetEdgeVertices ( Item, v1, v2 );
+			VList->InsertNextId( v1 );
+			VList->InsertNextId( v2 );
+
 		}
+
 	};
 
-	vtkGetMacro(ClusteringType,int);
+	vtkGetMacro( ClusteringType, int );
 
 protected:
+
 	/// Parameter indicating the type of Clustering (0: Faces ;1:Vertices)
 	int ClusteringType;
-
-	virtual int GetNumberOfDualItems()=0;
-
+	virtual int GetNumberOfDualItems() = 0;
 	void CreateWindows();
 	void InteractWithClusteringWindow();
 	void Snapshot();
@@ -94,12 +95,9 @@ protected:
 
 	vtkSurfaceClustering ();
 	~vtkSurfaceClustering ();
+	vtkSurface *Input;	// input vtkSurface
+	RenderWindow *Window; // The window where the clustering is displayed
 
-	/// The input vtkSurface
-	vtkSurface *Input;	
-	
-	/// The window where the clustering is displayed
-	RenderWindow *Window;
 };
 
 
@@ -107,10 +105,6 @@ protected:
 template <class Metric>
 void vtkSurfaceClustering<Metric>::BuildMetric()
 {
-	// Build the clusters
-	this->Clusters.resize( this->NumberOfClusters );
-	for ( vtkIdType i = 0; i < this->NumberOfClusters; i++)
-		this->MetricContext.ResetCluster( &this->Clusters[ i ] );
 
 	this->MetricContext.BuildMetric( this->Input, this->ClusteringType );
 

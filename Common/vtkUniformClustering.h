@@ -55,9 +55,13 @@ public:
 	typedef typename Metric::Cluster Cluster;
 
 	/// Sets the number of clusters to create
-	void SetNumberOfClusters(int N)
-	{
-		this->NumberOfClusters=N;
+	void SetNumberOfClusters( int N ) {
+
+		this->NumberOfClusters = N;
+		this->Clusters.resize( N );
+		for ( vtkIdType i = 0; i < N; i++)
+			this->MetricContext.ResetCluster( &this->Clusters[ i ] );
+
 	};
 
 	void SetMinimizeUsingDistances(bool YesNo)

@@ -55,51 +55,35 @@ template < class Metric > class vtkDiscreteRemeshing:public vtkSurfaceClustering
     public:
 
 	/// returns the coarsened model.
-	vtkSurface *GetOutput ()
-	{
-		return this->Output;
-	};
+	vtkGetMacro( Output, vtkSurface* );
 
 	// process the remeshing
-	virtual void Remesh ();
+	virtual void Remesh();
 
 	/// for debugging: sets on/off the capability to skip the curvature computation and/or the clustering
-	void SetFileLoadSaveOption (int F)
-	{
-		this->FileLoadSaveOption = F;
-	};
+	vtkSetMacro( FileLoadSaveOption, int )
 
 	/// defines the Subsampling threshold. If the subsampling ratio is below this threshold,
 	/// the mesh will be subdivided accordingly. Default value: 10
-	void SetSubsamplingThreshold (int T)
-	{
-		this->SubsamplingThreshold = T;
-	};
+	vtkSetMacro( SubsamplingThreshold, int )
 
-	// Sets On/Off the Edges optimization scheme (still experimental)
-	void SetEdgesOptimization (int S)
-	{
-		this->EdgeOptimizationFlag = S;
-	};
+	/// Sets On/Off the Edges optimization scheme (still experimental)
+	vtkSetMacro( EdgeOptimizationFlag, int )
 	
-	// Sets On/Off the fix for meshes with boundaries. Default value: 1 (On)
-	void SetBoundaryFixing (int B)
-	{
-		this->BoundaryFixingFlag=B;
-	}
+	/// Sets On/Off the fix for meshes with boundaries. Default value: 1 (On)
+	vtkSetMacro( BoundaryFixing, int )
 
-	vtkSetMacro(ForceManifold, bool)
-
-	vtkSetMacro(InputDensityFile, char*)
-	vtkSetMacro(MaxCustomDensity, double)
-	vtkSetMacro(MinCustomDensity, double)
-	vtkSetMacro(CustomDensityMultiplicationFactor, double)
+	vtkSetMacro( ForceManifold, bool )
+	vtkSetMacro( InputDensityFile, char* )
+	vtkSetMacro( MaxCustomDensity, double )
+	vtkSetMacro( MinCustomDensity, double )
+	vtkSetMacro( CustomDensityMultiplicationFactor, double )
 
 
 protected:
 
-	vtkDiscreteRemeshing ();
-	~vtkDiscreteRemeshing ();
+	vtkDiscreteRemeshing();
+	~vtkDiscreteRemeshing();
 
 	/// In this method, we compute the curvature indicator and adapt it to the possibly subdivided Input
 	void SamplingPreProcessing ();
@@ -168,7 +152,7 @@ protected:
 	int EdgeOptimizationFlag;
 
 	// flag to enable addition of polygons and points to fix the mesh boundaries
-	int BoundaryFixingFlag;
+	int BoundaryFixing;
 
 	// name of custom imageData file giving user-defined density info
 	char* InputDensityFile;
@@ -411,7 +395,7 @@ template < class Metric >
 	if (this->ClusteringType == 0)
 		return;
 
-	if (this->BoundaryFixingFlag == 0)
+	if (this->BoundaryFixing == 0)
 		return;
 
 	vtkIdType i;
@@ -1227,7 +1211,7 @@ template < class Metric >
 template < class Metric >
 	vtkDiscreteRemeshing < Metric >::vtkDiscreteRemeshing ()
 {
-	this->BoundaryFixingFlag = 0;
+	this->BoundaryFixing = 0;
 	this->EdgeOptimizationFlag = 0;
 	this->AnchorRenderWindow = 0;
 	this->FileLoadSaveOption = 0;
