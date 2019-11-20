@@ -89,7 +89,7 @@ public:
 
 	}
 
-	vtkGetMacro( Gradation, double )
+	double GetGradation() { return this->Gradation; }
 
 	// each item is represented by a quadric matrix
 	struct Item {

@@ -127,6 +127,8 @@ public:
 	/// Returns the number of items inside a cluster
 	int GetClusterSize(int Cluster){ return (this->ClustersSizes->GetValue(Cluster));};
 
+	vtkSetMacro( FixedClusters, vtkIdList* );
+
 protected:
 
 	/// virtual function derived in the threaded version.
@@ -227,7 +229,7 @@ protected:
 	void InitSamples(vtkIdList *List);
 
 	/// a independent method to randomly initialize regions according to the weights
-	virtual void ComputeInitialRandomSampling( vtkIdList *List,vtkIntArray *Sampling, int NumberOfRegions, vtkIdTypeArray *FirstClusters = 0 );
+	virtual void ComputeInitialRandomSampling( vtkIdList *List,vtkIntArray *Sampling, int NumberOfRegions );
 
 	/// Paramter defining th initial sampling type
 	/// 1: random initialisation  2: weight-based initialisation
@@ -326,7 +328,7 @@ protected:
 	vtkBitArray *IsClusterFreezed;
 
 	// an array to define first clusters for initialization
-	vtkIdTypeArray *FirstClusters;
+	vtkIdList *FixedClusters;
 
 };
 
@@ -362,6 +364,11 @@ void vtkUniformClustering<Metric,EdgeType>::ReComputeClustersSize() {
 				cout << "Warning! : item " << i << " belongs to cluster " << cluster << endl;
 		}
 	}
+
+	for	(vtkIdType i=0;i!=this->NumberOfClusters;i++)
+		if (this->ClustersSizes->GetValue(i)==0)
+			cout<<"Cluster "<<i<<" is empty!"<<endl;
+
 }
 
 template <class Metric, class EdgeType>
@@ -382,14 +389,14 @@ void vtkUniformClustering<Metric,EdgeType>::ReComputeStatistics()
 				cout<<"Warning! : item "<<i<<" belongs to cluster "<<Cluster<<endl;
 		}
 	}
+
 	for	(vtkIdType i=0;i!=this->NumberOfClusters;i++)
 	{
 
 		Cluster *Cluster = GetCluster( i );
 		this->MetricContext.ComputeClusterCentroid(Cluster);
 		this->MetricContext.ComputeClusterEnergy(Cluster);
-		if (this->ClustersSizes->GetValue(i)==0)
-			cout<<"Cluster "<<i<<" is empty!"<<endl;
+
 	}
 }
 
@@ -403,6 +410,7 @@ int	vtkUniformClustering<Metric,EdgeType>::CleanClustering() {
 	vtkIdType *VisitedCluster = new vtkIdType[ this->NumberOfClusters ];
 	int Number = 0;
 	vtkIdList *IList = vtkIdList::New();
+	int fixedClusters = FixedClusters ? FixedClusters->GetNumberOfIds() : -1;
 
 	// Detect clusters that	have several connected components
 	for	( int i = 0; i < this->GetNumberOfItems(); i++ ) Visited[ i ] = false;
@@ -424,14 +432,17 @@ int	vtkUniformClustering<Metric,EdgeType>::CleanClustering() {
 
 		int Size = 0;
 		Queue.push( i );
-		int Type = this->Clustering->GetValue(i);
+		int Type = this->Clustering->GetValue( i );
+
+		// is there a constraint on the vertex ?
+		int fixedItem = Type < fixedClusters ? FixedClusters->GetId( Type ) : -1;
 
 		while ( Queue.empty() == 0 ) {
 
 			vtkIdType I1 = Queue.front();
 			Queue.pop();
 			if ( Visited[ I1 ] ) continue;
-			if ( this->GetItemType( I1 ) != 0 ) Size++;
+			if ( this->GetItemType( I1 ) != 0 ) Size += I1 == fixedItem ? 1e9 : 1;
 			Visited[ I1 ] = true;
 			this->GetItemNeighbours( I1, IList );
 
@@ -440,6 +451,7 @@ int	vtkUniformClustering<Metric,EdgeType>::CleanClustering() {
 				vtkIdType I2 = IList->GetId( j );
 				if ( !Visited[ I2 ] && ( this->Clustering->GetValue( I2 ) == Type ) )
 					Queue.push( I2 );
+
 			}
 
 		}
@@ -469,9 +481,8 @@ int	vtkUniformClustering<Metric,EdgeType>::CleanClustering() {
 
 	}
 
-	for	( int i = 0;i < this->GetNumberOfItems(); i++ )	Visited[ i ] = false;
+	for	( int i = 0; i < this->GetNumberOfItems(); i++ )	Visited[ i ] = false;
 
-	// Reset the smallest unconnected components to	NULLCLUSTER
 	for	(int i = 0; i < this->NumberOfClusters; i++ ) {
 
 		if ( ( Clusters[ i ] == 0 ) || !this->IsClusterCleanable( i ) ) {
@@ -485,7 +496,7 @@ int	vtkUniformClustering<Metric,EdgeType>::CleanClustering() {
 		int Sizemax = 0, Imax;
 
 		// Detect for each cluster,	the	biggest	connected component;
-		for	( int j = 0; j <Clusters[ i ]->GetNumberOfIds() / 2; j++ ) {
+		for	( int j = 0; j < Clusters[ i ]->GetNumberOfIds() / 2; j++ ) {
 
 			if ( Sizemax >= Clusters[ i ]->GetId( 2 * j + 1 ) ) continue;
 			Sizemax = Clusters[ i ]->GetId( 2 * j + 1 );
@@ -494,9 +505,9 @@ int	vtkUniformClustering<Metric,EdgeType>::CleanClustering() {
 		}
 
 		// Reset the smallest components to	-1
-		for	( int j = 0; j < Clusters[ i ]->GetNumberOfIds() / 2 ;j++ ) {
+		for	( int j = 0; j < Clusters[ i ]->GetNumberOfIds() / 2; j++ ) {
 
-			if ( j ==Imax) continue;
+			if ( j == Imax) continue;
 			while ( Queue.empty() == 0 ) Queue.pop();
 			Queue.push( Clusters[ i ]->GetId( 2 * j ) );
 			int Type = this->Clustering->GetValue( Clusters[ i ]->GetId( 2 * j ) );
@@ -531,8 +542,8 @@ int	vtkUniformClustering<Metric,EdgeType>::CleanClustering() {
 	delete [] VisitedCluster;
 	delete [] Sizes;
 	IList->Delete();
-	
 	return Number;
+
 }
 
 template <class Metric, class EdgeType>
@@ -1158,16 +1169,25 @@ void vtkUniformClustering<Metric,EdgeType>::InitSamples(vtkIdList *List)
 
 template <class Metric, class EdgeType>
 void vtkUniformClustering<Metric,EdgeType>::ComputeInitialRandomSampling(
-	vtkIdList *List, vtkIntArray *Sampling, int NumberOfRegions, vtkIdTypeArray *FirstClusters ) {
+	vtkIdList *List, vtkIntArray *Sampling, int NumberOfRegions ) {
 
 	for	( int i = 0; i < this->GetNumberOfItems(); i++ )
 		Sampling->SetValue( i, this->NumberOfClusters );
 
+	int offset = 0;
+
+	if ( FixedClusters ) {
+
+		for ( ; offset < FixedClusters->GetNumberOfIds(); offset++ )
+			Sampling->SetValue( FixedClusters->GetId( offset ), offset );
+
+	}
+
+
 	int	*Items = new int[ this->GetNumberOfItems() ];
 	int	NumberOfRemainingItems = this->GetNumberOfItems();
-	int	NumberOfRemainingRegions = NumberOfRegions;
-	bool Found;
-	vtkIdList *IList=vtkIdList::New();
+	int	NumberOfRemainingRegions = NumberOfRegions - offset;
+	vtkIdList *IList = vtkIdList::New();
 	std::queue<int>	IQueue;
 
 	// shuffle the Ids ordering
@@ -1180,19 +1200,19 @@ void vtkUniformClustering<Metric,EdgeType>::ComputeInitialRandomSampling(
 		SWeights += this->MetricContext.GetItemWeight( i );
 
 	// compute desired average weight
-	double Weight = SWeights / ((double) NumberOfRemainingRegions);
-
+	double Weight = SWeights / ( ( double ) NumberOfRegions );
 	int FirstItem = 0;
+
 	while( ( NumberOfRemainingItems > 0 ) && ( NumberOfRemainingRegions > 0 ) ) {
 
-		Found = false;
+		bool Found = false;
 		int item;
 
 		while( ( !Found ) && ( FirstItem < this->GetNumberOfItems() ) ) {
 
 			item = Items[ FirstItem ];
 
-			if ( Sampling->GetValue( item ) == this-> NumberOfClusters )
+			if ( Sampling->GetValue( item ) == this->NumberOfClusters )
 				Found = true;
 			else
 				FirstItem++;
@@ -1212,8 +1232,8 @@ void vtkUniformClustering<Metric,EdgeType>::ComputeInitialRandomSampling(
 			if ( Sampling->GetValue( item ) != this->NumberOfClusters )
 				continue;
 
-			Sampling->SetValue( item, NumberOfRemainingRegions );
-			SWeights+=this->MetricContext.GetItemWeight( item );
+			Sampling->SetValue( item, NumberOfRemainingRegions + offset );
+			SWeights += this->MetricContext.GetItemWeight( item );
 			NumberOfRemainingItems--;
 			this->GetItemNeighbours( item, IList );
 
@@ -1243,33 +1263,36 @@ void vtkUniformClustering<Metric,EdgeType>::ComputeInitialRandomSampling(
 		Items[ i ] = i;
 		vtkIdType Clust = Sampling->GetValue( i );
 		if ( Clust == this->NumberOfClusters ) continue;
-		(*this->ClustersSizes->GetPointer(Clust))++;
+		( *this->ClustersSizes->GetPointer( Clust ) )++;
 
 	}
 
 	std::random_shuffle( Items, Items + this->GetNumberOfItems() );
 	FirstItem = 0;
 
+cout << "NumberOfRemainingRegions : " << NumberOfRemainingRegions << endl;
+
 	while( NumberOfRemainingRegions ) {
 
 		vtkIdType item;
 
 		while ( 1 ) {
-
+//cout << "NumberOfRemainingRegions : " << NumberOfRemainingRegions << endl;
+//cout << "item : " << FirstItem << endl;
 			item = Items[ FirstItem ];
 			FirstItem++;
 			vtkIdType clust = Sampling->GetValue( item );
 			if ( clust == this->NumberOfClusters ) break;
 			if (this->ClustersSizes->GetValue( clust ) == 1 ) continue;
-			Sampling->SetValue( item, NumberOfRemainingRegions );
+			Sampling->SetValue( item, NumberOfRemainingRegions + offset );
 			( *this->ClustersSizes->GetPointer( clust ) )--;
-			( *this->ClustersSizes->GetPointer( NumberOfRemainingRegions ) )++;
+			( *this->ClustersSizes->GetPointer( NumberOfRemainingRegions + offset ) )++;
 			break;
 
 		}
 
 		NumberOfRemainingRegions--;
-		Sampling->SetValue( item, NumberOfRemainingRegions );
+		Sampling->SetValue( item, NumberOfRemainingRegions + offset );
 
 	}
 

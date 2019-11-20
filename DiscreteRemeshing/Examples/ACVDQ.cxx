@@ -71,7 +71,6 @@ Auteur:   Sebastien Valette,
 // + non published work....
 /////////////////////////////////////////////////////////////////////////////////////////
 
-
 int main( int argc, char *argv[] ) {
 
 	//******************************************************************************************
@@ -82,6 +81,7 @@ int main( int argc, char *argv[] ) {
 									// other appropriates values range between 0 and 2
 	int SubsamplingThreshold = 10;	// subsampling threshold
 	char* OutputDirectory = 0;		// output directory
+	vtkIdList *fixedVertices = 0;
 	//*******************************************************************************************
 
 	char filename[ 5000 ];
@@ -225,10 +225,43 @@ int main( int argc, char *argv[] ) {
 			cout << "Setting custom density multiplication factor to : " << value << endl;
 			Remesh->SetCustomDensityMultiplicationFactor( atof( value ) );
 
-		} else if (strcmp( key, "-b" ) == 0) {
+		} else if ( strcmp( key, "-b" ) == 0 ) {
 
 			cout << "Setting boundary fixing to : " << value << endl;
 			Remesh->SetBoundaryFixing( atoi( value ) );
+
+		} else if ( strcmp( key, "-fv" ) == 0 ) {
+
+			ifstream input;
+			input.open( value );
+			int id;
+			fixedVertices = vtkIdList::New();
+			while( input >> id ) fixedVertices->InsertNextId( id );
+			input.close();
+
+		} else if ( strcmp( key, "-ft" ) == 0 ) {
+
+			ifstream input;
+			input.open( value );
+			int id;
+			bool fixed[ Mesh->GetNumberOfPoints() ];
+			fixedVertices = vtkIdList::New();
+
+			for ( int i = 0; i < Mesh->GetNumberOfPoints(); i++ )
+				fixed[ i ] = false;
+
+			while( input >> id ) {
+
+				vtkIdType v1, v2, v3;
+				Mesh->GetFaceVertices( id, v1, v2, v3 );
+				fixed[ v1 ] = fixed[ v2 ] = fixed[ v3 ] = true;
+
+			}
+
+			for ( int i = 0; i < Mesh->GetNumberOfPoints(); i++ )
+				if ( fixed[ i ] ) fixedVertices->InsertNextId( i );
+
+			input.close();
 
 		}
 
@@ -253,14 +286,39 @@ int main( int argc, char *argv[] ) {
 
 	}
 
+/*
+	double bounds[ 6 ];
+	Mesh->GetBounds( bounds );
+	double middle = 0.5 * ( bounds[ 0 ] + bounds [ 1 ] );
+	cout << "middle : " << middle << endl;
+	fixedVertices = vtkIdList::New();
+	for ( int i = 0; i < Mesh->GetNumberOfPoints(); i++ ) {
+		double coords[ 3 ];
+		Mesh->GetPointCoordinates( i, coords );
+		if ( coords[ 0 ] > middle ) fixedVertices->InsertNextId( i );
+	}
+	cout << "List size : " << fixedVertices->GetNumberOfIds() << endl;
+*/
+
 	Remesh->SetInput( Mesh );
 	Remesh->SetFileLoadSaveOption( 0 );
-	Remesh->SetNumberOfClusters( NumberOfSamples );
 	Remesh->SetConsoleOutput( 2 );
 	Remesh->SetSubsamplingThreshold( SubsamplingThreshold );
 	Remesh->GetMetric()->SetGradation( Gradation );
 	Remesh->SetDisplay( Display );
 	Remesh->SetUnconstrainedInitialization( 1 );
+
+	if ( fixedVertices ) {
+
+		Remesh->SetFixedClusters( fixedVertices );
+		Remesh->SetNumberOfClusters( NumberOfSamples + fixedVertices->GetNumberOfIds() );
+		cout << "Read " << fixedVertices->GetNumberOfIds() << " fixed Ids" << endl;
+
+		for ( int i = 0; i < fixedVertices->GetNumberOfIds(); i++ )
+			Remesh->GetCluster( i )->AnchorItem = fixedVertices->GetId( i );
+
+	} else Remesh->SetNumberOfClusters( NumberOfSamples );
+
 	Remesh->Remesh();
 
 	// save the output mesh to .ply format

@@ -120,9 +120,8 @@ protected:
 	void CheckSubsamplingRatio ();
 
 	/// Checks whether every output vertex is manifold
-	/// the non-conforming clusters while have their items density multiplied by Factor.
 	/// returns the number of vertices with issues.
-	int DetectNonManifoldOutputVertices (double Factor);
+	int DetectNonManifoldOutputVertices ();
 
 	/// the parameter storing the minimun subsampling ratio.
 	/// if the actual subsampling ration is below, the input mesh will be subdivided accordingly
@@ -159,100 +158,104 @@ protected:
 	double MaxCustomDensity;
 	double MinCustomDensity;
 	double CustomDensityMultiplicationFactor;
-
 	bool ForceManifold;
+
 };
 
 template < class Metric >
-	int vtkDiscreteRemeshing < Metric >::DetectNonManifoldOutputVertices (double Factor)
-{
+int vtkDiscreteRemeshing < Metric >::DetectNonManifoldOutputVertices() {
 
 	// initialize items contained in clusters
 	std::vector< vtkIdList *> ClusterItems;
 	ClusterItems.resize( this->NumberOfClusters );
-	for (vtkIdType i=0;i!=this->NumberOfClusters;i++)
-	{
-		ClusterItems[i]=0;
-		this->IsClusterFreezed->SetValue(i,1);
+
+	for (vtkIdType i = 0; i != this->NumberOfClusters;i++ ) {
+
+		ClusterItems[ i ] = 0;
+		this->IsClusterFreezed->SetValue( i,1 );
+
 	}
 
 	// create a list of items contained in each cluster
-	int numItems=this->GetNumberOfItems();
-	int NumberOfUncorrectlyAssociatedItems=0;
-	for (vtkIdType i=0;i!=numItems;i++)
-	{
-		int Cluster=this->Clustering->GetValue(i);
-		if((Cluster<0)||(Cluster>=this->NumberOfClusters))
+	int numItems = this->GetNumberOfItems();
+	int NumberOfUncorrectlyAssociatedItems = 0;
+
+	for ( vtkIdType i = 0; i != numItems; i++ ) {
+
+		int cluster = this->Clustering->GetValue( i );
+
+		if( ( cluster < 0 ) || ( cluster >= this->NumberOfClusters ) )
 			NumberOfUncorrectlyAssociatedItems++;
-		else
-		{
-			if (ClusterItems[Cluster]==0)
-				ClusterItems[Cluster]=vtkIdList::New();
-			ClusterItems[Cluster]->InsertNextId(i);
+		else {
+
+			if ( ClusterItems[ cluster ] == 0 )
+				ClusterItems[ cluster ] = vtkIdList::New();
+
+			ClusterItems[ cluster ]->InsertNextId(i);
+
 		}
+
 	}
 
-	if (NumberOfUncorrectlyAssociatedItems!=0)
-		cout<<NumberOfUncorrectlyAssociatedItems<<" uncorrectly associated items"<<endl;
+	if ( NumberOfUncorrectlyAssociatedItems != 0 )
+		cout << NumberOfUncorrectlyAssociatedItems << " uncorrectly associated items" << endl;
 
-	int NumberOfTopologyIssues=0;
-	vtkIdList *ClustersWithIssues=vtkIdList::New();
-	vtkIdList *CList=vtkIdList::New();
-	for (int Cluster=0;Cluster!=this->NumberOfClusters;Cluster++)
-	{
-		if (!this->Output->IsVertexManifold(Cluster))
-		{
-//			cout<<"Cluster "<<Cluster<<" is non manifold"<<endl;
-			vtkIdList *Items=ClusterItems[Cluster];
+	int NumberOfTopologyIssues = 0;
+	vtkIdList *ClustersWithIssues = vtkIdList::New();
+	vtkIdList *CList = vtkIdList::New();
 
-			bool problem=true;
-			if (Items!=0)
-			{
-				if (Items->GetNumberOfIds()==1)
-				{
-					if (this->Input->IsVertexManifold(Items->GetId(0))!=1)
-					{
-						problem=false;
-						cout<<"discarding this topology issue as the input mesh also has a topology issue"<<endl;
-					}
+	for ( int cluster = 0; cluster != this->NumberOfClusters; cluster++ ) {
+
+		if ( this->Output->IsVertexManifold( cluster ) ) continue;
+//		cout<<"Cluster "<<Cluster<<" is non manifold"<<endl;
+		vtkIdList *Items = ClusterItems[ cluster ];
+		bool problem = true;
+
+		if ( Items != 0) {
+
+			if ( Items->GetNumberOfIds() == 1 )	{
+
+				if ( this->Input->IsVertexManifold( Items->GetId( 0 ) ) != 1 ) {
+
+					problem = false;
+					cout << "discarding this topology issue as the input mesh also has a topology issue" << endl;
+
 				}
+
 			}
 
-			if (problem)
-			{
-				NumberOfTopologyIssues++;
-				ClustersWithIssues->InsertNextId(Cluster);
-	/*			vtkIdList *CItems=ClusterItems[Cluster];
-				int Size=0;
-				if (CItems!=0)
-					Size=CItems->GetNumberOfIds();
-
-				cout<<"Vertex "<<Cluster<<" is non manifold. Cluster size : "<<Size<<endl;*/
-
-				//unfreeze this cluster and its neighbours
-				this->IsClusterFreezed->SetValue(Cluster,0);
-				this->Output->GetVertexNeighbours(Cluster,CList);
-				for (int i=0;i!=CList->GetNumberOfIds();i++)
-					this->IsClusterFreezed->SetValue(CList->GetId(i),0);
-			}
 		}
+
+		if ( problem ) {
+
+			NumberOfTopologyIssues++;
+			ClustersWithIssues->InsertNextId(cluster);
+/*			vtkIdList *CItems=ClusterItems[Cluster];
+			int Size=0;
+			if (CItems!=0)
+				Size=CItems->GetNumberOfIds();
+
+			cout<<"Vertex "<<Cluster<<" is non manifold. Cluster size : "<<Size<<endl;*/
+
+			//unfreeze this cluster and its neighbours
+			this->IsClusterFreezed->SetValue( cluster, 0 );
+			this->Output->GetVertexNeighbours( cluster, CList );
+			for ( int i = 0; i != CList->GetNumberOfIds(); i++ )
+				this->IsClusterFreezed->SetValue( CList->GetId( i ), 0 );
+
+		}
+
 	}
+
 	CList->Delete();
+	vtkIdList *FList = vtkIdList::New();
+	vtkIdList *IList = vtkIdList::New();
 
-	vtkIdList *FList=vtkIdList::New();
-	vtkIdList *IList=vtkIdList::New();
-	for (int i=0;i!=ClustersWithIssues->GetNumberOfIds();i++)
-	{
-		vtkIdType Cluster=ClustersWithIssues->GetId(i);
-		vtkIdList *Items=ClusterItems[Cluster];
-		if (Items==0)
-			cout<<"Warning : cluster "<<Cluster<<" seems empty!"<<endl;
-		else
-		{
-//			for (vtkIdType j=0;j!=Items->GetNumberOfIds();j++)
-//				this->MetricContext.MultiplyItemWeight(Items->GetId(j),Factor);
-		}
+	for ( int i = 0; i != ClustersWithIssues->GetNumberOfIds(); i++ ) {
 
+		vtkIdType cluster = ClustersWithIssues->GetId( i );
+		vtkIdList *Items = ClusterItems[ cluster ];
+		if ( Items == 0 ) cout << "Warning : cluster " << cluster << " seems empty!" << endl;
 		int newSize = this->NumberOfClusters + 1;
 		this->Clusters.resize( newSize );
 		vtkIdType newCluster = this->NumberOfClusters;
@@ -265,85 +268,108 @@ template < class Metric >
 		this->ClustersLastModification[ newCluster ] = this->NumberOfLoops;
 		this->ClustersSizes->Resize( newSize );
 		this->ClustersSizes->SetValue( newCluster, 0 );
-//		cout<<"Adding cluster "<<newCluster<<" near cluster "<<Cluster<<endl;
+//		bool debug = newCluster == 22496 ? true : false;
+//		if (debug ) cout<<"Adding cluster "<<newCluster<<" near cluster "<<Cluster<<endl;
 		this->NumberOfClusters++;
-		if (Items->GetNumberOfIds()>1)
-		{
-			vtkIdType ItemToMove=Items->GetId(0);
-			this->Clustering->SetValue(ItemToMove,newCluster);
-			ClusterItems[newCluster]=vtkIdList::New();
-			ClusterItems[newCluster]->InsertNextId(ItemToMove);
-			Items->DeleteId(ItemToMove);
+
+		if ( Items->GetNumberOfIds() > 1 ) {
+
+//			if (debug) cout << Items->GetNumberOfIds() << " items in cluster" << endl;
+			vtkIdType ItemToMove = Items->GetId( 0 );
+			this->Clustering->SetValue( ItemToMove,newCluster );
+			ClusterItems[ newCluster ] = vtkIdList::New();
+			ClusterItems[ newCluster ]->InsertNextId( ItemToMove );
+			Items->DeleteId( ItemToMove );
+			continue;
+
 		}
-		else
-		{
-			// the cluster has only one item. Pick a neighbour item
-			vtkIdType Item=Items->GetId(0);
+
+//		if (debug) cout << "Only one item in cluster" << endl;
+		// the cluster has only one item. Pick a neighbour item
+		vtkIdType item = Items->GetId( 0 );
 //			cout<<"Cluster "<<Cluster<<" contains only vertex "<<Item<<" of valence "
 //			<<this->Input->GetValence(Item)<<endl;
-			this->Input->GetVertexNeighbourFaces(Item,FList);
+		this->Input->GetVertexNeighbourFaces( item, FList );
 /*			cout<<"Neighbour faces: "<<endl;
-			for (int j=0;j!=FList->GetNumberOfIds();j++)
-			{
-				vtkIdType v1,v2,v3;
-				this->Input->GetFaceVertices(FList->GetId(j),v1,v2,v3);
-				cout<<FList->GetId(j)<<" : vertices "<<v1<<" "<<v2<<" "<<v3<<endl;			
-			}*/
-			this->GetItemNeighbours(Item,IList);
-			bool found=false;
-			for (int j=0;j<IList->GetNumberOfIds();j++)
-			{
-				vtkIdType Neighbour=IList->GetId(j);
-				vtkIdType NeighbourCluster=this->Clustering->GetValue(Neighbour);
-				if (ClusterItems[NeighbourCluster]->GetNumberOfIds()>1)
-				{
-					this->Clustering->SetValue(Neighbour,newCluster);
-					ClusterItems[NeighbourCluster]->DeleteId(Neighbour);
-//					cout<<"Took 1 item from cluster "<<NeighbourCluster<<endl;
-					ClusterItems[newCluster]=vtkIdList::New();
-					ClusterItems[newCluster]->InsertNextId(Neighbour);
-					found=true;
-					break;
-				}
+		for (int j=0;j!=FList->GetNumberOfIds();j++)
+		{
+			vtkIdType v1,v2,v3;
+			this->Input->GetFaceVertices(FList->GetId(j),v1,v2,v3);
+			cout<<FList->GetId(j)<<" : vertices "<<v1<<" "<<v2<<" "<<v3<<endl;
+		}*/
+		this->GetItemNeighbours( item, IList );
+		bool found = false;
+
+		for ( int j = 0; j < IList->GetNumberOfIds(); j++ ) {
+
+			vtkIdType Neighbour = IList->GetId(j);
+			vtkIdType NeighbourCluster = this->Clustering->GetValue( Neighbour );
+
+			if ( ClusterItems[ NeighbourCluster ]->GetNumberOfIds() > 1 ) {
+
+				this->Clustering->SetValue( Neighbour, newCluster );
+				ClusterItems[ NeighbourCluster ]->DeleteId( Neighbour );
+//					if ( NeighbourCluster == 22496 ) cout<<"Took 1 item from cluster "<<NeighbourCluster<<endl;
+				ClusterItems[ newCluster ] = vtkIdList::New();
+				ClusterItems[ newCluster ]->InsertNextId( Neighbour );
+				found=true;
+				break;
 			}
-			if (!found)
-			{
+
+		}
+
+		if (!found) {
+
 //				cout<<"Could not find a place to add cluster "<<newCluster
 //				<<" near cluster "<<Cluster<<endl;
-				for (int j=0;j<IList->GetNumberOfIds();j++)
-				{
-					vtkIdType Neighbour=IList->GetId(j);
-					vtkIdType NeighbourCluster=this->Clustering->GetValue(Neighbour);
-					if (ClusterItems[NeighbourCluster]->GetNumberOfIds()>1)
-					{
-						this->Clustering->SetValue(Neighbour,newCluster);
-						ClusterItems[NeighbourCluster]->DeleteId(Neighbour);
-						ClusterItems[newCluster]=vtkIdList::New();
-						ClusterItems[newCluster]->InsertNextId(Neighbour);
-					}
-					else
-					{
+			for ( int j = 0; j < IList->GetNumberOfIds(); j++ ) {
+
+				vtkIdType Neighbour = IList->GetId( j );
+				vtkIdType NeighbourCluster = this->Clustering->GetValue( Neighbour );
+
+				if ( ClusterItems[ NeighbourCluster ]->GetNumberOfIds() > 1 ) {
+
+					this->Clustering->SetValue( Neighbour, newCluster );
+					ClusterItems[ NeighbourCluster ]->DeleteId( Neighbour );
+					ClusterItems[ newCluster ]=vtkIdList::New();
+					ClusterItems[ newCluster ]->InsertNextId( Neighbour );
+					found = true;
+					break;
+
+				} else {
 //						cout<<"Neighbour : "<<NeighbourCluster<<" has "
 //							<<ClusterItems[NeighbourCluster]->GetNumberOfIds()<<" items"<<endl;
-					}
 				}
-				this->Snapshot();
 			}
+
+			this->Snapshot();
+
 		}
+
+		if ( !found ) {
+
+			// no freeable nearby item found. Cancel new cluster creation
+			newSize--;
+			this->Clusters.resize( newSize );
+			ClusterItems.resize( newSize );
+			this->IsClusterFreezed->Resize( newSize );
+			this->ClustersLastModification.resize( newSize );
+			this->ClustersSizes->Resize( newSize );
+			this->NumberOfClusters--;
+
+		}
+
 	}
 
 	if ( this->Window ) 
 		this->Window->DisplayRandomColors( this->NumberOfClusters + 1 );
 
-
 	// free memory
 	ClustersWithIssues->Delete();
 	IList->Delete();
-	for (vtkIdType i=0;i!=this->NumberOfClusters;i++)
-	{
-		if (ClusterItems[i]!=0)
-			ClusterItems[i]->Delete();
-	}
+	for ( vtkIdType i = 0; i != this->NumberOfClusters; i++ )
+		if ( ClusterItems[ i ] != 0 ) ClusterItems[ i ]->Delete();
+
 	return NumberOfTopologyIssues;
 }
 
@@ -902,17 +928,17 @@ template < class Metric > void vtkDiscreteRemeshing < Metric >::Remesh ()
 	}
 
 	this->BuildDelaunayTriangulation ();
-	double Factor=2;
+
 	if (this->ForceManifold)
 	{
-		int NumberOfIssues=this->DetectNonManifoldOutputVertices(Factor);
+		int NumberOfIssues=this->DetectNonManifoldOutputVertices();
 		while (NumberOfIssues!=0)
 		{
 			cout<<NumberOfIssues<<" topology issues, restarting minimization"<<endl;
 			this->ConnexityConstraint=0;
 			this->MinimizeEnergy();
 			this->BuildDelaunayTriangulation ();
-			NumberOfIssues=this->DetectNonManifoldOutputVertices(Factor);
+			NumberOfIssues=this->DetectNonManifoldOutputVertices();
 		}
 	}
 }
@@ -1084,7 +1110,7 @@ template < class Metric >
 				if (this->Output->IsEdge(C1,C2)<0)
 				{
 					this->Output->AddEdge(C1,C2);
-					cout<<"Added non-manifold edge "<<C1<<","<<C2<<endl;
+//					cout<<"Added non-manifold edge "<<C1<<","<<C2<<endl;
 				}
 			}
 		}
