@@ -394,145 +394,136 @@ void vtkUniformClustering<Metric,EdgeType>::ReComputeStatistics()
 }
 
 template <class Metric, class EdgeType>
-int	vtkUniformClustering<Metric,EdgeType>::CleanClustering()
-{
-	int	i,j,l;
-	int	Number,Type,Size;
-	vtkIdList **Clusters;
-	char *Visited;
-	vtkIdType *VisitedCluster;
-	int	*Sizes;
-	vtkIdType I1,I2;
+int	vtkUniformClustering<Metric,EdgeType>::CleanClustering() {
 
-	std::queue<int>	Queue;
-	Clusters=new vtkIdList*[this->NumberOfClusters];
-	Sizes=new int[this->NumberOfClusters];
-	Visited=new	char[this->GetNumberOfItems()];
-	VisitedCluster=new vtkIdType[this->NumberOfClusters];
-	Number=0;
-
-	vtkIdList *IList=vtkIdList::New();
+	std::queue< int > Queue;
+	vtkIdList **Clusters = new vtkIdList*[ this->NumberOfClusters ];
+	int *Sizes=new int[ this->NumberOfClusters ];
+	bool *Visited = new	bool[ this->GetNumberOfItems() ];
+	vtkIdType *VisitedCluster = new vtkIdType[ this->NumberOfClusters ];
+	int Number = 0;
+	vtkIdList *IList = vtkIdList::New();
 
 	// Detect clusters that	have several connected components
-	for	(i=0;i<this->GetNumberOfItems();i++)
-		Visited[i]=0;
-	for	(i=0;i<this->NumberOfClusters;i++)
-	{
-		Clusters[i]=0;
-		Sizes[i]=0;
-		VisitedCluster[i]=0;
+	for	( int i = 0; i < this->GetNumberOfItems(); i++ ) Visited[ i ] = false;
+
+	for	( int i = 0; i < this->NumberOfClusters; i++ ) {
+
+		Clusters[ i ] = 0;
+		Sizes[ i ] = 0;
+		VisitedCluster[ i ] = 0;
+
 	}
 
-	for	(i=0;i<this->GetNumberOfItems();i++)
-	{
-		while (Queue.empty()==0)
+	for	( int i = 0; i < this->GetNumberOfItems(); i++ ) {
+
+		while ( Queue.empty() == 0) Queue.pop();
+
+		if ( Visited[i] 
+			|| ( this->Clustering->GetValue( i ) == this->NumberOfClusters ) ) continue;
+
+		int Size = 0;
+		Queue.push( i );
+		int Type = this->Clustering->GetValue(i);
+
+		while ( Queue.empty() == 0 ) {
+
+			vtkIdType I1 = Queue.front();
 			Queue.pop();
+			if ( Visited[ I1 ] ) continue;
+			if ( this->GetItemType( I1 ) != 0 ) Size++;
+			Visited[ I1 ] = true;
+			this->GetItemNeighbours( I1, IList );
 
-		if ((Visited[i]==0)&&(this->Clustering->GetValue(i)!=this->NumberOfClusters))
-		{
-			Size=0;
-			Queue.push(i);
-			Type=this->Clustering->GetValue(i);
-			while (Queue.empty()==0)
-			{
-				I1=Queue.front();
-				Queue.pop();
-				if (Visited[I1]==0)
-				{
-					if (this->GetItemType(I1)!=0)
-						Size++;
-					Visited[I1]=1;
+			for	(int j = 0; j < IList->GetNumberOfIds(); j++ ) {
 
-					this->GetItemNeighbours(I1,IList);
-
-					for	(j=0;j<IList->GetNumberOfIds();j++)
-					{
-						I2=IList->GetId(j);
-						if ((Visited[I2]==0)&&(this->Clustering->GetValue(I2)==Type))
-							Queue.push(I2);
-					}
-				}
+				vtkIdType I2 = IList->GetId( j );
+				if ( !Visited[ I2 ] && ( this->Clustering->GetValue( I2 ) == Type ) )
+					Queue.push( I2 );
 			}
-			if (Type!=this->NumberOfClusters)
-			{
-				if (VisitedCluster[Type]==0)
-				{
-					// first connected component
-					VisitedCluster[Type]=i;
-					Sizes[Type]=Size;
-				}
-				else
-				{
-					// The cluster has an other	connected component
-					if (Clusters[Type]==0)
-					{
-						Clusters[Type]=vtkIdList::New();
-						Clusters[Type]->InsertNextId(VisitedCluster[Type]);
-						Clusters[Type]->InsertNextId(Sizes[Type]);
-					}
-					Clusters[Type]->InsertNextId(i);
-					Clusters[Type]->InsertNextId(Size);
-				}
-			}																  
+
 		}
+
+		if ( Type == this->NumberOfClusters ) continue;
+
+		if ( VisitedCluster[ Type ] == 0 ) {
+
+			// first connected component
+			VisitedCluster[ Type ] = i;
+			Sizes[ Type ] = Size;
+
+		} else {
+
+			// The cluster has an other	connected component
+			if ( Clusters[ Type ] == 0 ) {
+
+				Clusters[ Type ] = vtkIdList::New();
+				Clusters[ Type ]->InsertNextId( VisitedCluster[ Type ] );
+				Clusters[ Type ]->InsertNextId( Sizes[ Type ] );
+			}
+
+			Clusters[ Type ]->InsertNextId( i );
+			Clusters[ Type ]->InsertNextId( Size );
+
+		}
+
 	}
 
-	for	(i=0;i<this->GetNumberOfItems();i++)
-		Visited[i]=0;
+	for	( int i = 0;i < this->GetNumberOfItems(); i++ )	Visited[ i ] = false;
 
 	// Reset the smallest unconnected components to	NULLCLUSTER
-	int	Sizemax, Imax=0;
-	for	(i=0;i<this->NumberOfClusters;i++)
-	{
-		if ((Clusters[i]!=0)&&(this->IsClusterCleanable(i)))
-		{
-			Number++;
-			Sizemax=0;
-			// Detect for each cluster,	the	biggest	connected component;
-			for	(j=0;j<Clusters[i]->GetNumberOfIds()/2;j++)
-			{
-				if (Sizemax<Clusters[i]->GetId(2*j+1))
-				{
-					Sizemax=Clusters[i]->GetId(2*j+1);
-					Imax=j;
+	for	(int i = 0; i < this->NumberOfClusters; i++ ) {
+
+		if ( ( Clusters[ i ] == 0 ) || !this->IsClusterCleanable( i ) ) {
+
+			if ( Clusters[ i ] != 0 ) Clusters[ i ]->Delete();
+			continue;
+
+		}
+
+		Number++;
+		int Sizemax = 0, Imax;
+
+		// Detect for each cluster,	the	biggest	connected component;
+		for	( int j = 0; j <Clusters[ i ]->GetNumberOfIds() / 2; j++ ) {
+
+			if ( Sizemax >= Clusters[ i ]->GetId( 2 * j + 1 ) ) continue;
+			Sizemax = Clusters[ i ]->GetId( 2 * j + 1 );
+			Imax = j;
+
+		}
+
+		// Reset the smallest components to	-1
+		for	( int j = 0; j < Clusters[ i ]->GetNumberOfIds() / 2 ;j++ ) {
+
+			if ( j ==Imax) continue;
+			while ( Queue.empty() == 0 ) Queue.pop();
+			Queue.push( Clusters[ i ]->GetId( 2 * j ) );
+			int Type = this->Clustering->GetValue( Clusters[ i ]->GetId( 2 * j ) );
+
+			while ( Queue.empty() == 0 ) {
+
+				vtkIdType I1 = Queue.front();
+				Queue.pop();
+				if (Visited[ I1 ] ) continue;
+				Visited[I1] = true;
+				this->Clustering->SetValue( I1, this->NumberOfClusters );
+				this->GetItemNeighbours( I1, IList );
+
+				for	( int l = 0;l < IList->GetNumberOfIds(); l++ ) {
+
+					vtkIdType I2 = IList->GetId(l);
+					if ( this->Clustering->GetValue( I2 ) == Type )
+						Queue.push( I2 );
+
 				}
+
 			}
 
-			// Reset the smallest components to	-1
-			for	(j=0;j<Clusters[i]->GetNumberOfIds()/2;j++)
-			{
-				if (j!=Imax)
-				{
-					while (Queue.empty()==0)
-						Queue.pop();
-					Queue.push(Clusters[i]->GetId(2*j));
-					Type=this->Clustering->GetValue(Clusters[i]->GetId(2*j));
-					while (Queue.empty()==0)
-					{
-						I1=Queue.front();
-						Queue.pop();
-						if (Visited[I1]==0)
-						{
-							Visited[I1]=1;
-							this->Clustering->SetValue(I1,this->NumberOfClusters);
-							this->GetItemNeighbours(I1,IList);
-							for	(l=0;l<IList->GetNumberOfIds();l++)
-							{
-								I2=IList->GetId(l);
-								if (this->Clustering->GetValue(I2)==Type)
-									Queue.push(I2);
-							}
-						}
-					}
-				}
-			}
-			Clusters[i]->Delete();
 		}
-		else
-		{
-			if (Clusters[i]!=0)
-				Clusters[i]->Delete();
-		}
+
+		Clusters[ i ]->Delete();
+
 	}
 
 	delete [] Clusters;
@@ -541,7 +532,7 @@ int	vtkUniformClustering<Metric,EdgeType>::CleanClustering()
 	delete [] Sizes;
 	IList->Delete();
 	
-	return (Number);
+	return Number;
 }
 
 template <class Metric, class EdgeType>
