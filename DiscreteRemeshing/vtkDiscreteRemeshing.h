@@ -68,7 +68,7 @@ template < class Metric > class vtkDiscreteRemeshing:public vtkSurfaceClustering
 	vtkSetMacro( SubsamplingThreshold, int )
 
 	/// Sets On/Off the Edges optimization scheme (still experimental)
-	vtkSetMacro( EdgeOptimizationFlag, int )
+	vtkSetMacro( EdgeOptimization, int )
 	
 	/// Sets On/Off the fix for meshes with boundaries. Default value: 1 (On)
 	vtkSetMacro( BoundaryFixing, int )
@@ -144,10 +144,7 @@ protected:
 	int FileLoadSaveOption;
 
 	// Experimental (Nevermind)
-	void OptimizeOutputEdges ();
-
-	// Experimental (Nevermind)
-	int EdgeOptimizationFlag;
+	int EdgeOptimization;
 
 	// flag to enable addition of polygons and points to fix the mesh boundaries
 	int BoundaryFixing;
@@ -581,8 +578,8 @@ template < class Metric >
 
 
 template < class Metric >
-	void vtkDiscreteRemeshing < Metric >::SamplingPreProcessing ()
-{
+void vtkDiscreteRemeshing < Metric >::SamplingPreProcessing () {
+
 	int i;
 	int Compute = 0;
 	vtkDoubleArray *CellsIndicators;
@@ -748,7 +745,7 @@ template < class Metric >
 			CurvatureCollection->ReplaceItem(0,CellsIndicators2);
 			CellsIndicators2->Delete();
 //			CellsIndicators->Delete();
-			CellsIndicators=CellsIndicators2;
+			CellsIndicators = CellsIndicators2;
 
 			cout << ".... Done" << endl;
 		}
@@ -839,321 +836,321 @@ template < class Metric >
 }
 
 template < class Metric >
-	void vtkDiscreteRemeshing < Metric >::CheckSubsamplingRatio ()
-{
-	vtkSurface *Levels[100];
-	Levels[0] = this->Input;
+void vtkDiscreteRemeshing < Metric >::CheckSubsamplingRatio () {
 
-	int i;
-	if (this->ClusteringType == 1)
-	{
-		if (!this->VerticesParent1)
+	vtkSurface *Levels[ 100 ];
+	Levels[ 0 ] = this->Input;
+
+	if ( this->ClusteringType == 1 ) {
+
+		if ( !this->VerticesParent1 )
 			this->VerticesParent1 = vtkIntArray::New ();
 		if (!this->VerticesParent2)
 			this->VerticesParent2 = vtkIntArray::New ();
+
 	}
 
-	while (Levels[NumberOfSubdivisionsBeforeClustering]->GetNumberOfPoints () 
-				<this->SubsamplingThreshold * this->NumberOfClusters )
-	{
-		if (this->ConsoleOutput)
-			cout << "Subdividing mesh" << endl;
-		Levels[NumberOfSubdivisionsBeforeClustering + 1] =
-			Levels[NumberOfSubdivisionsBeforeClustering]->
-			Subdivide (this->VerticesParent1,this->VerticesParent2);
+	while ( Levels[ NumberOfSubdivisionsBeforeClustering ]->GetNumberOfPoints()
+		< this->SubsamplingThreshold * this->NumberOfClusters ) {
+
+		if ( this->ConsoleOutput ) cout << "Subdividing mesh" << endl;
+		Levels[ NumberOfSubdivisionsBeforeClustering + 1 ] =
+			Levels[ NumberOfSubdivisionsBeforeClustering ]->
+			Subdivide( this->VerticesParent1, this->VerticesParent2 );
 		NumberOfSubdivisionsBeforeClustering++;
+
 	}
 
-	if (NumberOfSubdivisionsBeforeClustering != 0)
-	{
+	if ( NumberOfSubdivisionsBeforeClustering ) {
 
 		this->OriginalInput = this->Input;
-		this->Input = Levels[NumberOfSubdivisionsBeforeClustering];
-		for (i = 1; i < NumberOfSubdivisionsBeforeClustering; i++)
-		{		
+		this->Input = Levels[ NumberOfSubdivisionsBeforeClustering ];
+		for ( int i = 1; i < NumberOfSubdivisionsBeforeClustering; i++ )
 			Levels[i]->Delete ();
-		}
+
 	}
+
 }
+
 template < class Metric > void vtkDiscreteRemeshing < Metric >::Remesh ()
 {
-	int i;
 	int Compute = 1;
-
 	this->CheckSubsamplingRatio ();
 	this->SamplingPreProcessing ();
 
-	if (this->ConsoleOutput)
-		cout << "Input mesh: " << this->GetInput ()->
-			GetNumberOfPoints () << " vertices	and	" << this->
-			GetInput ()->GetNumberOfCells () << " faces" << endl;
+	if ( this->ConsoleOutput )
+		cout << "Input mesh: " << this->GetInput ()->GetNumberOfPoints()
+			<< " vertices	and	" << this->GetInput ()->GetNumberOfCells()
+			<< " faces" << endl;
 
-	if (this->FileLoadSaveOption)
-	{
+	if ( this->FileLoadSaveOption ) {
+
 		cout << "Do you want to compute the clustering? (0:NO	1:Yes) ";
 		cin >> Compute;
+
 	}
-	if ((Compute == 1) || (this->FileLoadSaveOption == 0))
-	{
+
+	if ( ( Compute == 1) || ( this->FileLoadSaveOption == 0 ) ) {
+
 		this->ProcessClustering ();
 
-		if (this->FileLoadSaveOption == 1)
-		{
+		if ( this->FileLoadSaveOption == 1 ) {
+
 			fstream ClusteringOutput;
-			ClusteringOutput.open ("clustering.dat", ofstream::out | ofstream::trunc | ios::binary);
-			for (i = 0; i < this->GetNumberOfItems (); i++)
-			{
-				int value;
-				value = this->Clustering->GetValue (i);
-				ClusteringOutput.write ((char *) &value, sizeof (int));
+			ClusteringOutput.open( "clustering.dat",
+				ofstream::out | ofstream::trunc | ios::binary );
+
+			for ( int i = 0; i < this->GetNumberOfItems (); i++ ) {
+
+				int value = this->Clustering->GetValue( i );
+				ClusteringOutput.write ( (char *) &value, sizeof (int) );
 			}
+
 			ClusteringOutput.close ();
+
 		}
-	}
-	else
-	{
+
+	} else {
+
 		this->Init ();
 		fstream ClusteringInput;
-		ClusteringInput.open ("clustering.dat",ofstream::in | ios::binary);
+		ClusteringInput.open( "clustering.dat", ofstream::in | ios::binary );
 
-		for (i = 0; i < this->GetNumberOfItems (); i++)
-		{
+		for ( int i = 0; i < this->GetNumberOfItems (); i++) {
+
 			int value;
-			ClusteringInput.read ((char *) &value, sizeof (int));
-			this->Clustering->SetValue (i, value);
-		}
-		ClusteringInput.close ();
+			ClusteringInput.read( (char *) &value, sizeof ( int ) );
+			this->Clustering->SetValue( i, value );
 
-		this->ReComputeStatistics ();
+		}
+
+		ClusteringInput.close();
+		this->ReComputeStatistics();
+
 	}
 
 	this->BuildDelaunayTriangulation ();
+	if ( this->ConsoleOutput ) this->Output->DisplayMeshProperties();
 
-	if (this->ForceManifold)
-	{
-		int NumberOfIssues=this->DetectNonManifoldOutputVertices();
-		while (NumberOfIssues!=0)
-		{
-			cout<<NumberOfIssues<<" topology issues, restarting minimization"<<endl;
-			this->ConnexityConstraint=0;
+	if ( this->ForceManifold ) {
+
+		while ( int NumberOfIssues = this->DetectNonManifoldOutputVertices() ) {
+
+			cout << NumberOfIssues << " topology issues, restarting minimization" << endl;
+			this->ConnexityConstraint = 0;
 			this->MinimizeEnergy();
-			this->BuildDelaunayTriangulation ();
-			NumberOfIssues=this->DetectNonManifoldOutputVertices();
+			this->BuildDelaunayTriangulation();
+
 		}
+
+		if ( this->ConsoleOutput ) this->Output->DisplayMeshProperties ();
+
 	}
+
 }
 template < class Metric >
-	void vtkDiscreteRemeshing <Metric >::GetDualItemNeighbourClusters (vtkIdType Item,vtkIdList * List)
-{
-	if (this->ClusteringType == 0)
-	{
-		vtkIdType Cluster;
+void vtkDiscreteRemeshing <Metric >::GetDualItemNeighbourClusters ( vtkIdType item,vtkIdList * List ) {
+
+	if (this->ClusteringType == 0) {
+
+		vtkIdType cluster;
 		List->Reset ();
 		vtkIdList *VerticesList = vtkIdList::New ();
-		this->GetInput ()->GetVertexNeighbourFaces (Item,VerticesList);
-		for (vtkIdType i = 0; i < VerticesList->GetNumberOfIds (); i++)
-		{
-			Cluster =this->Clustering->GetValue (VerticesList->GetId (i));
-			if (Cluster != this->NumberOfClusters)
-				List->InsertUniqueId (Cluster);
+		this->GetInput ()->GetVertexNeighbourFaces( item,VerticesList );
+
+		for ( vtkIdType i = 0; i < VerticesList->GetNumberOfIds (); i++ ) {
+
+			cluster = this->Clustering->GetValue( VerticesList->GetId( i ) );
+			if ( cluster != this->NumberOfClusters ) List->InsertUniqueId( cluster );
 
 		}
+
 		VerticesList->Delete ();
-	}
-	else
-	{
-		vtkIdType *Vertices,NumberOfVertices;
+
+	} else {
+
+		vtkIdType *Vertices, NumberOfVertices;
 		List->Reset ();
-		this->Input->GetCellPoints (Item, NumberOfVertices, Vertices);
-		for (vtkIdType i = 0; i < NumberOfVertices; i++)
-		{
-			vtkIdType Cluster = this->Clustering->GetValue (Vertices[i]);
-			if (Cluster < this->NumberOfClusters)
-				List->InsertUniqueId (Cluster);
+		this->Input->GetCellPoints( item, NumberOfVertices, Vertices );
+
+		for( vtkIdType i = 0; i < NumberOfVertices; i++ ) {
+
+			vtkIdType cluster = this->Clustering->GetValue( Vertices[ i ] );
+			if ( cluster < this->NumberOfClusters )	List->InsertUniqueId( cluster );
+
 		}
+
 	}
+
 }
 
 template < class Metric >
-	vtkIdType vtkDiscreteRemeshing < Metric >::AddFace (vtkIdType v1,vtkIdType v2,vtkIdType v3)
-{
-	if ((v1 == v2)||(v1 == v3)||(v2 == v3))
-		return (-1);
+vtkIdType vtkDiscreteRemeshing < Metric >::AddFace( vtkIdType v1, vtkIdType v2, vtkIdType v3) {
 
-	if (this->Output->IsFace (v1, v2, v3) < 0)
-		return (this->Output->AddFace (v1, v2, v3));
-	else
-		return (-1);
+	if ( ( v1 == v2 ) || ( v1 == v3 ) || ( v2 == v3 ) ) return (-1);
+
+	if ( this->Output->IsFace( v1, v2, v3 ) < 0 )
+		return ( this->Output->AddFace( v1, v2, v3 ) );
+	else return -1;
+
 }
 
 template < class Metric >
-	void vtkDiscreteRemeshing < Metric >::BuildDelaunayTriangulation ()
-{
+void vtkDiscreteRemeshing < Metric >::BuildDelaunayTriangulation () {
 
-	vtkIdType i, j;
 	double P[3];
 	vtkIdList *CList = vtkIdList::New ();
-	vtkIdType v1, v2, v3;
-
-	if (this->Output!=0)
-		this->Output->Delete();
-
-	this->Output = vtkSurface::New ();
-	vtkIdType e1, n, type_last, type, v_init, f1, f2;
-
+	vtkIdType v1, v2, v3, f1, f2;
+	if ( this->Output != 0 ) this->Output->Delete();
+	this->Output = vtkSurface::New();
 
 	// Find the first non-empty cluster and put its Id in Valid
 	int Valid = 0;
-	for (i = 0; i < this->GetNumberOfClusters (); i++)
-	{
-		if (this->ClustersSizes->GetValue (i) > 0)
-		{
+
+	for ( int i = 0; i < this->GetNumberOfClusters (); i++ )	{
+
+		if ( this->ClustersSizes->GetValue( i ) > 0 ) {
+
 			Valid = i;
 			break;
+
 		}
+
 	}
 
 	// We compute the vertices as inertia centers of each Cluster
-	for (i = 0; i < this->NumberOfClusters; i++)
-	{
-		if (this->ClustersSizes->GetValue (i) == 0)
-			this->MetricContext.GetClusterCentroid (&this->Clusters[ Valid ], P);
+	for ( int i = 0; i < this->NumberOfClusters; i++ ) {
+
+		if ( this->ClustersSizes->GetValue (i) == 0 )
+			this->MetricContext.GetClusterCentroid ( &this->Clusters[ Valid ], P );
 		else
-			this->MetricContext.GetClusterCentroid (&this->Clusters[ i ],P);
-		this->Output->AddVertex (P[0], P[1], P[2]);
+			this->MetricContext.GetClusterCentroid ( &this->Clusters[ i ], P );
+
+		this->Output->AddVertex ( P[ 0 ], P[ 1 ], P[ 2 ] );
+
 	}
 
-	for (i = 0; i < this->GetNumberOfDualItems (); i++)
-	{
-		this->GetDualItemNeighbourClusters (i, CList);
-		if (this->ClusteringType == 0)
-		{
+	for ( int i = 0; i < this->GetNumberOfDualItems (); i++ ) {
 
-			if (CList->GetNumberOfIds () > 3)
-			{
-				if ((this->GetInput ()->GetNumberOfBoundaries (i) == 0)
-				    && (CList->GetNumberOfIds () < 600))
-				{
+		this->GetDualItemNeighbourClusters ( i, CList );
+
+		if ( this->ClusteringType == 0 ) {
+
+			if ( CList->GetNumberOfIds () > 3 ) {
+
+				if ( ( this->GetInput ()->GetNumberOfBoundaries ( i ) == 0)
+				    && ( CList->GetNumberOfIds () < 600 ) ) {
 
 					CList->Reset ();
-					e1 = this->GetInput ()->GetFirstEdge (i);
-					this->GetInput ()->GetEdgeVertices (e1, v1, v2);
-					if (v1 == i)
-						v1 = v2;
-					v_init = v1;
-					this->GetInput ()->GetEdgeFaces (e1,f1,f2);
-					v2 = this->GetInput ()->GetThirdPoint (f1, i, v1);
-
+					vtkIdType e1 = this->GetInput ()->GetFirstEdge( i );
+					this->GetInput ()->GetEdgeVertices( e1, v1, v2 );
+					if ( v1 == i ) v1 = v2;
+					vtkIdType v_init = v1;
+					this->GetInput ()->GetEdgeFaces( e1, f1, f2 );
+					v2 = this->GetInput ()->GetThirdPoint( f1, i, v1 );
 					v1 = -1;
-					type_last = -1;
+					vtkIdType type_last = -1;
+					int Valence = this->GetInput()->GetValence( i );
 
-					int Valence =this->GetInput ()->GetValence (i);
-					while (Valence >= 0)
-					{
+					while ( Valence >= 0 ) {
+
 						Valence--;
-						if (v1 == v_init)
-							break;
-						type = this->Clustering->GetValue (f1);
-						if (type != type_last)
-						{
-							CList->InsertNextId(type);
+						if ( v1 == v_init )	break;
+						vtkIdType type = this->Clustering->GetValue( f1 );
+
+						if ( type != type_last ) {
+
+							CList->InsertNextId( type );
 							type_last = type;
+
 						}
-						this->GetInput ()->Conquer (f1, i, v2,f2, v3);
-						if (f2 < 0)
-							break;
+
+						this->GetInput()->Conquer( f1, i, v2, f2, v3 );
+						if ( f2 < 0 ) break;
 						f1 = f2;
 						v1 = v2;
 						v2 = v3;
+
 					}
+
 				}
+
 			}
-			n = CList->GetNumberOfIds ();
-			if (n >= 3)
-			{
-				v1 = CList->GetId (0);
-				if (v1 == CList->GetId (n - 1))
-					n--;
-				for (j = 0; j < n - 2; j++)
-					this->AddFace (v1, CList->GetId (j + 1),CList->GetId (j + 2));
+
+			vtkIdType n = CList->GetNumberOfIds ();
+
+			if ( n >= 3 ) {
+
+				v1 = CList->GetId( 0 );
+				if ( v1 == CList->GetId( n - 1 ) ) n--;
+
+				for ( int j = 0; j < n - 2; j++)
+					this->AddFace( v1, CList->GetId( j + 1 ), CList->GetId( j + 2 ) );
+
 			}
+
+		} else {
+
+			if ( CList->GetNumberOfIds() == 3 )
+				this->AddFace( CList->GetId( 0 ), CList->GetId( 1 ), CList->GetId( 2 ) );
+
+			if ( CList->GetNumberOfIds () == 4 ) {
+
+				this->AddFace( CList->GetId( 0 ), CList->GetId( 1 ), CList->GetId( 2 ) );
+				this->AddFace( CList->GetId( 0 ), CList->GetId( 2 ), CList->GetId( 3 ) );
+
+			}
+
 		}
-		else
-		{
-			if (CList->GetNumberOfIds () == 3)
-				this->AddFace (CList->GetId(0), CList->GetId(1),CList->GetId(2));
-			if (CList->GetNumberOfIds () == 4)
-			{
-				this->AddFace (CList->GetId(0), CList->GetId(1),CList->GetId(2));
-				this->AddFace (CList->GetId(0), CList->GetId(2),CList->GetId(3));
-			}
-		}
+
 	}
-	CList->Delete ();
 
-	this->FixMeshBoundaries ();
+	CList->Delete();
+	this->FixMeshBoundaries();
 
-	if (this->ForceManifold)
-	{
+	if ( this->ForceManifold ) {
+
 		// add non manifold edges
-		for (vtkIdType i=0;i<this->GetNumberOfEdges();i++)
-		{
+		for ( vtkIdType i = 0; i < this->GetNumberOfEdges(); i++ ) {
+
 			vtkIdType I1,I2;
 			vtkIdType C1,C2;
-			this->GetEdgeItems(i,I1,I2);
-			C1=this->Clustering->GetValue(I1);
-			C2=this->Clustering->GetValue(I2);
-			if ((C1!=C2)
-				&&(C1>=0)&&(C1<this->NumberOfClusters)
-				&&(C2>=0)&&(C2<this->NumberOfClusters))
-			{
-				if (this->Output->IsEdge(C1,C2)<0)
-				{
+			this->GetEdgeItems( i, I1, I2 );
+			C1 = this->Clustering->GetValue( I1 );
+			C2 = this->Clustering->GetValue( I2 );
+
+			if ( ( C1 != C2 )
+				&& ( C1 >= 0 ) && ( C1 < this->NumberOfClusters )
+				&& ( C2 >= 0 ) && ( C2 < this->NumberOfClusters ) ) {
+
+				if ( this->Output->IsEdge( C1, C2 ) < 0 )
 					this->Output->AddEdge(C1,C2);
-//					cout<<"Added non-manifold edge "<<C1<<","<<C2<<endl;
-				}
 			}
 		}
 	}
 
-	if (this->ConsoleOutput)
-		this->Output->DisplayMeshProperties ();
 
-	if (this->Display > 0)
-	{
-		if (this->OutputMeshWindow==0)
+	if ( this->Display ) {
+
+		if (this->OutputMeshWindow == 0 )
 			this->OutputMeshWindow = RenderWindow::New ();
-		this->OutputMeshWindow->SetInputData (this->Output);
+
+		this->OutputMeshWindow->SetInputData( this->Output );
 		this->OutputMeshWindow->DisplayInputEdges ();
-		this->OutputMeshWindow->Render ();
+		this->OutputMeshWindow->Render();
 		this->OutputMeshWindow->SetWindowName ("Coarsened model");
-		this->OutputMeshWindow->SetLookupTable ();
-		if (this->AnchorRenderWindow)
-			this->OutputMeshWindow->AttachToRenderWindow (this->AnchorRenderWindow);
-		this->OutputMeshWindow->Interact ();
+		this->OutputMeshWindow->SetLookupTable();
+		if ( this->AnchorRenderWindow )
+			this->OutputMeshWindow->AttachToRenderWindow( this->AnchorRenderWindow );
+		this->OutputMeshWindow->Interact();
+
 	}
 
-	if (this->EdgeOptimizationFlag == 1)
-	{
-		this->OptimizeOutputEdges ();
-		if (this->ConsoleOutput)
-		{
-			cout<<"After Edges Optimization : "<<endl;
-			this->Output->DisplayMeshProperties();
-		}
-		if (this->Display > 0)
-		{
-			this->OutputMeshWindow->SetWindowName("Coarsened model (after edge flips)");
-			OutputMeshWindow->DisplayInputEdges ();
-			this->OutputMeshWindow->Render ();
-			this->OutputMeshWindow->Interact ();
-		}
-	}
 }
 
 template < class Metric >
-	void vtkDiscreteRemeshing < Metric >::AdjustRemeshedGeometry ()
-{
+void vtkDiscreteRemeshing < Metric >::AdjustRemeshedGeometry() {
+
 	int i, Cluster;
 	vtkMath *Math = vtkMath::New ();
 
@@ -1181,63 +1178,16 @@ template < class Metric >
 	}
 
 	Math->Delete ();
-	delete[]Distances;
+	delete[] Distances;
 	Points->Delete ();
+
 }
 
 template < class Metric >
-	void vtkDiscreteRemeshing < Metric >::OptimizeOutputEdges ()
-{
-	/*
-	 * int  i,j;
-	 * double P1[3],P2[3],P3[3],P4[3],P12[3],P34[3];
-	 * vtkIdType v1,v2,v3,v4,f1,f2;
-	 * 
-	 * double Quadric[10];
-	 * double d1,d2;
-	 * 
-	 * for  (i=0;i<this->Output->GetNumberOfEdges();i++)
-	 * {
-	 * Output->GetEdgeFaces(i,f1,f2);
-	 * if ((f2>=0)&&(this->Input->IsEdgeManifold(i)==1))
-	 * {
-	 * Output->GetEdgeVertices(i,v1,v2);
-	 * v3=Output->GetThirdPoint(f1,v1,v2);
-	 * v4=Output->GetThirdPoint(f2,v1,v2);
-	 * if (Output->IsEdge(v3,v4)==-1)
-	 * {
-	 * Output->GetPoints()->GetPoint(v1,P1);
-	 * Output->GetPoints()->GetPoint(v2,P2);
-	 * Output->GetPoints()->GetPoint(v3,P3);
-	 * Output->GetPoints()->GetPoint(v4,P4);
-	 * 
-	 * for  (j=0;j<10;j++)
-	 * Quadric[j]=
-	 * Quadrics[v1][j]
-	 * +Quadrics[v2][j];
-	 * //+Quadrics[v3][j]
-	 * //+Quadrics[v4][j];
-	 * 
-	 * for  (j=0;j<3;j++)
-	 * {
-	 * P12[j]=0.5*(P1[j]+P2[j]);
-	 * P34[j]=0.5*(P3[j]+P4[j]);
-	 * }
-	 * d1=this->ComputeQuadraticDistance(P12,Quadric);      
-	 * d2=this->ComputeQuadraticDistance(P34,Quadric);
-	 * if (d1*0.6>d2)
-	 * Output->FlipEdge(i);
-	 * }
-	 * }
-	 * }
-	 */
-}
+vtkDiscreteRemeshing < Metric >::vtkDiscreteRemeshing () {
 
-template < class Metric >
-	vtkDiscreteRemeshing < Metric >::vtkDiscreteRemeshing ()
-{
 	this->BoundaryFixing = 0;
-	this->EdgeOptimizationFlag = 0;
+	this->EdgeOptimization = 0;
 	this->AnchorRenderWindow = 0;
 	this->FileLoadSaveOption = 0;
 	this->OriginalInput = 0;
@@ -1245,14 +1195,15 @@ template < class Metric >
 	this->VerticesParent2 = 0;
 	this->SubsamplingThreshold = 10;
 	this->NumberOfSubdivisionsBeforeClustering = 0;
-	this->OutputMeshWindow=0;
-	this->IndicatorWindow=0;
-	this->InputDensityFile=0;
-	this->MaxCustomDensity=1;
-	this->MinCustomDensity=0.1;
-	this->CustomDensityMultiplicationFactor=0.001;
-	this->Output=0;
-	this->ForceManifold=false;
+	this->OutputMeshWindow = 0;
+	this->IndicatorWindow = 0;
+	this->InputDensityFile  =0;
+	this->MaxCustomDensity = 1;
+	this->MinCustomDensity = 0.1;
+	this->CustomDensityMultiplicationFactor = 0.001;
+	this->Output = 0;
+	this->ForceManifold = false;
+
 }
 
 

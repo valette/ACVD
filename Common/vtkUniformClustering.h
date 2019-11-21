@@ -547,7 +547,7 @@ int	vtkUniformClustering<Metric,EdgeType>::CleanClustering() {
 }
 
 template <class Metric, class EdgeType>
-void vtkUniformClustering<Metric,EdgeType>::FillHolesInClustering(vtkIntArray *Clustering) {
+void vtkUniformClustering<Metric,EdgeType>::FillHolesInClustering( vtkIntArray *Clustering ) {
 
 	std::queue< int > IQueue;
 	vtkIdType I1,I2;
@@ -625,7 +625,7 @@ void vtkUniformClustering<Metric,EdgeType>::FillHolesInClustering(vtkIntArray *C
 	}
 	
 	if ( this->ConsoleOutput && NumberOfProblems )
-		cout << endl << "WARNING : The number	of uncorrectly assigned	Items was reduced from "
+		cout << endl << "WARNING : The number of uncorrectly assigned Items was reduced from "
 			<< InitialNumberOfProblems << " to " << NumberOfProblems << " Problems" << endl;
 
 }

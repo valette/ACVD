@@ -363,7 +363,7 @@ int main( int argc, char *argv[] ) {
 	
 	vtkPLYWriter *plyWriter = vtkPLYWriter::New();
 	plyWriter->SetInputData( remesh->GetOutput() );
-	plyWriter->SetFileName( REALFILE );
+	plyWriter->SetFileName( realFile );
 	plyWriter->Write();
 	plyWriter->Delete();
 	remesh->Delete();

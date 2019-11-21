@@ -56,7 +56,7 @@ public:
 	void SetConstrainedClustering( int C ) {
 
 		cout << "Setting Metric Constraint to "<< C << endl;
-		this->ActiveConstraintsFlag = C;
+		this->ActiveConstraints = C;
 
 	}
 
@@ -276,7 +276,7 @@ public:
 
 		for ( int i = 0; i < 3; i++) C->Centroid[ i ] = C->SValue[ i ] / C->SWeight;
 		
-		if ( !this->ActiveConstraintsFlag || !this->QuadricsOptimizationLevel )
+		if ( !this->ActiveConstraints || !this->QuadricsOptimizationLevel )
 			return;
 
 		C->RankDeficiency = vtkQuadricTools::ComputeRepresentativePoint(
@@ -365,7 +365,7 @@ public:
 
 		this->CustomWeights = 0;
 		this->Gradation = 0;
-		this->ActiveConstraintsFlag = 1;
+		this->ActiveConstraints = 1;
 		this->Object = vtkObject::New();
 		this->QuadricsOptimizationLevel = 3;
 
@@ -381,7 +381,7 @@ public:
 private:
 
 	vtkSurface *Mesh;
-	int	ActiveConstraintsFlag;
+	int	ActiveConstraints;
 	vtkDoubleArray *CustomWeights;
 	int QuadricsOptimizationLevel;
 	vtkObject *Object; // Dummy object used for registering the curvature indicators
