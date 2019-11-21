@@ -1206,7 +1206,6 @@ vtkDiscreteRemeshing < Metric >::vtkDiscreteRemeshing () {
 
 }
 
-
 template < class Metric >
 	vtkDiscreteRemeshing < Metric >::~vtkDiscreteRemeshing ()
 {

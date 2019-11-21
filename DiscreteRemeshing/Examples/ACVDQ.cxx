@@ -334,7 +334,7 @@ int main( int argc, char *argv[] ) {
 			vtkIdType v = fixedVertices->GetId( i );
 			mesh->GetPointCoordinates( v, c1 );
 			mesh2->GetPointCoordinates( i, c2 );
-//cout << i << " " << v << endl;
+
 			for ( int j = 0; j < 3; j++) {
 
 				if ( c1[ j ] == c2[ j ] ) continue;
