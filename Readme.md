@@ -2,6 +2,11 @@ ACVD
 ====
 [![Build Status](https://travis-ci.org/valette/ACVD.png)](https://travis-ci.org/valette/ACVD)
 
+
+<p align="center">
+  <img src="https://www.creatis.insa-lyon.fr/~valette/public/project/acvd/featured.jpg">
+</p>
+
 ### Info ###
 This code is the implementation deriving from those papers:
 
