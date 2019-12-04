@@ -46,6 +46,6 @@ for ACVD, the output is written in the file simplification.ply
 
 additionnally, when running ACVD, a file output_1.ply is also written. It is the output mesh before post-processing using quadrics.
 
-note that to enforce a manifold output mesh, such as explained in [3], you need to use the -m 1 option, and to define a correct number of spare clusters using options -sf or -sc.
+note that to enforce a manifold output mesh, such as explained in [3], you need to use the -m 1 option.
 
 comments, suggestions : https://github.com/valette/ACVD/issues
