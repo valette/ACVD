@@ -587,15 +587,15 @@ RenderWindow::Capture (const char *filename)
 void
 RenderWindow::SetLookupTable (vtkLookupTable * Colors)
 {
-	if (this->lut)
+	if ( this->lut && ( this->lut != Colors ) )
 		this->lut->Delete();
 
-	if (Colors)
-	{
+	if ( Colors ) {
+
 		this->lut = Colors;
-	}
-	else
-	{
+
+	} else {
+
 		this->lut=vtkLookupTable::New();
 		double x[4];
 		this->lut->SetRange (0.0, 2.0);
@@ -617,12 +617,14 @@ RenderWindow::SetLookupTable (vtkLookupTable * Colors)
 		this->lut->SetTableValue (2, x);	
 	}
 	
-	if (this->Input)
-	{
+	if ( this->Input ) {
+
 		vtkPolyDataMapper *Mapper=(vtkPolyDataMapper *) this->MeshActor->GetMapper();
 		Mapper->SetLookupTable (this->lut );
 		Mapper->SetScalarRange (this->lut ->GetTableRange ());
+
 	}
+
 }
 
 void
@@ -665,20 +667,18 @@ RenderWindow::DisplayRandomColors (int NumberOfColors)
 	vtkMath *Math = vtkMath::New ();
 	Math->RandomSeed (_RANDOM_SEED);
 	double x[4];
-	
-	vtkLookupTable *lut=vtkLookupTable::New();	
-	
-	lut->SetRange (0.0, NumberOfColors - 1);
 
+	vtkLookupTable *lut=this->lut;
+	if ( !lut ) {
+		lut = vtkLookupTable::New();
+		lut->SetNumberOfTableValues( 0 );
+	}
+	lut->SetRange (0.0, NumberOfColors - 1);
+	int oldSize = lut->GetNumberOfTableValues();
+	if ( oldSize > 0 ) oldSize--;
 	lut->SetNumberOfTableValues (NumberOfColors);
 
-//		x[0] = 0;
-//		x[1] = 0.4;
-//		x[2] = 0.8;
-//		x[3] = 0.3;
-//		this->lut->SetTableValue (0, x);
-	
-	for (int i = 0; i < NumberOfColors - 1; i++)
+	for (int i = oldSize; i < NumberOfColors - 1; i++)
 	{
 		x[0] = x[1] = x[2] = Math->Random ();
 		x[1] = Math->Random ();
@@ -686,13 +686,13 @@ RenderWindow::DisplayRandomColors (int NumberOfColors)
 		x[3] = 1;
 		lut->SetTableValue (i, x);
 	}
+
 	x[0] = 1.0;
 	x[1] = 1.0;
 	x[2] = 1.0;
 	x[3] = 1;
 	lut->SetTableValue (NumberOfColors - 1, x);
 	this->SetLookupTable(lut);
-//	lut->Delete();
 	Math->Delete ();
 }
 

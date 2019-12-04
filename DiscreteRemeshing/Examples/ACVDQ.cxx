@@ -71,31 +71,28 @@ Auteur:   Sebastien Valette,
 // + non published work....
 /////////////////////////////////////////////////////////////////////////////////////////
 
-
-int main( int argc, char *argv[] )
-{
+int main( int argc, char *argv[] ) {
 
 	//******************************************************************************************
-	// Inside input parameters:
-	int Display=0;				// defines whether there will be a graphic display (0: No, 1: yes)
-
-
-	int NumberOfSamples=500;	// the number of desired vertices
-	double Gradation=0;			// the gamma parameter for simplification (if gamma=0: uniform)
-								// other appropriates values range between 0 and 2
-	int SubsamplingThreshold=10;
-	char* OutputDirectory=0;		// the output directory 
+	// Input parameters:
+	int display = 0;				// defines whether there will be a graphic display (0: No, 1: yes)
+	int numberOfSamples = 500;		// number of desired vertices
+	double gradation = 0;			// gamma parameter for simplification (if gamma=0: uniform)
+									// other appropriates values range between 0 and 2
+	int subsamplingThreshold = 10;	// subsampling threshold
+	char* outputDirectory = 0;		// output directory
+	vtkIdList *fixedVertices = 0;
 	//*******************************************************************************************
 
-	char filename[500];
+	char filename[ 5000 ];
 
-	if(argc>1)
-	{
-		cout <<"load : "<<argv[1]<<endl;
-		strcpy(filename,argv[1]);
-	}
-	else
-	{
+	if( argc > 1 ) {
+
+		cout << "load : " << argv[ 1 ] << endl;
+		strcpy( filename, argv[ 1 ] );
+
+	} else {
+
 		cout<<"Usage : ACVD file nvertices gradation [options]"<<endl;
 		cout<<"nvertices is the desired number of vertices"<<endl;
 		cout<<"gradation defines the influence of local curvature (0=uniform meshing)"<<endl;
@@ -111,195 +108,266 @@ int main( int argc, char *argv[] )
 		cout<<"-cmax value : set maximum custom indicator value"<<endl;
 		cout<<"-cf value : set custom indicator multiplication factor"<<endl;
 		cout<<"-m 0/1 : enforce a manifold output ON/OFF (default : 0)"<<endl;
-		cout<<"-sf spare_factor : sets the spare factor"<<endl;
-		return (0);
+		return 0;
+
 	}
 
-	vtkSurface *Mesh=vtkSurface::New();
-	vtkQIsotropicDiscreteRemeshing *Remesh=vtkQIsotropicDiscreteRemeshing::New();
-
-	Mesh->CreateFromFile(filename);
-	Mesh->GetCellData()->Initialize();
-	Mesh->GetPointData()->Initialize();
-	Mesh->DisplayMeshProperties();
+	vtkSurface *mesh = vtkSurface::New();
+	vtkQIsotropicDiscreteRemeshing *remesh = vtkQIsotropicDiscreteRemeshing::New();
+	mesh->CreateFromFile( filename );
+	mesh->GetCellData()->Initialize();
+	mesh->GetPointData()->Initialize();
+	mesh->DisplayMeshProperties();
 
 	// get mandatory arguments
-	if(argc>2)
-	{
-		NumberOfSamples=atoi(argv[2]);
-	}
-	else
-	{
-		NumberOfSamples=3000;
-		cout<<"Number of vertices ? ";
-		cin>>NumberOfSamples;
+	if( argc > 2 ) {
+
+		numberOfSamples = atoi( argv[ 2 ] );
+
+	} else {
+
+		cout << "Number of vertices ? ";
+		cin >> numberOfSamples;
+
 	}
 
-	if(argc>3)
-	{
-		Gradation=atof(argv[3]);
-	}
-	else
-	{
-		cout<<"Gradation ? ";
-		cin>>Gradation;
+	if( argc > 3 ) gradation = atof( argv[ 3 ] );
+	else {
+
+		cout << "Gradation ? ";
+		cin >> gradation;
+
 	}
 
 	// Parse optionnal arguments
-	int ArgumentsIndex=4;
-	while (ArgumentsIndex<argc)
-	{
-		char* key = argv[ArgumentsIndex];
-		char* value = argv[ArgumentsIndex + 1];
+	int argumentsIndex = 4;
 
-		if (strcmp(key,"-m")==0)
-		{
-			Remesh->SetForceManifold(atoi(value));
-			cout<<"Force Manifold="<<atoi(value)<<endl;
-		}
+	while ( argumentsIndex < argc ) {
 
-		if (strcmp(key,"-s")==0)
-		{
-			SubsamplingThreshold=atoi(value);
-			cout<<"Subsampling Threshold="<<SubsamplingThreshold<<endl;
-		}
+		char* key = argv[ argumentsIndex ];
+		char* value = argv[ argumentsIndex + 1 ];
 
-		if (strcmp(key,"-d")==0)
-		{
-			Display=atoi(value);
-			cout<<"Display="<<Display<<endl;
+		if ( strcmp( key, "-m" ) == 0 ) {
+
+			remesh->SetForceManifold( atoi( value ) );
+			cout << "Force Manifold=" << atoi( value ) << endl;
+
+		} else if ( strcmp( key, "-s" ) == 0 ) {
+
+			subsamplingThreshold = atoi( value );
+			cout << "Subsampling Threshold=" << subsamplingThreshold << endl;
+
+		} else if ( strcmp( key, "-d" ) == 0 ) {
+
+			display = atoi( value );
+			cout << "Display=" << display << endl;
+
 		}
 
 #ifdef DOmultithread
-		if (strcmp(key,"-np")==0)
+		if ( strcmp( key, "-np" ) == 0 )
 		{
-			int NumberOfThreads=atoi(value);
-			cout<<"Number of threads="<<NumberOfThreads<<endl;
-			Remesh->SetNumberOfThreads(NumberOfThreads);
+			int NumberOfThreads = atoi( value );
+			cout << "Number of threads=" << NumberOfThreads << endl;
+			remesh->SetNumberOfThreads( NumberOfThreads );
 		}
 #endif
-		if (strcmp(key,"-o")==0)
-		{
+		if ( strcmp( key, "-o" ) == 0 ) {
 
-			OutputDirectory=value;
-			cout<<"OutputDirectory: "<<OutputDirectory<<endl;
-			Remesh->SetOutputDirectory(value);
+			outputDirectory = value;
+			cout << "OutputDirectory: " << outputDirectory << endl;
+			remesh->SetOutputDirectory( value );
+
+		} else if ( strcmp( key, "-l" ) == 0 ) {
+
+			mesh->SplitLongEdges( atof( value ) );
+			cout << "Splitting edges longer than "
+				<< atof( value ) << " times the average edge length" << endl;
+
+		} else if ( strcmp( key,"-w" ) == 0 ) {
+
+			cout << "Setting writing energy log file to " << atoi( value ) << endl;
+			remesh->SetWriteToGlobalEnergyLog( atoi( value ) );
+
 		}
 
-		if (strcmp(key,"-l")==0)
-		{
-
-			Mesh->SplitLongEdges(atof(value));
-			cout<<"Splitting edges longer than "
-			<<atof(value)<<" times the average edge length"<<endl;
-		}
-		if (strcmp(key,"-w")==0)
-		{
-			cout<<"Setting writing energy log file to "<<atoi(value)<<endl;
-			Remesh->SetWriteToGlobalEnergyLog(atoi(value));
-		}
 #ifdef DOmultithread
-		if (strcmp(key,"-p")==0)
-		{
-			cout<<"Thread pooling ratio: "<<atoi(value)<<endl;
-			Remesh->SetPoolingRatio(atoi(value));
+		if ( strcmp( key, "-p" ) == 0 ) {
+
+			cout << "Thread pooling ratio: " << atoi( value ) << endl;
+			remesh->SetPoolingRatio( atoi( value ) );
+
 		}
 #endif
 
-		if (strcmp(key,"-q")==0)
-		{
-			cout<<"Setting number of eigenvalues for quadrics to "<<atoi(value)<<endl;
-			Remesh->GetMetric()->SetQuadricsOptimizationLevel(atoi(value));
-		}
+		if ( strcmp( key, "-q" ) == 0 ) {
 
-		if (strcmp(key,"-cd")==0)
-		{
-			cout<<"Setting number custom file for density info : "<<value<<endl;
-			Remesh->SetInputDensityFile(value);
-		}
+			cout << "Setting number of eigenvalues for quadrics to " << atoi( value ) << endl;
+			remesh->GetMetric()->SetQuadricsOptimizationLevel( atoi( value ) );
 
-		if (strcmp(key,"-cmax")==0)
-		{
-			cout<<"Setting maximum custom density to : "<<value<<endl;
-			Remesh->SetMaxCustomDensity(atof(value));
-		}
+		} else if ( strcmp( key, "-cd" ) == 0 ) {
 
-		if (strcmp(key,"-cmin")==0)
-		{
-			cout<<"Setting minimum custom density to : "<<value<<endl;
-			Remesh->SetMinCustomDensity(atof(value));
-		}
+			cout << "Setting number custom file for density info : " << value << endl;
+			remesh->SetInputDensityFile( value );
 
-		if (strcmp(key,"-cf")==0)
-		{
-			cout<<"Setting custom density multiplication factor to : "<<value<<endl;
-			Remesh->SetCustomDensityMultiplicationFactor(atof(value));
-		}
+		} else if ( strcmp( key, "-cmax" ) == 0 ) {
 
-		if (strcmp(key,"-sc")==0)
-		{
-			cout<<"Setting number of spare clusters to : "<<value<<endl;
-			Remesh->SetMinNumberOfSpareClusters(atoi(value));
-		}
+			cout << "Setting maximum custom density to : " << value << endl;
+			remesh->SetMaxCustomDensity( atof( value ) );
 
-		if (strcmp(key,"-sf")==0)
-		{
-			cout<<"Setting spare factor to : "<<value<<endl;
-			Remesh->SetSpareFactor(atof(value));
-		}
+		} else if ( strcmp( key, "-cmin" ) == 0 ) {
 
-		if (strcmp(key, "-b") == 0) {
+			cout << "Setting minimum custom density to : " << value << endl;
+			remesh->SetMinCustomDensity( atof( value ) );
+
+		} if (strcmp( key, "-cf" ) == 0 ) {
+
+			cout << "Setting custom density multiplication factor to : " << value << endl;
+			remesh->SetCustomDensityMultiplicationFactor( atof( value ) );
+
+		} else if ( strcmp( key, "-b" ) == 0 ) {
+
 			cout << "Setting boundary fixing to : " << value << endl;
-			Remesh->SetBoundaryFixing(atoi(value));
+			remesh->SetBoundaryFixing( atoi( value ) );
+
+		} else if ( strcmp( key, "-fv" ) == 0 ) {
+
+			ifstream input;
+			input.open( value );
+			int id;
+			fixedVertices = vtkIdList::New();
+			while( input >> id ) fixedVertices->InsertNextId( id );
+			input.close();
+
+		} else if ( strcmp( key, "-ft" ) == 0 ) {
+
+			ifstream input;
+			input.open( value );
+			bool fixed[ mesh->GetNumberOfPoints() ];
+			fixedVertices = vtkIdList::New();
+			int id, n = 0;
+
+			for ( int i = 0; i < mesh->GetNumberOfPoints(); i++ )
+				fixed[ i ] = false;
+
+			while( input >> id ) {
+
+				n++;
+				vtkIdType v1, v2, v3;
+				mesh->GetFaceVertices( id, v1, v2, v3 );
+				fixed[ v1 ] = fixed[ v2 ] = fixed[ v3 ] = true;
+
+			}
+
+			for ( int i = 0; i < mesh->GetNumberOfPoints(); i++ )
+				if ( fixed[ i ] ) fixedVertices->InsertNextId( i );
+
+			input.close();
+			cout << "Added " << n << " constraints on triangles" << endl;
+
 		}
 
-		ArgumentsIndex+=2;
+		argumentsIndex += 2;
+
 	}
 
-	RenderWindow *Window=0;
-	if (Display!=0)
-	{
-		Window=RenderWindow::New();
-		vtkPolyData *Visu=vtkPolyData::New();
-		Visu->ShallowCopy(Mesh);
-		Window->SetInputData(Visu);
-		Visu->Delete();
-		Remesh->SetAnchorRenderWindow(Window);
-		Window->Render();
-		Window->SetWindowName(filename);
-		Window->GetCamera()->Zoom(1.2);
-		Window->Interact();
+	RenderWindow *window = 0;
+
+	if ( display ) {
+
+		window = RenderWindow::New();
+		vtkPolyData *visu = vtkPolyData::New();
+		visu->ShallowCopy( mesh );
+		window->SetInputData( visu );
+		visu->Delete();
+		remesh->SetAnchorRenderWindow( window );
+		window->Render();
+		window->SetWindowName( filename );
+		window->GetCamera()->Zoom( 1.2 );
+		window->Interact();
+
 	}
 
-	Remesh->SetInput(Mesh);
-	Remesh->SetFileLoadSaveOption(0);
-	Remesh->SetNumberOfClusters(NumberOfSamples);
-	Remesh->SetConsoleOutput(2);
-	Remesh->SetSubsamplingThreshold(SubsamplingThreshold);
-	Remesh->GetMetric()->SetGradation(Gradation);
-	Remesh->SetDisplay(Display);
-	Remesh->SetConstrainedInitialization(1);
-	Remesh->Remesh();
+/*
+	double bounds[ 6 ];
+	mesh->GetBounds( bounds );
+	double middle = 0.5 * ( bounds[ 0 ] + bounds [ 1 ] );
+	cout << "middle : " << middle << endl;
+	fixedVertices = vtkIdList::New();
+	for ( int i = 0; i < mesh->GetNumberOfPoints(); i++ ) {
+		double coords[ 3 ];
+		mesh->GetPointCoordinates( i, coords );
+		if ( coords[ 0 ] > middle ) fixedVertices->InsertNextId( i );
+	}
+	cout << "List size : " << fixedVertices->GetNumberOfIds() << endl;
+*/
+
+	remesh->SetInput( mesh );
+	remesh->SetFileLoadSaveOption( 0 );
+	remesh->SetConsoleOutput( 2 );
+	remesh->SetSubsamplingThreshold( subsamplingThreshold );
+	remesh->GetMetric()->SetGradation( gradation );
+	remesh->SetDisplay( display );
+	remesh->SetUnconstrainedInitialization( 1 );
+
+	if ( fixedVertices ) {
+
+		remesh->SetFixedClusters( fixedVertices );
+		remesh->SetNumberOfClusters( numberOfSamples + fixedVertices->GetNumberOfIds() );
+		cout << "Read " << fixedVertices->GetNumberOfIds() << " fixed Ids" << endl;
+
+		for ( int i = 0; i < fixedVertices->GetNumberOfIds(); i++ )
+			remesh->GetCluster( i )->AnchorItem = fixedVertices->GetId( i );
+
+	} else remesh->SetNumberOfClusters( numberOfSamples );
+
+	remesh->Remesh();
+
+	// check that vertex constraints are respected
+	if ( fixedVertices ) {
+
+		vtkSurface *mesh2 = remesh->GetOutput();
+
+		for ( int i = 0; i < fixedVertices->GetNumberOfIds(); i++ ) {
+
+			double c1[ 3 ], c2[ 3 ];
+			vtkIdType v = fixedVertices->GetId( i );
+			mesh->GetPointCoordinates( v, c1 );
+			mesh2->GetPointCoordinates( i, c2 );
+
+			for ( int j = 0; j < 3; j++) {
+
+				if ( c1[ j ] == c2[ j ] ) continue;
+				cout << "Error, vertex " << v << " has been lost" << endl;
+				exit( 1 );
+
+			}
+
+
+		}
+
+		cout << "Constraints on vertices have been checked" << endl;
+		fixedVertices->Delete();
+
+	}
 
 	// save the output mesh to .ply format
-	char REALFILE[500];
+	char realFile[ 5000 ];
 	
-	if (OutputDirectory)
-	{
-		strcpy (REALFILE,OutputDirectory);
-		strcat (REALFILE,"simplification.ply");
+	if ( outputDirectory ) {
+
+		strcpy ( realFile, outputDirectory );
+		strcat ( realFile, "simplification.ply" );
 	
-	}
-	else
-		strcpy(REALFILE,"simplification.ply");
+	} else strcpy( realFile, "simplification.ply" );
 	
-	vtkPLYWriter *plyWriter=vtkPLYWriter::New();
-	plyWriter->SetInputData(Remesh->GetOutput());
-	plyWriter->SetFileName(REALFILE);
+	vtkPLYWriter *plyWriter = vtkPLYWriter::New();
+	plyWriter->SetInputData( remesh->GetOutput() );
+	plyWriter->SetFileName( realFile );
 	plyWriter->Write();
 	plyWriter->Delete();
-	Remesh->Delete();
-	Mesh->Delete();
-	if (Display!=0)
-		Window->Delete();	
+	remesh->Delete();
+	mesh->Delete();
+	if ( display ) window->Delete();
+
 }

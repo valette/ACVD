@@ -99,7 +99,6 @@ int main( int argc, char *argv[] )
 		cout << "-l ratio : split the edges longer than ( averageLength * ratio )" << endl;
 		cout << "-b 0/1 : sets mesh boundary fixing off/on (default : 0)" << endl;
 		cout << "-q 1/2/3 : qets number of eigenvalues used for quadric-based vertex relocation to 0/1/2 (default : 3)"<< endl;
-		cout<<"-sf spare_factor : sets the spare factor"<<endl;
 		return (0);
 	}
 

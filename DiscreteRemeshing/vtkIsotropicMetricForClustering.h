@@ -104,6 +104,7 @@ public:
 		double SWeight;
 		double EnergyValue;
 	};
+
 	int GetClusterRankDeficiency(Cluster *C)
 	{return (0);};
 	double GetClusterEnergy(Cluster *C)
@@ -211,15 +212,9 @@ public:
 			delete [] this->Items;
 	};
 
-	void BuildMetric(Cluster *&Clusters,vtkSurface *Mesh,vtkIdType 
-NumberOfClusters,int ClusteringType)
+	void BuildMetric( vtkSurface *Mesh, int ClusteringType )
 	{
 		vtkIdType i;
-		// Build the clusters
-		Clusters=new Cluster[NumberOfClusters];
-		for (i=0;i<NumberOfClusters;i++)
-			this->ResetCluster(Clusters+i);
-
 
 		//Build the items
 		if (ClusteringType==0)

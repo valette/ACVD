@@ -231,16 +231,11 @@ public:
 	{
 	};
 
-	void BuildMetric(Item *&Items,Cluster *&Clusters,vtkSurface *Mesh,int NumberOfClusters,int ClusteringType)
+	void BuildMetric( vtkSurface *Mesh, int ClusteringType )
 	{
 		vtkIdType i,j;
 		vtkIdType v1,v2,v3;
 		double P1[3],P2[3],P3[3];
-
-		// Build the clusters
-		Clusters=new Cluster[NumberOfClusters];
-		for (i=0;i<NumberOfClusters;i++)
-			this->ResetCluster(Clusters+i);
 
 		// Compute the parameter mixing between the L21 metric and the isotropic metric
 		// We actually mix L21 with Isotropic metric to improve convergence
@@ -360,6 +355,10 @@ private:
 	vtkDoubleArray *CustomWeights;
 	double Factor;
 	double Gradation;
+
+	// The array storing items
+	Item *Items;
+
 };
 
 #endif
