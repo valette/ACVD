@@ -14,7 +14,7 @@
 					"required": true
 				}
 			],
-			"executable": "VolumeOOCSlice"
+			"executable": "bin/VolumeOOCSlice"
 		},
 		"acvd" : {
 			"description" : "Performs simplification/remeshing of 3D triangular meshes",
@@ -50,48 +50,57 @@
 		            "max":"1"
 		        },
 		        {
-		            "prefix":"-r ",
-		            "info" : "number of reserve vertices when a manifold output is required",
-		            "name":"vertex_reserve",
-		            "type":"int",
-		            "required":"false",
-		            "min":"0"
-		        },
-		        {
 		            "text":"-d 0"
 		        }
 		    ],
-	        "executable":"ACVD"
+	        "executable":"bin/ACVD"
 		},
 		"acvdq" : {
-			"description" : "Performs simplification/remeshing of 3D triangular meshes (usin QEM, more accurate but slower)",
-		    "parameters":[
-		        {
-		            "name":"input_mesh",
-		            "type":"file",
-		            "required":"true"
-		        },
-		        {
-		            "name":"number_of_desired_vertices",
-		            "info" : "number of desired vertices for the output mesh",
-		            "type":"int",
-		            "min":"0",
-		            "required":"true"
-		        },
-		        {
-		            "name":"gradation",
-		            "info" : "set to 0 for uniform meshing, increase (example : 2.5) to add curvature-adapted meshing",
-		            "type":"float",
-		            "required":"true",
-		            "min":"0",
-		            "max":"30",
-		            "defaultValue":"0"
-		        },
-		        {
-		            "text":"-d 0"
-		        }
-		    ],
-	        "executable":"ACVDQ"
+      "description": "Performs simplification/remeshing of 3D triangular meshes (usin QEM, more accurate but slower)",
+      "parameters": [
+        {
+          "name": "input_mesh",
+          "type": "file",
+          "required": true
+        },
+        {
+          "name": "number_of_desired_vertices",
+          "info": "number of desired vertices for the output mesh",
+          "type": "int",
+          "min": "0",
+          "required": true
+        },
+        {
+          "name": "gradation",
+          "info": "set to 0 for uniform meshing, increase (example : 2.5) to add curvature-adapted meshing",
+          "type": "float",
+          "required": true,
+          "min": "0",
+          "max": "30",
+          "defaultValue": "0"
+        },
+        {
+          "prefix": "-m ",
+          "info": "force the output mesh to be manifold",
+          "name": "force_manifold",
+          "type": "int",
+          "min": "0",
+          "max": "1"
+        },
+        {
+          "prefix": "-q ",
+          "info": "quadrics level (0 : no quadrics, 3 : full quadrics)",
+          "name": "quadricsLevel",
+          "type": "int",
+          "min": "0",
+          "max": "3",
+          "defaultValue": "3"
+        },
+        {
+          "text": "-d 0"
+        }
+      ],
+      "executable": "bin/ACVDQ"
 		},
 		"extract_meshes" : {
 			"description" : "Generates meshes from labeled volume data : marching cubes + simplification + smoothing",
@@ -174,7 +183,7 @@
 		            "prefix":"-x "
 		        }
 		    ],
-			"executable":"VolumeAnalysis"
+			"executable":"bin/VolumeAnalysis"
 		},
 		"mesh2vtk" : {
 			"description" : "Converts a mesh into a vtk format",
@@ -185,7 +194,7 @@
 		            "required":"true"
 		        }
 		    ],
-	        "executable":"mesh2vtk"
+	        "executable":"bin/mesh2vtk"
 		},
 		"slice_volume" : {
 			"description" : "Computes slices from volume data",
@@ -214,7 +223,7 @@
 		    "output" : {
 				"XML" : "volume.xml"
 			},
-	        "executable":"VolumeSlice",
+	        "executable":"bin/VolumeSlice",
 	        "permissions":"0"
 		},
 		"volume_median_filtering" : {
@@ -234,7 +243,7 @@
 		            "max":"10"
 		        }
 		    ],
-	        "executable":"VolumeMedian"
+	        "executable":"bin/VolumeMedian"
 		},
 		"volume_anisotropic_diffusion" : {
 		    "parameters":[
@@ -260,7 +269,7 @@
 		            "type":"float"
 		        }
 		    ],
-	        "executable":"VolumeAnisotropicDiffusion"
+	        "executable":"bin/VolumeAnisotropicDiffusion"
 		},
 		"img2raw": {
 			"parameters": [
@@ -273,7 +282,7 @@
 					"required": true
 				}
 			],
-			"executable": "img2raw",
+			"executable": "bin/img2raw",
 			"noCache" : true
 		}
 
