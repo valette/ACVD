@@ -230,10 +230,9 @@ VTK_THREAD_RETURN_TYPE ThreadedSurfaceExtraction (void *arg)
 					Helper->MaximumTimes[MyId][1] = Timer->GetElapsedTime();
 
 				Timer->StartTimer();
-				Remesh->SetInputData(Mesh2);
+				Remesh->SetInput(Mesh2);
 				if (Helper->ForceManifold!=0) {
 					Remesh->SetForceManifold(1);
-					Remesh->SetSpareFactor(4);
 				}
 				Remesh->SetNumberOfClusters(WantedNumberOfIsotropicVertices);
 				Remesh->SetConsoleOutput(0);
@@ -287,10 +286,9 @@ VTK_THREAD_RETURN_TYPE ThreadedSurfaceExtraction (void *arg)
 				if (Helper->Anisotropy != 0) {
 					vtkAnisotropicDiscreteRemeshing *AnisoRemesh=vtkAnisotropicDiscreteRemeshing::New();
 					AnisoRemesh->GetMetric()->SetGradation(Helper->Gradation);
-					AnisoRemesh->SetInputData(Remesh->GetOutput());
+					AnisoRemesh->SetInput(Remesh->GetOutput());
 					if (Helper->ForceManifold!=0) {
 						AnisoRemesh->SetForceManifold(1);
-						AnisoRemesh->SetSpareFactor(4);
 					}
 					AnisoRemesh->SetNumberOfClusters(WantedNumberOfVertices);
 					AnisoRemesh->SetConsoleOutput(0);
