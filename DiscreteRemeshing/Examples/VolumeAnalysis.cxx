@@ -15,30 +15,32 @@ Auteur:   Sebastien Valette
 #include <math.h>
 #include <map>
 
-#include <vtkImageData.h>
-#include <vtkMetaImageReader.h>
-#include <vtkIdList.h>
-#include <vtkPolyDataWriter.h>
-#include <vtkPLYWriter.h>
-#include <vtkSTLWriter.h>
-#include <vtkPointData.h>
 #include <vtkCellData.h>
+#include <vtkDiscreteMarchingCubes.h>
+#include <vtkFillHolesFilter.h>
+#include <vtkIdList.h>
+#include <vtkImageCast.h>
+#include <vtkImageData.h>
+#include <vtkMetaImageWriter.h>
+#include <vtkImageExtractComponents.h>
+#include <vtkImageResample.h>
+#include <vtkImageThreshold.h>
 #include <vtkMultiThreader.h>
+#include <vtkMutexLock.h>
+#include <vtkPLYWriter.h>
+#include <vtkPointData.h>
+#include <vtkPolyDataWriter.h>
+#include <vtkQuadricClustering.h>
+#include <vtkSortDataArray.h>
+#include <vtkSTLWriter.h>
+#include <vtkTimerLog.h>
+#include <vtkWindowedSincPolyDataFilter.h>
 #include <vtkXMLDataElement.h>
 #include <vtkXMLUtilities.h>
-#include <vtkTimerLog.h>
-#include <vtkMutexLock.h>
-#include <vtkQuadricClustering.h>
-#include <vtkImageResample.h>
-#include <vtkDiscreteMarchingCubes.h>
-#include <vtkMINCImageReader.h>
-#include <vtkWindowedSincPolyDataFilter.h>
-#include <vtkSortDataArray.h>
-#include <vtkFillHolesFilter.h>
-#include <vtkImageCast.h>
 
 #include "vtkIsotropicDiscreteRemeshing.h"
 #include "vtkAnisotropicDiscreteRemeshing.h"
+#include "../VolumeProcessing/vtkRobustImageReader.h"
 
 #define NumberOfTimingTypes 6
 
@@ -111,67 +113,61 @@ VTK_THREAD_RETURN_TYPE ThreadedSurfaceExtraction (void *arg)
 	int NumberOfThreads=Info->NumberOfThreads;
 	vtkIdList *Labels=Helper->Labels;
 
+	if (MyId >= Labels->GetNumberOfIds()) {
+		return (VTK_THREAD_RETURN_VALUE);
+	}
+
 	vtkTimerLog *Timer=vtkTimerLog::New();
 
-	Helper->Lock->Lock();
-	if (Helper->ProcessingTimes.size()==0)
-	{
-		Helper->ProcessingTimes.resize(NumberOfThreads);
-		Helper->MaximumTimes.resize(NumberOfThreads);
-	}
-	for (int i=0;i<NumberOfTimingTypes;i++)
-	{
+	for (int i = 0; i < NumberOfTimingTypes; i++) {
 		Helper->ProcessingTimes[MyId].push_back(0);
 		Helper->MaximumTimes[MyId].push_back(0);
 	}
-	Helper->Lock->Unlock();
 
-	vtkImageData *Image=vtkImageData::New();
+	vtkImageData *Image = vtkImageData::New();
 	Image->ShallowCopy(Helper->Image);
 
 	// create the polydataWriter in correct format
-	vtkPolyDataWriter *Writer=0;
+	vtkPolyDataWriter *Writer = 0;
 	char *Format=Helper->GetOutputFormat();
 	char extension[4];
 	strcpy (extension,"vtk");
-	if (strstr(Format,extension)!=NULL)
+	if (strstr(Format,extension) != NULL) {
 		Writer=vtkPolyDataWriter::New();
-	else
-	{
-		strcpy (extension,"ply");
-		if (strstr(Format,extension)!=NULL)
-			Writer=(vtkPolyDataWriter*) vtkPLYWriter::New();
-		else
-		{
-			strcpy (extension,"stl");
-			if (strstr(Format,extension)!=NULL)
-				Writer=(vtkPolyDataWriter*) vtkSTLWriter::New();		
+	} else {
+		strcpy (extension, "ply");
+		if (strstr(Format,extension) != NULL) {
+			Writer = (vtkPolyDataWriter*) vtkPLYWriter::New();
+		} else {
+			strcpy (extension, "stl");
+			if (strstr(Format, extension) != NULL)
+				Writer = (vtkPolyDataWriter*) vtkSTLWriter::New();		
 		}
 	}
 
-	vtkDiscreteMarchingCubes *Contour=vtkDiscreteMarchingCubes::New();
+	vtkDiscreteMarchingCubes *Contour = vtkDiscreteMarchingCubes::New();
 	Contour->ComputeNormalsOff();
 	Contour->ComputeGradientsOff ();
 	Contour->ComputeScalarsOff();
 	Contour->SetInputData(Image);
-	for (int i=MyId; i<Labels->GetNumberOfIds(); i+=NumberOfThreads)
-	{
-		double StartTime=Timer->GetUniversalTime();
-		vtkIdType Level=Labels->GetId(i);
+	for (int i = MyId; i < Labels->GetNumberOfIds(); i += NumberOfThreads) {
+		double StartTime = Timer->GetUniversalTime();
+		vtkIdType Level = Labels->GetId(i);
 		Timer->StartTimer();
 		Contour->SetValue(0,Level);
 		Contour->Update();
-		vtkPolyData *Mesh=Contour->GetOutput();
+		vtkPolyData *Mesh = Contour->GetOutput();
 
-		if (Helper->KeepBiggestComponent!=0)
-		{
-			vtkSurface *ToClean=vtkSurface::New();
+		if (Helper->KeepBiggestComponent != 0) {
+			vtkSurface *ToClean = vtkSurface::New();
 			ToClean->CreateFromPolyData(Mesh);
-			vtkSurface *Cleaned=ToClean->GetBiggestConnectedComponent();
+			vtkSurface *Cleaned = ToClean->GetBiggestConnectedComponent();
 			Cleaned->EnsureOutwardsNormals();
+			Helper->Lock->Lock();
 			Mesh->ShallowCopy(Cleaned);
 			Cleaned->Delete();
 			ToClean->Delete();
+			Helper->Lock->Unlock();
 			/*
 			vtkPolyDataConnectivityFilter *Connectivity=vtkPolyDataConnectivityFilter::New();
 			Connectivity->SetExtractionModeToLargestRegion();
@@ -181,14 +177,12 @@ VTK_THREAD_RETURN_TYPE ThreadedSurfaceExtraction (void *arg)
 			Connectivity->Delete();*/
 		}
 
-		if (Helper->FillHoles!=0)
-		{
-			vtkFillHolesFilter *HolesFill= vtkFillHolesFilter::New();
+		if (Helper->FillHoles != 0) {
+			vtkFillHolesFilter *HolesFill = vtkFillHolesFilter::New();
 			HolesFill->SetInputData(Mesh);
 			HolesFill->SetHoleSize(1e9);
 			HolesFill->Update();
-			if (HolesFill->GetOutput()->GetNumberOfCells()>0)
-			{
+			if (HolesFill->GetOutput()->GetNumberOfCells() > 0) {
 				Mesh->ShallowCopy(HolesFill->GetOutput());
 			}
 			HolesFill->Delete();
@@ -196,102 +190,91 @@ VTK_THREAD_RETURN_TYPE ThreadedSurfaceExtraction (void *arg)
 
 		Timer->StopTimer();
 
-		Helper->ProcessingTimes[MyId][0]+=Timer->GetElapsedTime();
-		if (Helper->MaximumTimes[MyId][0]<Timer->GetElapsedTime())
-			Helper->MaximumTimes[MyId][0]=Timer->GetElapsedTime();
+		Helper->ProcessingTimes[MyId][0] += Timer->GetElapsedTime();
+		if (Helper->MaximumTimes[MyId][0] < Timer->GetElapsedTime())
+			Helper->MaximumTimes[MyId][0] = Timer->GetElapsedTime();
 
 		std::stringstream Name;
-		if (Helper->NamesMap[Level].length()>0)
-		{
-			Name<<Helper->OutputDirectory<<Level<<"-"<<Helper->NamesMap[Level]<<"."<<Helper->GetOutputFormat();
+		Name << Helper->OutputDirectory << Level;
+		if (Helper->NamesMap[Level].length()>0) {
+			Name << "-" << Helper->NamesMap[Level] << "." << Helper->GetOutputFormat();
+		} else {
+			Name << "." << Helper->GetOutputFormat();
 		}
-		else
+		int MaxNumberOfVertices = Helper->MaximumNumberOfVertices;
+		if ((Mesh->GetNumberOfPoints() > MaxNumberOfVertices) && (MaxNumberOfVertices > 0))
 		{
-			Name<<Helper->OutputDirectory<<Level<<"."<<Helper->GetOutputFormat();
-		}
-		int MaxNumberOfVertices=Helper->MaximumNumberOfVertices;
-		if ((Mesh->GetNumberOfPoints()>MaxNumberOfVertices)&&(MaxNumberOfVertices>0))
-		{
-			int WantedNumberOfVertices=MaxNumberOfVertices;
+			int WantedNumberOfVertices = MaxNumberOfVertices;
 			Timer->StartTimer();
-			if (Helper->SimplificationType==1)
-			{
-				vtkQuadricClustering *Simplification=vtkQuadricClustering::New();
+			if (Helper->SimplificationType == 1) {
+				vtkQuadricClustering *Simplification = vtkQuadricClustering::New();
 				Simplification->SetInputData(Mesh);
 				int NumberOfSubdivisions=(int) pow((double) WantedNumberOfVertices, (double) 1.0/3.0);
 				Simplification->SetNumberOfDivisions (NumberOfSubdivisions,NumberOfSubdivisions,NumberOfSubdivisions);
 				Simplification->Update();
 				Mesh->ShallowCopy(Simplification->GetOutput());
 				Simplification->Delete();
-			}
-			else
-			{
+			} else {
 				int WantedNumberOfIsotropicVertices=WantedNumberOfVertices;
-				if (Helper->Anisotropy!=0)
-				{
+				if (Helper->Anisotropy!=0) {
 					WantedNumberOfIsotropicVertices=30*WantedNumberOfVertices;
 				}
 					
 				vtkIsotropicDiscreteRemeshing *Remesh=vtkIsotropicDiscreteRemeshing::New();
 				Remesh->GetMetric()->SetGradation(Helper->Gradation);
-				vtkSurface *Mesh2=vtkSurface::New();
+				vtkSurface *Mesh2 = vtkSurface::New();
 				Mesh2->CreateFromPolyData(Mesh);
 				Timer->StopTimer();
-				Helper->ProcessingTimes[MyId][1]+=Timer->GetElapsedTime();
-				if (Helper->MaximumTimes[MyId][1]<Timer->GetElapsedTime())
-					Helper->MaximumTimes[MyId][1]=Timer->GetElapsedTime();
+				Helper->ProcessingTimes[MyId][1] += Timer->GetElapsedTime();
+				if (Helper->MaximumTimes[MyId][1] < Timer->GetElapsedTime())
+					Helper->MaximumTimes[MyId][1] = Timer->GetElapsedTime();
 
 				Timer->StartTimer();
-				Remesh->SetInput(Mesh2);
-				if (Helper->ForceManifold!=0)
-				{
+				Remesh->SetInputData(Mesh2);
+				if (Helper->ForceManifold!=0) {
 					Remesh->SetForceManifold(1);
+					Remesh->SetSpareFactor(4);
 				}
 				Remesh->SetNumberOfClusters(WantedNumberOfIsotropicVertices);
 				Remesh->SetConsoleOutput(0);
+				Remesh->SetSubsamplingThreshold(1);
 				Remesh->Remesh();
 
-				if (1)
-				{
+				if (1) {
 					//Optimize vertices positions with quadrics-based placement
 					// Note : this is an adaptation of Siggraph 2000 Paper : Out-of-core simplification of large polygonal models
 					vtkIntArray *Clustering=Remesh->GetClustering();
 					int Cluster,NumberOfMisclassedItems=0;
 
 					double **ClustersQuadrics =new double*[WantedNumberOfIsotropicVertices];
-					for (int i = 0; i < WantedNumberOfIsotropicVertices; i++)
-					{
-						ClustersQuadrics[i]=new double[9];
-						for (int j=0;j<9;j++)
-							ClustersQuadrics[i][j]=0;
+					for (int i = 0; i < WantedNumberOfIsotropicVertices; i++) {
+						ClustersQuadrics[i] = new double[9];
+						for (int j = 0; j < 9; j++) {
+							ClustersQuadrics[i][j] = 0;
+						}
 					}
 
-					vtkIdList *FList=vtkIdList::New();
+					vtkIdList *FList = vtkIdList::New();
 
-					for (int i = 0; i < Remesh->GetNumberOfItems (); i++)
-					{
+					for (int i = 0; i < Remesh->GetNumberOfItems (); i++) {
 						Cluster = Clustering->GetValue (i);
-						if ((Cluster >= 0)&& (Cluster < WantedNumberOfIsotropicVertices))
-						{
-							if (Remesh->GetClusteringType() == 0)
-							{
+						if ((Cluster >= 0)&& (Cluster < WantedNumberOfIsotropicVertices)) {
+							if (Remesh->GetClusteringType() == 0) {
 								vtkQuadricTools::AddTriangleQuadric(ClustersQuadrics[Cluster],Remesh->GetInput(),i,false);
-							}
-							else
-							{
+							} else {
 								Remesh->GetInput()->GetVertexNeighbourFaces(i,FList);
-								for (int j=0;j<FList->GetNumberOfIds();j++)
+								for (int j=0;j<FList->GetNumberOfIds();j++) {
 									vtkQuadricTools::AddTriangleQuadric(ClustersQuadrics[Cluster]
-											,Remesh->GetInput(),FList->GetId(j),false);				
+											,Remesh->GetInput(),FList->GetId(j),false);
+								}
 							}
-						}
-						else
+						} else {
 							NumberOfMisclassedItems++;
+						}
 					}
 					FList->Delete();
 					double P[3];
-					for (int i = 0; i < WantedNumberOfIsotropicVertices; i++)
-					{
+					for (int i = 0; i < WantedNumberOfIsotropicVertices; i++) {
 						Remesh->GetOutput()->GetPoint (i, P);
 						vtkQuadricTools::ComputeRepresentativePoint(ClustersQuadrics[i], P,1);
 						Remesh->GetOutput()->SetPointCoordinates (i, P);
@@ -301,28 +284,29 @@ VTK_THREAD_RETURN_TYPE ThreadedSurfaceExtraction (void *arg)
 					Mesh->GetPoints()->Modified ();
 				}
 
-				if (Helper->Anisotropy!=0)
-				{
+				if (Helper->Anisotropy != 0) {
 					vtkAnisotropicDiscreteRemeshing *AnisoRemesh=vtkAnisotropicDiscreteRemeshing::New();
 					AnisoRemesh->GetMetric()->SetGradation(Helper->Gradation);
-					AnisoRemesh->SetInput(Remesh->GetOutput());
-					if (Helper->ForceManifold!=0)
-					{
+					AnisoRemesh->SetInputData(Remesh->GetOutput());
+					if (Helper->ForceManifold!=0) {
 						AnisoRemesh->SetForceManifold(1);
+						AnisoRemesh->SetSpareFactor(4);
 					}
 					AnisoRemesh->SetNumberOfClusters(WantedNumberOfVertices);
 					AnisoRemesh->SetConsoleOutput(0);
 					AnisoRemesh->Remesh();
+					Helper->Lock->Lock();
 					Mesh->ShallowCopy(AnisoRemesh->GetOutput());
 					Remesh->Delete();
 					AnisoRemesh->Delete();
 					Mesh2->Delete();
-				}
-				else
-				{
+					Helper->Lock->Unlock();
+				} else {
+					Helper->Lock->Lock();
 					Mesh->ShallowCopy(Remesh->GetOutput());
 					Remesh->Delete();
 					Mesh2->Delete();
+					Helper->Lock->Unlock();
 				}
 			}
 			Timer->StopTimer();
@@ -333,20 +317,25 @@ VTK_THREAD_RETURN_TYPE ThreadedSurfaceExtraction (void *arg)
 
 		Timer->StartTimer();
 
-		if (Helper->NumberOfSmoothingSteps!=0)
-		{
+		if (Helper->NumberOfSmoothingSteps != 0) {
 			vtkWindowedSincPolyDataFilter *Smoother=vtkWindowedSincPolyDataFilter::New();
 			Smoother->SetInputData(Mesh);
 			Smoother->SetNumberOfIterations(Helper->NumberOfSmoothingSteps);
 			Smoother->Update();
 			Mesh->ShallowCopy(Smoother->GetOutput());
+			Helper->Lock->Lock();
 			Smoother->Delete();
+			Helper->Lock->Unlock();
 		}
 
 		Writer->SetInputData(Mesh);
 		Writer->SetFileName(Name.str().c_str());
 		Writer->Write();
 		Timer->StopTimer();
+		
+		Helper->Lock->Lock();
+		cout<< "Label " << Level << " done"<<endl;
+		Helper->Lock->Unlock();
 
 		Helper->ProcessingTimes[MyId][4]+=Timer->GetElapsedTime();
 		if (Helper->MaximumTimes[MyId][4]<Timer->GetElapsedTime())
@@ -358,10 +347,13 @@ VTK_THREAD_RETURN_TYPE ThreadedSurfaceExtraction (void *arg)
 			Helper->MaximumTimes[MyId][5]=GlobalTime;		
 	}
 
+	Helper->Lock->Lock();
 	Contour->Delete();
 	Writer->Delete();
 	Image->Delete();
 	Timer->Delete();
+	cout<< "Thread " << MyId << " done"<<endl;
+	Helper->Lock->Unlock();
 	return (VTK_THREAD_RETURN_VALUE);
 }
 
@@ -371,16 +363,16 @@ vtkIdList* GetIds(vtkImageData *Image)
 	vtkIdList *Ids=vtkIdList::New();
 	int Dimensions[3];
 	Image->GetDimensions(Dimensions);
-	int NumVoxels=Dimensions[0]*Dimensions[1]*Dimensions[2];
+	int NumVoxels = Dimensions[0] * Dimensions[1] * Dimensions[2];
 
 	voxel_type *Pointer=(voxel_type *) Image->GetScalarPointer();
 	voxel_type Label;
-	for (;NumVoxels!=0;NumVoxels--)
-	{
-		 Label=*Pointer;
+	for (;NumVoxels!=0;NumVoxels--) {
+		 Label = *Pointer;
 		 Pointer++;
-		if (Ids->IsId(Label)==-1)
+		if (Ids->IsId(Label) == -1) {
 			Ids->InsertNextId(Label);
+		}
 	}
 	vtkSortDataArray::Sort(Ids);
 	return (Ids);
@@ -391,8 +383,10 @@ int main( int argc, char *argv[] )
 	MyThreaderHelperClass Helper;
 	vtkMultiThreader *Threader=vtkMultiThreader::New();
 	Threader->SetSingleMethod (ThreadedSurfaceExtraction, (void *) &Helper);
-	double MaxNumberOfVoxels=100000000;
+	double MaxNumberOfVoxels = VTK_INT_MAX;
 	int MaximumSubsamplingFactor=4;
+	double threshold = VTK_DOUBLE_MIN;
+	int binaryMasks = 0;
 
 	std::map<int, std::string> ColorMap;
 
@@ -412,105 +406,96 @@ int main( int argc, char *argv[] )
 		cout<<"-m 0/1 : forces manifold output (default : 0)"<<endl;
 		cout<<"-a 0/1 : uses anisotropic coarsening (default : 0)"<<endl;
 		cout<<"-c 0/1 : keeps (or not) only each biggest component (default : 0)"<<endl;
+		cout<<"-t threshold_value : apply thresholding to the volume (default : not used)"<<endl;
 		cout<<"-x xmlfile : adds colors provided in xmlfile"<<endl;
 		exit(1);
 	}
 
 	// Parse optionnal arguments
 	int ArgumentsIndex=2;
-	while (ArgumentsIndex<argc)
-	{
-		if (strcmp(argv[ArgumentsIndex],"-n")==0)
-		{
-			cout<<"Setting maximum number of vertices to "<<atoi(argv[ArgumentsIndex+1])<<endl;
-			Helper.MaximumNumberOfVertices=(atoi(argv[ArgumentsIndex+1]));
+	while (ArgumentsIndex < argc) {
+		char *key = argv[ArgumentsIndex];
+		char *value = argv[ArgumentsIndex + 1];
+
+		if (strcmp(key, "-masks") == 0) {
+			cout << "Output binary masks : " << atoi(value) << endl;
+			binaryMasks = atoi(value);
 		}
-		if (strcmp(argv[ArgumentsIndex],"-j")==0)
-		{
-			cout<<"Setting number of threads to "<<atoi(argv[ArgumentsIndex+1])<<endl;
-			Threader->SetNumberOfThreads(atoi(argv[ArgumentsIndex+1]));
+		if (strcmp(key, "-n") == 0) {
+			cout << "Setting maximum number of vertices to " << atoi(value) << endl;
+			Helper.MaximumNumberOfVertices = (atoi(value));
 		}
-		if (strcmp(argv[ArgumentsIndex],"-s")==0)
-		{
-			cout<<"Setting simplification type to "<<atoi(argv[ArgumentsIndex+1])<<endl;
-			Helper.SimplificationType=atoi(argv[ArgumentsIndex+1]);
+		if (strcmp(key, "-j") == 0) {
+			cout << "Setting number of threads to " << atoi(value) << endl;
+			Threader->SetNumberOfThreads(atoi(value));
 		}
-		if (strcmp(argv[ArgumentsIndex],"-sm")==0)
-		{
-			cout<<"Setting number of smoothing steps to "<<atoi(argv[ArgumentsIndex+1])<<endl;
-			Helper.NumberOfSmoothingSteps=atoi(argv[ArgumentsIndex+1]);
+		if (strcmp(key, "-s") == 0) {
+			cout << "Setting simplification type to " << atoi(value) << endl;
+			Helper.SimplificationType=atoi(value);
 		}
-		if (strcmp(argv[ArgumentsIndex],"-r")==0)
-		{
-			cout<<"Setting maximum subsampling factor to "<<atoi(argv[ArgumentsIndex+1])<<endl;
-			MaximumSubsamplingFactor=atoi(argv[ArgumentsIndex+1]);
+		if (strcmp(key, "-sm") == 0) {
+			cout << "Setting number of smoothing steps to " << atoi(value) << endl;
+			Helper.NumberOfSmoothingSteps=atoi(value);
 		}
-		if (strcmp(argv[ArgumentsIndex],"-v")==0)
-		{
-			cout<<"Setting maximum number of voxels to "<<atoi(argv[ArgumentsIndex+1])<<endl;
-			MaxNumberOfVoxels=atoi(argv[ArgumentsIndex+1]);
+		if (strcmp(key, "-r") == 0) {
+			cout << "Setting maximum subsampling factor to " << atoi(value) << endl;
+			MaximumSubsamplingFactor=atoi(value);
 		}
-		if (strcmp(argv[ArgumentsIndex],"-g")==0)
-		{
-			cout<<"Setting gradation to "<<atof(argv[ArgumentsIndex+1])<<endl;
-			Helper.Gradation=atof(argv[ArgumentsIndex+1]);
+		if (strcmp(key, "-v") == 0) {
+			cout << "Setting maximum number of voxels to " << atoi(value) << endl;
+			MaxNumberOfVoxels=atoi(value);
 		}
-		if (strcmp(argv[ArgumentsIndex],"-f")==0)
-		{
-			cout<<"Setting output format to "<<argv[ArgumentsIndex+1]<<endl;
-			Helper.SetOutputFormat(argv[ArgumentsIndex+1]);
+		if (strcmp(key, "-g") == 0) {
+			cout << "Setting gradation to " << atof(value) << endl;
+			Helper.Gradation=atof(value);
 		}
-		if (strcmp(argv[ArgumentsIndex],"-o")==0)
-		{
-			cout<<"Setting output directory to : "<<argv[ArgumentsIndex+1]<<endl;
-			strcpy (Helper.OutputDirectory,argv[ArgumentsIndex+1]);
+		if (strcmp(key, "-f") == 0) {
+			cout << "Setting output format to " << value << endl;
+			Helper.SetOutputFormat(value);
+		}
+		if (strcmp(key, "-o") == 0) {
+			cout << "Setting output directory to : " << value << endl;
+			strcpy (Helper.OutputDirectory,value);
 			strcat (Helper.OutputDirectory,"/");
 		}
-		if (strcmp(argv[ArgumentsIndex],"-m")==0)
-		{
-			cout<<"Setting manifold output to "<<atoi(argv[ArgumentsIndex+1])<<endl;
-			Helper.ForceManifold=atoi(argv[ArgumentsIndex+1]);
+		if (strcmp(key, "-m") == 0) {
+			cout<<"Setting manifold output to " << atoi(value) << endl;
+			Helper.ForceManifold=atoi(value);
 		}
-		if (strcmp(argv[ArgumentsIndex],"-fill")==0)
-		{
-			cout<<"Setting fill holes output to "<<atoi(argv[ArgumentsIndex+1])<<endl;
-			Helper.FillHoles=atoi(argv[ArgumentsIndex+1]);
+		if (strcmp(key, "-fill") == 0) {
+			cout << "Setting fill holes output to " << atoi(value) << endl;
+			Helper.FillHoles=atoi(value);
 		}
-		if (strcmp(argv[ArgumentsIndex],"-a")==0)
-		{
-			cout<<"Setting anisotropy to "<<atoi(argv[ArgumentsIndex+1])<<endl;
-			Helper.Anisotropy=atoi(argv[ArgumentsIndex+1]);
+		if (strcmp(key, "-a") == 0) {
+			cout << "Setting anisotropy to " << atoi(value) << endl;
+			Helper.Anisotropy=atoi(value);
 		}
-		if (strcmp(argv[ArgumentsIndex],"-c")==0)
-		{
-			cout<<"Setting keeping biggest component to "<<atoi(argv[ArgumentsIndex+1])<<endl;
-			Helper.KeepBiggestComponent=atoi(argv[ArgumentsIndex+1]);
+		if (strcmp(key, "-c") == 0) {
+			cout << "Setting keeping biggest component to " << atoi(value) << endl;
+			Helper.KeepBiggestComponent=atoi(value);
 		}
-		if (strcmp(argv[ArgumentsIndex],"-x")==0)
-		{
-			cout<<"Setting colors from : "<<argv[ArgumentsIndex+1]<<endl;
-			vtkXMLDataElement *RootElement=vtkXMLUtilities::ReadElementFromFile (argv[ArgumentsIndex+1]);
-			for (int j=0;j<RootElement->GetNumberOfNestedElements();j++)
-			{
+		if (strcmp(key, "-t") == 0) {
+			cout << "Threshold value : " << atof(value) << endl;
+			threshold = atoi(value);
+		}
+		if (strcmp(key, "-x") == 0) {
+			cout << "Setting colors from : " << value << endl;
+			vtkXMLDataElement *RootElement=vtkXMLUtilities::ReadElementFromFile (value);
+			for (int j=0;j<RootElement->GetNumberOfNestedElements();j++) {
 				vtkXMLDataElement *XMLColors=RootElement->GetNestedElement(j);
-				if (strcmp(XMLColors->GetName(),"colors")==0)
-				{
-					for (int i=0;i<XMLColors->GetNumberOfNestedElements();i++)
-					{
+				if (strcmp(XMLColors->GetName(),"colors")==0) {
+					for (int i=0;i<XMLColors->GetNumberOfNestedElements();i++) {
 						vtkXMLDataElement *Element=XMLColors->GetNestedElement(i);
-						if (strcmp(Element->GetName(),"color")==0)
-						{
-							if ((Element->GetAttribute("label")!=0)&&
-								(Element->GetAttribute("meshcolor")!=0))
-							{
+						if (strcmp(Element->GetName(),"color")==0) {
+							if ((Element->GetAttribute("label")!=0) &&
+								(Element->GetAttribute("meshcolor")!=0)) {
 								int Label;
 								Element->GetScalarAttribute("label",Label);
 								ColorMap[Label]=Element->GetAttribute("meshcolor");
 								cout<<"Label "<<Label<<" has color ["<<Element->GetAttribute("meshcolor")<<"]"<<endl;
 							}
-							if ((Element->GetAttribute("label")!=0)&&
-								(Element->GetAttribute("name")!=0))
-							{
+							if ((Element->GetAttribute("label")!=0) &&
+								(Element->GetAttribute("name")!=0)) {
 								int Label;
 								Element->GetScalarAttribute("label",Label);
 								Helper.NamesMap[Label]=Element->GetAttribute("name");
@@ -528,10 +513,31 @@ int main( int argc, char *argv[] )
 	// Load Volume
 	cout <<"load : "<<argv[1]<<endl;
 	vtkImageData *Image;
-	vtkMetaImageReader *Reader=vtkMetaImageReader::New();
+	vtkRobustImageReader *Reader = vtkRobustImageReader::New();
 	Reader->SetFileName(argv[1]);
 	Reader->Update();
-	Image=Reader->GetOutput();
+	Image = Reader->GetOutput();
+	int numComp = Image->GetNumberOfScalarComponents();
+
+	if ( numComp > 1) {
+		cout << "Warning : image has " << numComp << " components. Will keep only the first" << endl;
+		vtkImageExtractComponents *components = vtkImageExtractComponents::New();
+		components->SetInputData(Image);
+		components->SetComponents(0);
+		components->Update();
+		Image = components->GetOutput();
+	}
+
+	if (threshold > VTK_DOUBLE_MIN) {
+		vtkImageThreshold *t = vtkImageThreshold::New();
+		t->SetOutputScalarTypeToUnsignedChar();
+		t->SetInValue(1);
+		t->SetOutValue(0);
+		t->SetInputData(Image);
+		t->ThresholdByUpper(threshold);
+		t->Update();
+		Image = t->GetOutput();
+	}
 
 	int Dimensions[3];
 	Image->GetDimensions(Dimensions);
@@ -541,39 +547,63 @@ int main( int argc, char *argv[] )
 
 	vtkIdList *Labels;
 	vtkImageCast *Cast;
-	switch (Image->GetScalarType())
-	{
+	switch (Image->GetScalarType()) {
 	case VTK_UNSIGNED_CHAR:
-		Labels=GetIds<unsigned char>(Image);
+		Labels = GetIds<unsigned char>(Image);
 		break;
 	case VTK_UNSIGNED_SHORT:
-		Labels=GetIds<unsigned short>(Image);
+		Labels = GetIds<unsigned short>(Image);
 		break;
 	case VTK_SHORT:
-		Labels=GetIds<short>(Image);
+		Labels = GetIds<short>(Image);
 		break;
 	case VTK_INT:
-		Labels=GetIds<int>(Image);
+		Labels = GetIds<int>(Image);
 		break;
 	case VTK_SIGNED_CHAR:
-		Labels=GetIds<char>(Image);
+		Labels = GetIds<char>(Image);
 		break;
 	default:
-		Cast=vtkImageCast::New();
+		Cast = vtkImageCast::New();
 		Cast->SetInputData(Image);
 		Cast->SetOutputScalarTypeToInt ();
 		Cast->Update();
 		Image->ShallowCopy(Cast->GetOutput());
 		Cast->Delete();
-		cout<<"Warning : casting image to ints"<<endl;
-		Labels=GetIds<int>(Image);
+		cout << "Warning : casting image to ints" << endl;
+		Labels = GetIds<int>(Image);
 		break;
 	}
 
-	cout<<"Found "<<Labels->GetNumberOfIds()<<" labels"<<endl;
+	cout << "Found " << Labels->GetNumberOfIds() << " labels" << endl;
 
-	double Factor=pow (MaxNumberOfVoxels/NumberOfVoxels, 1.0/3.0);
-	if ((Factor<1)&&(MaximumSubsamplingFactor>1))
+	if ( binaryMasks ) {
+
+		vtkImageThreshold *threshold = vtkImageThreshold::New();
+		threshold->SetInValue(1);
+		threshold->SetOutValue(0);
+		threshold->SetOutputScalarTypeToUnsignedChar();
+		threshold->SetInputData( Image );
+		vtkMetaImageWriter *writer = vtkMetaImageWriter::New();
+
+		for (int i = 0; i < Labels->GetNumberOfIds(); i++) {
+
+			std::stringstream name;
+			int label = Labels->GetId( i );
+			name << "label" << label << ".mhd";
+			threshold->ThresholdBetween( label, label );
+			threshold->Update();
+			writer->SetInputData( threshold->GetOutput() );
+			writer->SetFileName( name.str().c_str() );
+			writer->Write();
+
+		}
+
+	}
+
+
+	double Factor = pow (MaxNumberOfVoxels / NumberOfVoxels, 1.0 / 3.0);
+	if ((Factor < 1) && (MaximumSubsamplingFactor > 1))
 	{
 		if (Factor<1.0/MaximumSubsamplingFactor)
 			Factor=1.0/MaximumSubsamplingFactor;
@@ -592,13 +622,13 @@ int main( int argc, char *argv[] )
 
 	Helper.Image=Image;
 	Helper.Labels=Labels;
-
+	Helper.ProcessingTimes.resize(Threader->GetNumberOfThreads());
+	Helper.MaximumTimes.resize(Threader->GetNumberOfThreads());
 	Threader->SingleMethodExecute ();
-
+	cout << "All meshes extracted" << endl;
 // Display timings
 	cout<<endl<<"Timings :"<<endl;
-	for (int TimingType=0;TimingType<NumberOfTimingTypes;TimingType++)
-	{
+	for (int TimingType=0;TimingType<NumberOfTimingTypes;TimingType++) {
 		switch (TimingType)
 		{
 		case 0:
@@ -623,33 +653,29 @@ int main( int argc, char *argv[] )
 		}
 		double Time=0;
 		double MaxTime=0;
-		for (int i=0;i<Threader->GetNumberOfThreads();i++)
-		{
-			double ThreadTime=Helper.ProcessingTimes[i][TimingType];
-			Time+=ThreadTime;
-			if (MaxTime<Helper.MaximumTimes[i][TimingType])
-				MaxTime=Helper.MaximumTimes[i][TimingType];
+		for (int i=0;i<Threader->GetNumberOfThreads();i++) {
+			if (Helper.ProcessingTimes[i].size() <= i) continue;
+			double ThreadTime = Helper.ProcessingTimes[i][TimingType];
+			Time += ThreadTime;
+			if (MaxTime < Helper.MaximumTimes[i][TimingType])
+				MaxTime = Helper.MaximumTimes[i][TimingType];
 		}
-		cout<<"Average : "<<Time/Labels->GetNumberOfIds()<<" ";
-		cout<<"Max : "<<MaxTime<<endl;
+		cout<<"Average : " << Time/Labels->GetNumberOfIds() << " ";
+		cout<<"Max : " << MaxTime << endl;
 	}
 
 	vtkXMLDataElement *Root=vtkXMLDataElement::New ();
 	Root->SetName("root");
 	Root->SetIntAttribute ("timestamp",(int) vtkTimerLog::GetUniversalTime());
 
-	for (int i=0;i<Labels->GetNumberOfIds();i++)
-	{
+	for (int i = 0; i < Labels->GetNumberOfIds(); i++) {
 		std::stringstream Name;
-		int Label=Labels->GetId(i);
+		int Label = Labels->GetId(i);
 
-		if (Helper.NamesMap[Label].length()>0)
-		{
-			Name<<Label<<"-"<<Helper.NamesMap[Label]<<"."<<Helper.GetOutputFormat();
-		}
-		else
-		{
-			Name<<Label<<"."<<Helper.GetOutputFormat();
+		if (Helper.NamesMap[Label].length() > 0) {
+			Name << Label<< "-" << Helper.NamesMap[Label]<<"."<<Helper.GetOutputFormat();
+		} else {
+			Name << Label << "."<< Helper.GetOutputFormat();
 		}
 
 		vtkXMLDataElement *Element=vtkXMLDataElement::New ();
@@ -658,19 +684,25 @@ int main( int argc, char *argv[] )
 		Element->SetAttribute("mesh",Name.str().c_str());
 
 		std::string Color=ColorMap[Label];
-		if (Color.length()==0)
+		if (Color.length()==0) {
 			cout<<"Warning : no color was provided for label "<<Label<<endl;
-		else
+		} else {
 			Element->SetAttribute("color",Color.c_str());
+		}
 
 		Root->AddNestedElement(Element);
 		Element->Delete();
+		cout<< "XML element for label " << Label << " done"<<endl;
 	}
 
 	vtkXMLUtilities::WriteElementToFile (Root, "meshes.xml");
-	Reader->Delete();
-	Root->Delete();
-	Threader->Delete();
-	Labels->Delete();
+//	Reader->Delete();
+	cout << "reader deleted" << endl;
+//	Root->Delete();
+	cout << "root deleted" << endl;
+//	Threader->Delete();
+	cout << "threader deleted" << endl;
+//	Labels->Delete();
+	cout << "labels deleted" << endl;
     return (0);
 }

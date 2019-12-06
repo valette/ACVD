@@ -103,87 +103,104 @@
       "executable": "bin/ACVDQ"
 		},
 		"extract_meshes" : {
-			"description" : "Generates meshes from labeled volume data : marching cubes + simplification + smoothing",
-		    "parameters":[
-		        {
-		            "name":"input_volume",
-		            "type":"file",
-		            "required":"true"
-		        },
-		        {
-		            "name":"max_number_of_vertices",
-		            "type":"int",
-		            "min":"-1",
-		            "defaultValue":"10000",
-		            "prefix":"-n "
-		        },
-		        {
-		            "name":"simlification_method",
-		            "type":"int",
-		            "min":"0",
-		            "max":"1",
-		            "defaultValue":"0",
-		            "prefix":"-s "
-		        },
-		        {
-		            "name":"number_of_smoothing_steps",
-		            "type":"int",
-		            "min":"0",
-		            "defaultValue":"0",
-		            "prefix":"-sm "
-		        },
-		        {
-		            "name":"gradation",
-		            "type":"float",
-		            "min":"0",
-		            "max":"3",
-		            "defaultValue":"0",
-		            "prefix":"-g "
-		        },
-		        {
-		            "name":"format",
-		            "type":"string",
-		            "defaultValue":"vtk",
-		            "prefix":"-f "
-		        },
-		        {
-		            "name":"manifold_output",
-		            "type":"int",
-		            "defaultValue":"0",
-		            "min":"0",
-		            "max":"1",
-		            "prefix":"-fill 1 -m "
-		        },
-		        {
-		            "name":"anisotropy",
-		            "type":"int",
-		            "defaultValue":"0",
-		            "min":"0",
-		            "max":"1",
-		            "prefix":"-a "
-		        },
-		        {
-		            "name":"num_voxel_max",
-		            "info" : "defines the maximum number of input voxels. If the input volume has more, it will be resampled to this number",
-		            "type":"int",
-		            "min":"0",
-		            "prefix":"-v "
-		        },
-		        {
-		            "name":"cleaning",
-		            "type":"int",
-		            "defaultValue":"0",
-		            "min":"0",
-		            "max":"1",
-		            "prefix":"-c "
-		        },
-		        {
-		            "name":"colors",
-		            "type":"file",
-		            "prefix":"-x "
-		        }
-		    ],
-			"executable":"bin/VolumeAnalysis"
+      "description": "Generates meshes from labeled volume data : marching cubes + simplification + smoothing",
+      "parameters": [
+        {
+          "name": "input_volume",
+          "type": "file",
+          "required": true
+        },
+        {
+          "name": "max_number_of_vertices",
+          "type": "int",
+          "min": "-1",
+          "defaultValue": "10000",
+          "prefix": "-n "
+        },
+        {
+          "name": "simlification_method",
+          "type": "int",
+          "min": "0",
+          "max": "1",
+          "defaultValue": "0",
+          "prefix": "-s "
+        },
+        {
+          "name": "number_of_smoothing_steps",
+          "type": "int",
+          "min": "0",
+          "defaultValue": "0",
+          "prefix": "-sm "
+        },
+        {
+          "name": "gradation",
+          "type": "float",
+          "min": "0",
+          "max": "3",
+          "defaultValue": "0",
+          "prefix": "-g "
+        },
+        {
+          "name": "format",
+          "type": "string",
+          "defaultValue": "vtk",
+          "prefix": "-f "
+        },
+        {
+          "name": "manifold_output",
+          "type": "int",
+          "min": "0",
+          "max": "1",
+          "prefix": "-fill 1 -m "
+        },
+        {
+          "name": "anisotropy",
+          "type": "int",
+          "defaultValue": "0",
+          "min": "0",
+          "max": "1",
+          "prefix": "-a "
+        },
+        {
+          "name": "num_voxel_max",
+          "info": "defines the maximum number of input voxels. If the input volume has more, it will be resampled to this number",
+          "type": "int",
+          "min": "0",
+          "prefix": "-v "
+        },
+        {
+          "name": "cleaning",
+          "type": "int",
+          "defaultValue": "0",
+          "min": "0",
+          "max": "1",
+          "prefix": "-c "
+        },
+        {
+          "name": "fill_holes",
+          "type": "int",
+          "defaultValue": "0",
+          "min": "0",
+          "max": "1",
+          "prefix": "-fill "
+        },
+        {
+          "name": "colors",
+          "type": "file",
+          "prefix": "-x "
+        },
+        {
+          "name": "threshold",
+          "type": "float",
+          "prefix": "-t "
+        },
+        {
+          "name": "masks",
+          "type": "string",
+          "prefix": "-masks "
+        }
+      ],
+      "executable": "bin/VolumeAnalysis"
 		},
 		"mesh2vtk" : {
 			"description" : "Converts a mesh into a vtk format",
