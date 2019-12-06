@@ -1400,6 +1400,7 @@ vtkUniformClustering<Metric,EdgeType>::vtkUniformClustering() {
 	this->EdgeList = vtkIdList::New();
 	this->IsClusterFreezed = 0;
 	this->MinimizeUsingEnergy = true;
+	this->FixedClusters = 0;
 
 }
 
