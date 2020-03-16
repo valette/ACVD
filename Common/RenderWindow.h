@@ -52,7 +52,6 @@
  *  - "2"			Capture window to "capture.eps" image file
  *  - "3"			Capture window to "capture.png" image file
  *  - "4"			Set the window size multiplication factor (>=1) to create high quality capture images	
- *  - "A"			Set the Anti-aliasing factor (>=1)
  *
  *  - "E"			Set the number of times Interact() will be skipped (usefull for debuging)
  *  - "x"			Toggles On/off the display of the mesh edges on the surface
@@ -115,9 +114,6 @@ public:
 
 	/// sets the size of the window in pixels
 	void SetSize (int x, int y) {this->renWin->SetSize( x,y );};
-
-	/// sets antialiasing (the higher the more antialiased and the slower)
-	void SetAntiAliasing (int n) {this->renWin->SetAAFrames(n);};
 
 	/// renders the scene
 	void Render() {this->renWin->Render();};
@@ -210,9 +206,6 @@ public:
 	// method to set the interactor style to allow additionnal function keys
 	virtual void SetCustomInteractorStyle();
 
-	// sets/unsets immediate mode (default : on)
-	void SetImmediateMode(bool Used);
-
 protected:
 
 	// The window
@@ -248,8 +241,6 @@ protected:
 	vtkActor2D *cellLabels;
 
 	vtkTextActor *TextActor;
-
-	bool ImmediateMode;
 
 	RenderWindow(); 
 	virtual ~RenderWindow();

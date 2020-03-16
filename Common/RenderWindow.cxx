@@ -103,12 +103,6 @@ public:
 			cin>>Factor;
 			this->Window->SetCaptureMagnificationFactor(Factor);
 			return;	
-		case 'A' :
-			int AntiAliasingFactor;
-			cout<<"Enter anti-aliasing factor :";
-			cin>>AntiAliasingFactor;
-			this->Window->SetAntiAliasing(AntiAliasingFactor);
-			return;	
 		case 'E' :
 			int Number;
 			cout<<"Enter number of interactions to skip :";
@@ -472,8 +466,6 @@ vtkActor* RenderWindow::SetInputData (vtkPolyData * Input)
 	{
 		Mapper=vtkPolyDataMapper::New();		
 		Mapper->SetResolveCoincidentTopologyToPolygonOffset ();
-		if (this->ImmediateMode)
-			Mapper->ImmediateModeRenderingOn ();
 		this->MeshActor->SetMapper(Mapper);
 		Mapper->Delete();
 	}
@@ -819,8 +811,6 @@ vtkActor *RenderWindow::AddPolyData (vtkPolyData * Input)
 {
 
 	vtkPolyDataMapper *mapper = vtkPolyDataMapper::New ();
-	if (this->ImmediateMode)
-		mapper->ImmediateModeRenderingOn ();
 	mapper->SetResolveCoincidentTopologyToPolygonOffset ();
 //	mapper->SetResolveCoincidentTopologyToShiftZBuffer();
 
@@ -910,8 +900,6 @@ RenderWindow::SetInputEdges (vtkPolyData * Edges)
 	
 		vtkPolyDataMapper *EdgesMapper = vtkPolyDataMapper::New ();
 		EdgesMapper->SetResolveCoincidentTopologyToPolygonOffset ();
-		if (this->ImmediateMode)
-			EdgesMapper->ImmediateModeRenderingOn ();
 
 		this->EdgesActor = vtkActor::New ();
 		vtkIntArray *EdgesColor = vtkIntArray::New ();
@@ -1023,11 +1011,6 @@ RenderWindow::SetDisplayIdsOff ()
 	this->Render ();
 }
 
-
-void RenderWindow::SetImmediateMode(bool Used)
-{
-	this->ImmediateMode=Used;
-}
 
 void
 RenderWindow::SetDisplayIdsOn ()
@@ -1193,7 +1176,6 @@ RenderWindow::RenderWindow () : HighlightedVerticesActor( 0 ),HighlightedEdgesAc
 	this->cellLabels = 0;
 	this->NumberOfInteractionsToSkip=0;
 	this->TextActor=0;
-	this->ImmediateMode=true;
 }
 
 RenderWindow::~RenderWindow ()	//Destructeur
