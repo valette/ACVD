@@ -173,6 +173,13 @@ VTK_THREAD_RETURN_TYPE ThreadedImageSlice (void *arg) {
 		PNGSlice = vtkImageData::New();
 		PNGSlice->SetDimensions(Dimensions);
 		PNGSlice->AllocateScalars(VTK_UNSIGNED_CHAR, NumComponents);		
+	} else if ( ( Helper->Format == 0 ) && ( Image->GetNumberOfScalarComponents() == 3 ) ) {
+		Cast->SetOutputScalarTypeToUnsignedChar ();
+		Writer = vtkPNGWriter::New();
+		Suffix << ".png";
+		PNGSlice = vtkImageData::New();
+		PNGSlice->SetDimensions(Dimensions);
+		PNGSlice->AllocateScalars(VTK_UNSIGNED_CHAR, 3);
 	} else {
 		Cast->SetOutputScalarTypeToUnsignedChar ();
 		Writer = (vtkImageWriter *) vtkJPEGWriter::New();
