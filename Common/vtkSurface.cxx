@@ -145,14 +145,18 @@ vtkSurface* vtkSurface::CleanMemory()
 		{
 			vtkIdType NVertices;
 			const vtkIdType *Vertices;
-			vtkIdType *New_Vertices;
+
 			this->GetFaceVertices(Id, NVertices, Vertices);
+			vtkIdType *New_Vertices = new vtkIdType [NVertices];
+			for (int i=0;i<NVertices;i++)
+				New_Vertices[i]=Vertices[i];
 
 			// Change vertices Ids according to the cleaning phase
 			for (int i=0;i<NVertices;i++)
-				New_Vertices[i]=Ids[Vertices[i]];
+				New_Vertices[i]=Ids[New_Vertices[i]];
 
 			Output->AddPolygon(NVertices,New_Vertices);
+			delete New_Vertices;
 		}
 	}
 

@@ -263,11 +263,12 @@ void vtkSurfaceBase::SwitchOrientation()
 	// vtkIdType *Vertices2 = new vtkIdType[NumberOfVertices];
 	vtkIdList *New_Vertices = vtkIdList::New();
 	vtkIdType i;
-	// for (i=0;i<NumberOfVertices;i++)
-	// 	Vertices2[i]=Vertices[i];
 	New_Vertices->SetNumberOfIds(NumberOfVertices);
 	for (i=0;i<NumberOfVertices;i++)
-		New_Vertices->SetId(i, Vertices[NumberOfVertices-1-i]);
+	    New_Vertices->SetId(i, Vertices[i]);
+	
+	for (i=0;i<NumberOfVertices;i++)
+		New_Vertices->SetId(i, New_Vertices->GetId(NumberOfVertices-1-i));
 
 	this->ReplaceCell(0, New_Vertices);
 	this->CheckNormals();
@@ -658,7 +659,7 @@ void vtkSurfaceBase::MergeVertices(vtkIdType v1, vtkIdType v2)
 		GetFaceVertices(List->GetId(i), NumberOfVertices, Vertices);
 		//vtkIdType indx = FindVertexIndex (Vertices,v2,NumberOfVertices);
 
-		this->ReplaceCellPoint(List->GetId(i), FindVertexIndex (Vertices,v2,NumberOfVertices), v1);
+		this->ReplaceCellPoint(List->GetId(i), FindVertexIndex(Vertices,v2,NumberOfVertices), v1);
 		//Vertices[FindVertexIndex (Vertices,v2,NumberOfVertices)]=v1;
 	}
 	
