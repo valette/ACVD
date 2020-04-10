@@ -19,6 +19,11 @@ add_library(vtkSurface
  )
 target_link_libraries(vtkSurface ${VTK_LIBRARIES})
 
+vtk_module_autoinit(
+  TARGETS vtkSurface
+  MODULES ${VTK_LIBRARIES}
+  )
+
 set_target_properties( vtkSurface PROPERTIES
   DEBUG_POSTFIX "-d"
   VERSION "${ACVD_LIB_VERSION}"

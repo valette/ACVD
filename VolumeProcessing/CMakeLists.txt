@@ -5,6 +5,10 @@ add_library(vtkVolumeProcessing
 
 target_link_libraries(vtkVolumeProcessing ${VTK_LIBRARIES})
 
+vtk_module_autoinit(
+  TARGETS vtkVolumeProcessing
+  MODULES ${VTK_LIBRARIES}
+  )
 
 set_target_properties( vtkVolumeProcessing PROPERTIES
 	DEBUG_POSTFIX "-d"

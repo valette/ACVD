@@ -1,10 +1,10 @@
 project(ACVD)
 
-cmake_minimum_required(VERSION 2.8.7)
+cmake_minimum_required(VERSION 3.14)
 
-if( POLICY CMP0042 )
-  cmake_policy( SET CMP0042 NEW )
-endif()
+# if( POLICY CMP0042 )
+#   cmake_policy( SET CMP0042 NEW )
+# endif()
 
 # version
 set( ACVD_MAJOR_VERSION 1 )
@@ -31,8 +31,28 @@ foreach(p LIB BIN INCLUDE CMAKE)
 endforeach()
 
 # find_package
-find_package(VTK REQUIRED NO_MODULE)
-include(${VTK_USE_FILE})
+find_package(VTK REQUIRED COMPONENTS 
+            CommonCore
+            CommonDataModel
+            RenderingCore
+            CommonSystem
+            IOImport
+            IOExport
+            IOImage
+            IOGeometry
+            IOPLY
+            FiltersSources
+            InteractionStyle
+            FiltersHybrid
+            RenderingLabel
+            IOMINC
+            FiltersModeling
+            FiltersGeneral
+            metaio
+            ImagingGeneral
+)
+
+#include(${VTK_USE_FILE})
 
 option(BUILD_SHARED_LIBS "Build vtkSurface with shared libraries." ON)
 option(BUILD_DOCUMENTATION "Build the html documentation with doxygen." OFF)

@@ -312,7 +312,7 @@ void RenderWindow :: SaveCamera(const char *filename)
         vtkCamera *camera=this->GetMeshRenderer()->GetActiveCamera();
 
 	std::ofstream camera_file;
-	camera_file.open (filename, ofstream::out | ofstream::trunc);
+	camera_file.open (filename, std::ofstream::out | std::ofstream::trunc);
 	double *ClippingRange = camera->GetClippingRange();
 	double *FocalPoint = camera->GetFocalPoint();
 	double *Position = camera->GetPosition();

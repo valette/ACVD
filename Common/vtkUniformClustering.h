@@ -673,7 +673,7 @@ vtkIntArray* vtkUniformClustering<Metric,EdgeType>::ProcessClustering(vtkIdList 
 	} else strcpy( FileName, "energy.txt" );
 
 	if ( this->ComputeAndSaveEnergy )
-		this->GlobalEnergyLog.open( FileName, ofstream::out | ofstream::trunc );
+		this->GlobalEnergyLog.open( FileName, std::ofstream::out | std::ofstream::trunc );
 
 	this->CreateWindows();
 	if (this->ConsoleOutput) cout << "Clustering......" << endl;

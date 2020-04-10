@@ -30,6 +30,12 @@ vtkManifoldSimplification.cxx
 
 target_link_libraries(vtkDiscreteRemeshing vtkSurface)
 
+vtk_module_autoinit(
+  TARGETS vtkDiscreteRemeshing
+  MODULES ${VTK_LIBRARIES}
+  )
+
+
 set_target_properties(vtkDiscreteRemeshing PROPERTIES
   DEBUG_POSTFIX "-d"
   VERSION "${ACVD_LIB_VERSION}"

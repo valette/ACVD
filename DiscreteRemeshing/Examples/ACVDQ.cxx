@@ -88,26 +88,26 @@ int main( int argc, char *argv[] ) {
 
 	if( argc > 1 ) {
 
-		cout << "load : " << argv[ 1 ] << endl;
-		strcpy( filename, argv[ 1 ] );
+		std::cout << "load : " << argv[ 1 ] << std::endl;
+		std::strcpy( filename, argv[ 1 ] );
 
 	} else {
 
-		cout<<"Usage : ACVD file nvertices gradation [options]"<<endl;
-		cout<<"nvertices is the desired number of vertices"<<endl;
-		cout<<"gradation defines the influence of local curvature (0=uniform meshing)"<<endl;
-		cout<<endl<<"Optionnal arguments : "<<endl;
-		cout << "-b 0/1 : sets mesh boundary fixing off/on (default : 0)" << endl;
-		cout<<"-s threshold : defines the subsampling threshold i.e. the input mesh will be subdivided until its number ";
-		cout<<" of vertices is above nvertices*threshold (default=10)"<<endl;
-		cout<<"-d 0/1/2 : enables display (default : 0)"<<endl;
-		cout << "-l ratio : split the edges longer than ( averageLength * ratio )" << endl;
-		cout << "-q 1/2/3 : qets number of eigenvalues used for quadric-based vertex relocation to 0/1/2 (default : 3)"<< endl;
-		cout<<"-cd file : set custom imagedata file containing density information"<<endl;
-		cout<<"-cmin value : set minimum custom indicator value"<<endl;
-		cout<<"-cmax value : set maximum custom indicator value"<<endl;
-		cout<<"-cf value : set custom indicator multiplication factor"<<endl;
-		cout<<"-m 0/1 : enforce a manifold output ON/OFF (default : 0)"<<endl;
+		std::cout<<"Usage : ACVD file nvertices gradation [options]"<<std::endl;
+		std::cout<<"nvertices is the desired number of vertices"<<std::endl;
+		std::cout<<"gradation defines the influence of local curvature (0=uniform meshing)"<<std::endl;
+		std::cout<<std::endl<<"Optionnal arguments : "<<std::endl;
+		std::cout << "-b 0/1 : sets mesh boundary fixing off/on (default : 0)" << std::endl;
+		std::cout<<"-s threshold : defines the subsampling threshold i.e. the input mesh will be subdivided until its number ";
+		std::cout<<" of vertices is above nvertices*threshold (default=10)"<<std::endl;
+		std::cout<<"-d 0/1/2 : enables display (default : 0)"<<std::endl;
+		std::cout << "-l ratio : split the edges longer than ( averageLength * ratio )" << std::endl;
+		std::cout << "-q 1/2/3 : qets number of eigenvalues used for quadric-based vertex relocation to 0/1/2 (default : 3)"<< std::endl;
+		std::cout<<"-cd file : set custom imagedata file containing density information"<<std::endl;
+		std::cout<<"-cmin value : set minimum custom indicator value"<<std::endl;
+		std::cout<<"-cmax value : set maximum custom indicator value"<<std::endl;
+		std::cout<<"-cf value : set custom indicator multiplication factor"<<std::endl;
+		std::cout<<"-m 0/1 : enforce a manifold output ON/OFF (default : 0)"<<std::endl;
 		return 0;
 
 	}
@@ -126,16 +126,16 @@ int main( int argc, char *argv[] ) {
 
 	} else {
 
-		cout << "Number of vertices ? ";
-		cin >> numberOfSamples;
+		std::cout << "Number of vertices ? ";
+		std::cin >> numberOfSamples;
 
 	}
 
 	if( argc > 3 ) gradation = atof( argv[ 3 ] );
 	else {
 
-		cout << "Gradation ? ";
-		cin >> gradation;
+		std::cout << "Gradation ? ";
+		std::cin >> gradation;
 
 	}
 
@@ -150,17 +150,17 @@ int main( int argc, char *argv[] ) {
 		if ( strcmp( key, "-m" ) == 0 ) {
 
 			remesh->SetForceManifold( atoi( value ) );
-			cout << "Force Manifold=" << atoi( value ) << endl;
+			std::cout << "Force Manifold=" << atoi( value ) << std::endl;
 
 		} else if ( strcmp( key, "-s" ) == 0 ) {
 
 			subsamplingThreshold = atoi( value );
-			cout << "Subsampling Threshold=" << subsamplingThreshold << endl;
+			std::cout << "Subsampling Threshold=" << subsamplingThreshold << std::endl;
 
 		} else if ( strcmp( key, "-d" ) == 0 ) {
 
 			display = atoi( value );
-			cout << "Display=" << display << endl;
+			std::cout << "Display=" << display << std::endl;
 
 		}
 
@@ -168,25 +168,25 @@ int main( int argc, char *argv[] ) {
 		if ( strcmp( key, "-np" ) == 0 )
 		{
 			int NumberOfThreads = atoi( value );
-			cout << "Number of threads=" << NumberOfThreads << endl;
+			std::cout << "Number of threads=" << NumberOfThreads << std::endl;
 			remesh->SetNumberOfThreads( NumberOfThreads );
 		}
 #endif
 		if ( strcmp( key, "-o" ) == 0 ) {
 
 			outputDirectory = value;
-			cout << "OutputDirectory: " << outputDirectory << endl;
+			std::cout << "OutputDirectory: " << outputDirectory << std::endl;
 			remesh->SetOutputDirectory( value );
 
 		} else if ( strcmp( key, "-l" ) == 0 ) {
 
 			mesh->SplitLongEdges( atof( value ) );
-			cout << "Splitting edges longer than "
-				<< atof( value ) << " times the average edge length" << endl;
+			std::cout << "Splitting edges longer than "
+				<< atof( value ) << " times the average edge length" << std::endl;
 
 		} else if ( strcmp( key,"-w" ) == 0 ) {
 
-			cout << "Setting writing energy log file to " << atoi( value ) << endl;
+			std::cout << "Setting writing energy log file to " << atoi( value ) << std::endl;
 			remesh->SetWriteToGlobalEnergyLog( atoi( value ) );
 
 		}
@@ -194,7 +194,7 @@ int main( int argc, char *argv[] ) {
 #ifdef DOmultithread
 		if ( strcmp( key, "-p" ) == 0 ) {
 
-			cout << "Thread pooling ratio: " << atoi( value ) << endl;
+			std::cout << "Thread pooling ratio: " << atoi( value ) << std::endl;
 			remesh->SetPoolingRatio( atoi( value ) );
 
 		}
@@ -202,37 +202,37 @@ int main( int argc, char *argv[] ) {
 
 		if ( strcmp( key, "-q" ) == 0 ) {
 
-			cout << "Setting number of eigenvalues for quadrics to " << atoi( value ) << endl;
+			std::cout << "Setting number of eigenvalues for quadrics to " << atoi( value ) << std::endl;
 			remesh->GetMetric()->SetQuadricsOptimizationLevel( atoi( value ) );
 
 		} else if ( strcmp( key, "-cd" ) == 0 ) {
 
-			cout << "Setting number custom file for density info : " << value << endl;
+			std::cout << "Setting number custom file for density info : " << value << std::endl;
 			remesh->SetInputDensityFile( value );
 
 		} else if ( strcmp( key, "-cmax" ) == 0 ) {
 
-			cout << "Setting maximum custom density to : " << value << endl;
+			std::cout << "Setting maximum custom density to : " << value << std::endl;
 			remesh->SetMaxCustomDensity( atof( value ) );
 
 		} else if ( strcmp( key, "-cmin" ) == 0 ) {
 
-			cout << "Setting minimum custom density to : " << value << endl;
+			std::cout << "Setting minimum custom density to : " << value << std::endl;
 			remesh->SetMinCustomDensity( atof( value ) );
 
 		} if (strcmp( key, "-cf" ) == 0 ) {
 
-			cout << "Setting custom density multiplication factor to : " << value << endl;
+			std::cout << "Setting custom density multiplication factor to : " << value << std::endl;
 			remesh->SetCustomDensityMultiplicationFactor( atof( value ) );
 
 		} else if ( strcmp( key, "-b" ) == 0 ) {
 
-			cout << "Setting boundary fixing to : " << value << endl;
+			std::cout << "Setting boundary fixing to : " << value << std::endl;
 			remesh->SetBoundaryFixing( atoi( value ) );
 
 		} else if ( strcmp( key, "-fv" ) == 0 ) {
 
-			ifstream input;
+			std::ifstream input;
 			input.open( value );
 			int id;
 			fixedVertices = vtkIdList::New();
@@ -241,7 +241,7 @@ int main( int argc, char *argv[] ) {
 
 		} else if ( strcmp( key, "-ft" ) == 0 ) {
 
-			ifstream input;
+			std::ifstream input;
 			input.open( value );
 			bool* fixed = new bool[ mesh->GetNumberOfPoints() ];
 			fixedVertices = vtkIdList::New();
@@ -263,7 +263,7 @@ int main( int argc, char *argv[] ) {
 				if ( fixed[ i ] ) fixedVertices->InsertNextId( i );
 
 			input.close();
-			cout << "Added " << n << " constraints on triangles" << endl;
+			std::cout << "Added " << n << " constraints on triangles" << std::endl;
 			delete [] fixed;
 
 		}
@@ -293,14 +293,14 @@ int main( int argc, char *argv[] ) {
 	double bounds[ 6 ];
 	mesh->GetBounds( bounds );
 	double middle = 0.5 * ( bounds[ 0 ] + bounds [ 1 ] );
-	cout << "middle : " << middle << endl;
+	std::cout << "middle : " << middle << std::endl;
 	fixedVertices = vtkIdList::New();
 	for ( int i = 0; i < mesh->GetNumberOfPoints(); i++ ) {
 		double coords[ 3 ];
 		mesh->GetPointCoordinates( i, coords );
 		if ( coords[ 0 ] > middle ) fixedVertices->InsertNextId( i );
 	}
-	cout << "List size : " << fixedVertices->GetNumberOfIds() << endl;
+	std::cout << "List size : " << fixedVertices->GetNumberOfIds() << std::endl;
 */
 
 	remesh->SetInput( mesh );
@@ -315,7 +315,7 @@ int main( int argc, char *argv[] ) {
 
 		remesh->SetFixedClusters( fixedVertices );
 		remesh->SetNumberOfClusters( numberOfSamples + fixedVertices->GetNumberOfIds() );
-		cout << "Read " << fixedVertices->GetNumberOfIds() << " fixed Ids" << endl;
+		std::cout << "Read " << fixedVertices->GetNumberOfIds() << " fixed Ids" << std::endl;
 
 		for ( int i = 0; i < fixedVertices->GetNumberOfIds(); i++ )
 			remesh->GetCluster( i )->AnchorItem = fixedVertices->GetId( i );
@@ -339,7 +339,7 @@ int main( int argc, char *argv[] ) {
 			for ( int j = 0; j < 3; j++) {
 
 				if ( c1[ j ] == c2[ j ] ) continue;
-				cout << "Error, vertex " << v << " has been lost" << endl;
+				std::cout << "Error, vertex " << v << " has been lost" << std::endl;
 				exit( 1 );
 
 			}
@@ -347,7 +347,7 @@ int main( int argc, char *argv[] ) {
 
 		}
 
-		cout << "Constraints on vertices have been checked" << endl;
+		std::cout << "Constraints on vertices have been checked" << std::endl;
 		fixedVertices->Delete();
 
 	}

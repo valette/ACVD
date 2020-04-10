@@ -158,7 +158,7 @@ void vtkOOCMetaImageReader::ReadImageParameters ( ) {
 		return;
 	}
 
-	//The cout qui montre la dimensionalité du fichier
+	//The cout qui montre la dimensionalitï¿½ du fichier
 	vtkDebugMacro(<< "* This image has " << FileDimensionality << " dimensions");
 
 	int i;
@@ -985,12 +985,12 @@ int vtkOOCMetaImageReader::CanReadFile(const char* fname)
 	}
 
 	// Now check the file content
-	ifstream inputStream;
+	std::ifstream inputStream;
 
 #ifdef __sgi
 	inputStream.open( fname, ios::in );
 #else
-	inputStream.open( fname, ios::in | ios::binary );
+	inputStream.open( fname, std::ios::in | std::ios::binary );
 #endif
 
 	if( inputStream.fail() )

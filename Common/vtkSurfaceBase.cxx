@@ -97,10 +97,10 @@ vtkIdType vtkSurfaceBase::BisectEdge(vtkIdType Edge)
 	return (NewVertex);
 }
 
-vtkIdType FindVertexIndex (vtkIdType *Vertices,vtkIdType Vertex, vtkIdType
+vtkIdType FindVertexIndex (const vtkIdType *Vertices,vtkIdType Vertex, vtkIdType
 NumberOfVertices)
 {
-	for (vtkIdType i=0;i<NumberOfVertices;i++)
+	for (vtkIdType i=0;i<NumberOfVertices;++i)
 	{
 		if (Vertex==Vertices[i])
 			return (i);
@@ -110,7 +110,8 @@ NumberOfVertices)
 
 void vtkSurfaceBase::ChangeFaceVertex(vtkIdType Face, vtkIdType OldVertex, vtkIdType NewVertex)
 {
-	vtkIdType *Vertices;
+	const vtkIdType *Vertices;
+	vtkIdList *New_Vertices = vtkIdList::New();
 	vtkIdType NumberOfVertices;
 	this->GetCellPoints(Face,NumberOfVertices,Vertices);
 
@@ -121,7 +122,15 @@ void vtkSurfaceBase::ChangeFaceVertex(vtkIdType Face, vtkIdType OldVertex, vtkId
 	Neighbours[0]=Vertices[(Index+1)%NumberOfVertices];
 	Neighbours[1]=Vertices[(Index+NumberOfVertices-1)%NumberOfVertices];
 
-	Vertices[Index]=NewVertex;
+	New_Vertices->SetNumberOfIds(NumberOfVertices);
+	for (int i=0;i<NumberOfVertices;i++)
+	{
+		New_Vertices->SetId(i, Vertices[i]);
+	}
+
+	New_Vertices->SetId(Index, NewVertex);
+
+	this->ReplaceCell(Face, New_Vertices);
 
 	for (int i=0;i<2;i++)
 	{
@@ -147,6 +156,7 @@ void vtkSurfaceBase::ChangeFaceVertex(vtkIdType Face, vtkIdType OldVertex, vtkId
 
 	VisitedPolygons->SetValue(Face,0);
 	this->ConquerOrientationFromFace(Face);
+	New_Vertices->Delete();
 }
 
 void vtkSurfaceBase::SetOrientationOn()
@@ -162,7 +172,8 @@ void vtkSurfaceBase::SetOrientationOff()
 bool vtkSurfaceBase::CheckStructure()
 {
 	bool Problem=false;
-	vtkIdType *Vertices,NumberOfVertices;
+	const vtkIdType *Vertices;
+	vtkIdType NumberOfVertices;
 
 	for (vtkIdType i=0;i<this->GetNumberOfCells();i++)
 	{
@@ -246,18 +257,22 @@ bool vtkSurfaceBase::IsVertexManifold( const vtkIdType& iV )
 /// switches the cells orientation (usefull when the mesh is displayed all black...)
 void vtkSurfaceBase::SwitchOrientation()
 {
-	vtkIdType NumberOfVertices, *Vertices;
+	vtkIdType NumberOfVertices;
+	const vtkIdType *Vertices;
 	this->GetFaceVertices(0,NumberOfVertices,Vertices);
-	vtkIdType *Vertices2=new vtkIdType[NumberOfVertices];
+	// vtkIdType *Vertices2 = new vtkIdType[NumberOfVertices];
+	vtkIdList *New_Vertices = vtkIdList::New();
 	vtkIdType i;
+	// for (i=0;i<NumberOfVertices;i++)
+	// 	Vertices2[i]=Vertices[i];
+	New_Vertices->SetNumberOfIds(NumberOfVertices);
 	for (i=0;i<NumberOfVertices;i++)
-		Vertices2[i]=Vertices[i];
+		New_Vertices->SetId(i, Vertices[NumberOfVertices-1-i]);
 
-	for (i=0;i<NumberOfVertices;i++)
-		Vertices[i]=Vertices2[NumberOfVertices-1-i];
-
-	this->CheckNormals();	
-	delete [] Vertices2;
+	this->ReplaceCell(0, New_Vertices);
+	this->CheckNormals();
+	New_Vertices->Delete();
+	// delete [] Vertices2;
 }
 
 void vtkSurfaceBase::SQueeze()
@@ -335,9 +350,11 @@ void vtkSurfaceBase::ConquerOrientationFromFace(vtkIdType Face)
 	std::queue <vtkIdType> EdgesQueue;
 	vtkIdType v1,v2,v3,v4,f1,f2,Edge,Edge2;
 	vtkIdType Visited1,Visited2;
-	vtkIdType NumberOfPoints1,NumberOfPoints2,*Face1,*Face2;
+	vtkIdType NumberOfPoints1,NumberOfPoints2;
+	const vtkIdType *Face1,*Face2;
 	vtkIdType j;
 	vtkIdType FlipFace;
+	vtkIdList *New_Face = vtkIdList::New();
 
 	this->GetCellPoints(Face,NumberOfPoints1,Face1);
 	for (j=0;j<NumberOfPoints1;j++)
@@ -373,6 +390,11 @@ void vtkSurfaceBase::ConquerOrientationFromFace(vtkIdType Face)
 				FlipFace=0;
 				this->GetCellPoints(f1,NumberOfPoints1,Face1);
 				this->GetCellPoints(f2,NumberOfPoints2,Face2);
+				New_Face->SetNumberOfIds(NumberOfPoints2);
+				for (j = 0; j < NumberOfPoints2; ++j)
+				{
+					New_Face->SetId(j, Face2[j]);
+				}
 				this->GetEdgeVertices(Edge,v1,v2);
 				Index1=FindVertexIndex(Face1,v1,NumberOfPoints1);
 				Index2=FindVertexIndex(Face2,v1,NumberOfPoints2);
@@ -384,10 +406,12 @@ void vtkSurfaceBase::ConquerOrientationFromFace(vtkIdType Face)
 					// flip f2
 					for (j=0;j<NumberOfPoints2/2;j++)
 					{
-						v1=Face2[j];
-						Face2[j]=Face2[NumberOfPoints2-1-j];
-						Face2[NumberOfPoints2-1-j]=v1;
+						v1 = New_Face->GetId(j);
+						New_Face->SetId(j, New_Face->GetId(NumberOfPoints2-1-j));
+						New_Face->SetId(NumberOfPoints2-1-j, v1);
 					}
+
+					this->ReplaceCell(f2,New_Face);
 				}
 
 				this->VisitedPolygons->SetValue(f2,1);
@@ -401,13 +425,14 @@ void vtkSurfaceBase::ConquerOrientationFromFace(vtkIdType Face)
 			}
 		}
 	}
+	New_Face->Delete();
 }
 
 double vtkSurfaceBase::GetValenceEntropy()
 {
 
-	register int i;		// Loop counter
-	register int v1;	// Valence of given point
+	int i;		// Loop counter
+	int v1;	// Valence of given point
 	double inv_number;	// 1.0 / number of points
 	double inv_Log2;	// 1.0 / log(2.0)
 	double s;			// 
@@ -450,11 +475,11 @@ double vtkSurfaceBase::GetValenceEntropy()
 
 void vtkSurfaceBase::GetValenceTab(char *filename)
 {
-	register int i;
-	register int v1;
+	int i;
+	int v1;
 
-	register int min=0;
-	register int Max=0;
+	int min=0;
+	int Max=0;
 
 	// allocate array for valences
 	vtkIntArray *Vals=vtkIntArray::New();
@@ -493,7 +518,7 @@ void vtkSurfaceBase::GetValenceTab(char *filename)
 	cout <<Max <<endl;
 
 	std::ofstream out;
-	out.open (filename, ofstream::out | ofstream::trunc);
+	out.open (filename, std::ofstream::out | std::ofstream::trunc);
 
 	for(i=min;i<Max;i++)
 	{
@@ -561,27 +586,35 @@ void vtkSurfaceBase::DeleteFace(vtkIdType f1)
 	if (this->IsFaceActive(f1)==0)
 		return;
 		
-	vtkIdType NumberOfPoints,*Points,Loc;
-	Loc = this->Cells->GetCellLocation(f1);
+	vtkIdType NumberOfPoints;
+	const vtkIdType *Points;
 	vtkIdType i;
 	vtkIdType Edge;
+	const TaggedCellId Loc = this->Cells->GetTag(f1);
+	vtkIdList *New_Cell = vtkIdList::New();
 
-	this->Polys->GetCell(Loc,NumberOfPoints,Points);
+	this->Polys->GetCellAtId(Loc.GetCellId(),NumberOfPoints,Points);
 	for (i=0;i<NumberOfPoints;i++)
 	{
 		Edge=this->IsEdge(Points[i],Points[(i+1)%NumberOfPoints]);
 		this->DeleteFaceInRing(f1,Edge);
 		this->CleanEdge(Edge);
 	}
+
+	New_Cell->SetNumberOfIds(NumberOfPoints);
 	for (i=0;i<NumberOfPoints;i++)
 	{
-		Points[i]=Points[0];
+		New_Cell->SetId(i, Points[0]);
 	}
 
+	this->ReplaceCell(f1, New_Cell);
 	this->DeleteCell(f1);
 	this->CellsGarbage[NumberOfPoints].push(f1);
 	this->ActivePolygons->SetValue(f1,0);
+
+	New_Cell->Delete();
 }
+
 void vtkSurfaceBase::CleanEdge(vtkIdType Edge)
 {
 	if (this->CleanEdges==0)
@@ -591,6 +624,7 @@ void vtkSurfaceBase::CleanEdge(vtkIdType Edge)
 		this->DeleteEdge(Edge);
 	}
 }
+
 void vtkSurfaceBase::CleanVertex(vtkIdType Vertex)
 {
 	if (this->CleanVertices==0)
@@ -614,15 +648,18 @@ void vtkSurfaceBase::MergeVertices(vtkIdType v1, vtkIdType v2)
 		for (int i=0;i<List->GetNumberOfIds();i++)
 			this->DeleteFace(List->GetId(i));
 	}
-	
+
 	// for each remaining face adjacent to v2, replace v2 by v1
 	this->GetVertexNeighbourFaces(v2,List);
 	for (vtkIdType i=0;i<List->GetNumberOfIds();i++)
 	{
 		vtkIdType NumberOfVertices;
-		vtkIdType *Vertices;
+		const vtkIdType *Vertices;
 		GetFaceVertices(List->GetId(i), NumberOfVertices, Vertices);
-		Vertices[FindVertexIndex (Vertices,v2,NumberOfVertices)]=v1;
+		//vtkIdType indx = FindVertexIndex (Vertices,v2,NumberOfVertices);
+
+		this->ReplaceCellPoint(List->GetId(i), FindVertexIndex (Vertices,v2,NumberOfVertices), v1);
+		//Vertices[FindVertexIndex (Vertices,v2,NumberOfVertices)]=v1;
 	}
 	
 	// Modify every edge adjacent to v2
@@ -788,7 +825,8 @@ void vtkSurfaceBase :: GetFaceNeighbours(vtkIdType Face,vtkIdListCollection *FLi
 
 void vtkSurfaceBase::GetFaceNeighbours(vtkIdType Face,vtkIdList *FList)
 {
-	vtkIdType NumberOfVertices, *Vertices;
+	vtkIdType NumberOfVertices;
+	const vtkIdType *Vertices;
 	vtkIdList *List = vtkIdList :: New();
 	this->GetFaceVertices(Face, NumberOfVertices, Vertices);
 	FList->Reset();
@@ -1017,10 +1055,10 @@ void vtkSurfaceBase::GetNeighbours(vtkIdList *Input,vtkIdList *Output)
 
 vtkIdType vtkSurfaceBase::IsEdgeBetweenFaces(vtkIdType f1, vtkIdType f2)
 {
-	vtkIdType *Vertices1;
+	const vtkIdType *Vertices1;
 	vtkIdType NumberOfVertices1;
 	this->GetCellPoints(f1,NumberOfVertices1,Vertices1);
-	vtkIdType *Vertices2;
+	const vtkIdType *Vertices2;
 	vtkIdType NumberOfVertices2;
 	this->GetCellPoints(f2,NumberOfVertices2,Vertices2);
 	
@@ -1304,19 +1342,18 @@ vtkIdType& v3)
 vtkIdType vtkSurfaceBase::AddPolygon(int NumberOfVertices,vtkIdType *Vertices)
 {
 	vtkIdType face;
-	int Loc;
 	int i;
-
-	int Type=0;
+	int type_check = 0;
+	VTKCellType Type = VTKCellType::VTK_EMPTY_CELL;
 	
 	// Check if the vertices of the polygon have been created
 	
 	for (i=0;i<NumberOfVertices;i++)
 	{
 		if (Vertices[i]>=this->GetNumberOfPoints())
-			Type=99;		
+			type_check=99;		
 	}
-	if (Type)
+	if (type_check)
 	{
 		cout<<"ERROR : attempt to create the Cell with vertices : ";
 		for (i=0;i<NumberOfVertices;i++)
@@ -1330,14 +1367,14 @@ vtkIdType vtkSurfaceBase::AddPolygon(int NumberOfVertices,vtkIdType *Vertices)
 	switch (NumberOfVertices)
 	{
 	case 3:
-		Type=VTK_TRIANGLE;
+		Type = VTKCellType::VTK_TRIANGLE;
 		break;
 	case 4:
-		Type=VTK_QUAD;
+		Type = VTKCellType::VTK_QUAD;
 		break;
 
 	default:
-		Type=VTK_POLYGON;
+		Type = VTKCellType::VTK_POLYGON;
 		break;
 	}
 
@@ -1346,8 +1383,8 @@ vtkIdType vtkSurfaceBase::AddPolygon(int NumberOfVertices,vtkIdType *Vertices)
 		face=this->Polys->InsertNextCell(NumberOfVertices);
 		for (i=0;i<NumberOfVertices;i++)
 			this->Polys->InsertCellPoint(Vertices[i]);
-		Loc=this->Polys->GetInsertLocation(NumberOfVertices);
-		this->Cells->InsertNextCell(Type,Loc);
+		vtkIdType Loc=this->Polys->GetInsertLocation(NumberOfVertices);
+		this->Cells->InsertNextCell(Loc, Type);
 		while (face>=this->NumberOfAllocatedPolygonsAttributes)
 			this->AllocateMorePolygonsAttributes();
 	}
@@ -1355,9 +1392,10 @@ vtkIdType vtkSurfaceBase::AddPolygon(int NumberOfVertices,vtkIdType *Vertices)
 	{
 		face=this->CellsGarbage[NumberOfVertices].front();
 		this->CellsGarbage[NumberOfVertices].pop();
-		Loc = this->Cells->GetCellLocation(face);
-		this->Cells->InsertCell(face,Type,Loc);
-		this->Polys->ReplaceCell(Loc,NumberOfVertices,Vertices);
+		const TaggedCellId Loc = this->Cells->GetTag(face);
+		//Loc = this->Cells->GetCellLocation(face);
+		//this->Cells->InsertCell(face,Type,Loc.GetCellId());
+		this->Polys->ReplaceCell(Loc.GetCellId(),NumberOfVertices,Vertices);
 	}
 
 	for (i=0;i<NumberOfVertices;i++)
@@ -1486,8 +1524,9 @@ void vtkSurfaceBase::Init(vtkSurfaceBase *mesh)
 
 // ****************************************************************
 // ****************************************************************
-// cette fonction initialise l'objet a partir d'un nombre de points,
-// de triangles et d'arretes , renvoie un objet vide
+// 
+// this function initializes the object from a number of points,
+// of triangles and edges, returns an empty object
 void vtkSurfaceBase::Init(int numPoints, int numFaces, int numEdges)
 {
 	vtkCellArray *CellsArray1;
@@ -1499,8 +1538,8 @@ void vtkSurfaceBase::Init(int numPoints, int numFaces, int numEdges)
 	if (this->Cells)
 		this->Cells->Delete();
 	
-	this->Cells = vtkCellTypes::New();
-	this->Cells->Allocate(numFaces,numFaces);
+	this->Cells = vtkPolyData_detail::CellMap::New();
+	this->Cells->SetCapacity(numFaces);
 
 	// create and allocate memory for points
 	vtkPoints *Points1=vtkPoints::New();
@@ -1523,7 +1562,8 @@ void vtkSurfaceBase::Init(int numPoints, int numFaces, int numEdges)
 void vtkSurfaceBase::CreateFromPolyData(vtkPolyData *input)
 {
 	vtkIdType i,j,v1,v2;
-	vtkIdType NumberOfVertices,*Vertices;
+	vtkIdType NumberOfVertices;
+	const vtkIdType *Vertices;
 
 	// just copy the polydata in input
 	this->ShallowCopy(input);
@@ -1549,7 +1589,7 @@ void vtkSurfaceBase::CreateFromPolyData(vtkPolyData *input)
 	this->AllocateEdgesAttributes(numPoints+numFaces+1000);
 	this->AllocatePolygonsAttributes(numFaces);
 
-	for (i=0;i<this->GetNumberOfCells();i++)
+	for (i=0;i<this->GetNumberOfCells();++i)
 	{
 		bool ActiveFace=false;
 		this->GetCellPoints(i,NumberOfVertices,Vertices);

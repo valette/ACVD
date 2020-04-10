@@ -42,6 +42,7 @@
 #include <vtkCell.h>
 #include <vtkCommand.h>
 #include <vtkCellArray.h>
+#include <vtkCellTypes.h>
 
 /// this variable defines the maximal number of possible vertices in a polygon (100 is a rather high value...)
 #define MAXCELLSIZE 100
@@ -131,7 +132,7 @@ public:
 	void CheckNormals();
 
 	/// Deletes the face f1, possibly its adjacent edges and vertices if they are free
-	/// and is CleanVertices and CleanEdges are set to 1
+	/// and if CleanVertices and CleanEdges are set to 1
 	void DeleteFace(vtkIdType f1);
 
 	/// Deletes the free edge e1 and possibly its vertices if they are free.
@@ -176,7 +177,7 @@ public:
 
 	/// Returns the number of vertices and a pointer to them for the face 
 	void GetFaceVertices(const vtkIdType& face, vtkIdType &NumberOfVertices,
-vtkIdType* &Vertices);
+const vtkIdType* &Vertices);
 	
 	/// Returns the coordinates of Point
 	void GetPointCoordinates(vtkIdType Point, double *x);
@@ -446,18 +447,22 @@ inline void vtkSurfaceBase::GetEdgeVertices(const vtkIdType& edge, vtkIdType &v1
 inline void vtkSurfaceBase::GetFaceVertices(const vtkIdType &face, vtkIdType &v1,
 											vtkIdType &v2, vtkIdType &v3)
 {
-	vtkIdType n,*pts;
-	this->Polys->GetCell(
-			this->Cells->GetCellLocation(face),n,pts);
+	vtkIdType n;
+	const vtkIdType *pts;
+	const TaggedCellId tag = this->Cells->GetTag(face);
+	this->Polys->GetCellAtId(tag.GetCellId(), n, pts);
 	v1=pts[0];
 	v2=pts[1];
 	v3=pts[2];
 }
+
 inline void vtkSurfaceBase::GetFaceVertices(const vtkIdType& face,
-vtkIdType &NumberOfVertices, vtkIdType* &Vertices)
+vtkIdType &NumberOfVertices, const vtkIdType* &Vertices)
 {
-	this->Polys->GetCell(this->Cells->GetCellLocation(face),NumberOfVertices,Vertices);
+	const TaggedCellId tag = this->Cells->GetTag(face);
+	this->Polys->GetCellAtId(tag.GetCellId(),NumberOfVertices,Vertices);
 }
+
 inline void vtkSurfaceBase::GetVertexNeighbourEdges(const vtkIdType& v1,
 vtkIdType &NumberOfEdges, vtkIdType* &Edges)
 {

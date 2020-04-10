@@ -17,6 +17,10 @@ set(VolumeProcessing_EXAMPLES
 foreach(loop_var ${VolumeProcessing_EXAMPLES})
   add_executable(${loop_var} ${loop_var}.cxx)
   target_link_libraries(${loop_var} vtkSurface vtkVolumeProcessing ${VTK_LIBRARIES})
+  vtk_module_autoinit(
+  TARGETS ${loop_var}
+  MODULES ${VTK_LIBRARIES}
+  )
 endforeach(loop_var)
 
 install( TARGETS ${VolumeProcessing_EXAMPLES}

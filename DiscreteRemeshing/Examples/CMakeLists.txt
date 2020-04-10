@@ -16,6 +16,10 @@ ManifoldSimplification
 foreach(loop_var ${DISCRETEREMESHING_EXAMPLES})
   add_executable(${loop_var} ${loop_var}.cxx)
   target_link_libraries(${loop_var} vtkDiscreteRemeshing )
+  vtk_module_autoinit(
+  TARGETS ${loop_var}
+  MODULES ${VTK_LIBRARIES}
+  )
 endforeach(loop_var)
 
 install( TARGETS ${DISCRETEREMESHING_EXAMPLES}

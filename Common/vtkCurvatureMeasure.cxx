@@ -689,11 +689,8 @@ vtkCurvatureMeasure::ThreadedCurvatureComputation (void *arg)
 		if ((Cell % DISPLAYINTERVAL == 0) && (Cell != 0))
 		{
 			char CarriageReturn = 13;
-#if ( (VTK_MAJOR_VERSION >= 5))
-			ElapsedTime =CurvatureMeasure->Timer->GetUniversalTime () -StartTime;
-#else
-			ElapsedTime =CurvatureMeasure->Timer->GetCurrentTime () - StartTime;
-#endif
+			ElapsedTime =CurvatureMeasure->Timer->GetUniversalTime() - StartTime;
+
 			TotalTimeEstimated =ElapsedTime * NumberOfCells / Cell;
 			cout << CarriageReturn << (int) (TotalTimeEstimated -ElapsedTime) <<
 				" s remaining." << " Total time: " << (int)
@@ -942,11 +939,7 @@ vtkCurvatureMeasure::ComputeCurvatureIndicatorWithPolynomialFitting ()
 	else
 		NumberOfElements = this->Input->GetNumberOfPoints ();
 
-#if ( (VTK_MAJOR_VERSION >= 5))
 	this->StartTime = this->Timer->GetUniversalTime ();
-#else
-	this->StartTime = this->Timer->GetCurrentTime ();
-#endif
 	vtkMultiThreader *Threader=vtkMultiThreader::New();
 		
 	Threader->SetSingleMethod (ThreadedCurvatureComputation, (void *) this);
