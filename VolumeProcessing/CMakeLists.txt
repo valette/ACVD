@@ -1,14 +1,25 @@
-add_library(vtkVolumeProcessing
+set(lib_sources
 	vtkImageDataCleanLabels.cxx
 	vtkOOCMetaImageReader.cxx
 )
 
-target_link_libraries(vtkVolumeProcessing ${VTK_LIBRARIES})
+if (VTK_VERSION VERSION_LESS "8.90.0")
+  # old system
+  include(${VTK_USE_FILE})
+  add_library(vtkVolumeProcessing ${lib_sources} )
+  target_link_libraries(vtkVolumeProcessing PRIVATE ${VTK_LIBRARIES})
+else ()
+  # include all components
+  add_library(vtkVolumeProcessing ${lib_sources} )
+  target_link_libraries(vtkVolumeProcessing PRIVATE ${VTK_LIBRARIES})
 
-vtk_module_autoinit(
-  TARGETS vtkVolumeProcessing
-  MODULES ${VTK_LIBRARIES}
-  )
+  # vtk_module_autoinit is needed
+  vtk_module_autoinit(
+    TARGETS vtkVolumeProcessing
+    MODULES ${VTK_LIBRARIES}
+    )
+endif () 
+
 
 set_target_properties( vtkVolumeProcessing PROPERTIES
 	DEBUG_POSTFIX "-d"

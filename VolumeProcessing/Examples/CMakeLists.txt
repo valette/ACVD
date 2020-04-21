@@ -15,12 +15,19 @@ set(VolumeProcessing_EXAMPLES
 )
 
 foreach(loop_var ${VolumeProcessing_EXAMPLES})
-  add_executable(${loop_var} ${loop_var}.cxx)
-  target_link_libraries(${loop_var} vtkSurface vtkVolumeProcessing ${VTK_LIBRARIES})
-  vtk_module_autoinit(
-  TARGETS ${loop_var}
-  MODULES ${VTK_LIBRARIES}
+  if (VTK_VERSION VERSION_LESS "8.90.0")
+    # old system
+    include(${VTK_USE_FILE})
+    add_executable(${loop_var} ${loop_var}.cxx)
+    target_link_libraries(${loop_var} vtkSurface vtkVolumeProcessing  ${VTK_LIBRARIES})
+  else ()
+    add_executable(${loop_var} ${loop_var}.cxx)
+    target_link_libraries(${loop_var} vtkSurface vtkVolumeProcessing ${VTK_LIBRARIES})
+    vtk_module_autoinit(
+    TARGETS ${loop_var}
+    MODULES ${VTK_LIBRARIES}
   )
+  endif () 
 endforeach(loop_var)
 
 install( TARGETS ${VolumeProcessing_EXAMPLES}

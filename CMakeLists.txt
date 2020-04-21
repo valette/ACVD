@@ -22,6 +22,8 @@ set(INSTALL_INCLUDE_DIR include CACHE PATH "Installation directory for header fi
 set(INSTALL_DOC_DIR share/doc/ACVD CACHE PATH "Installation directory for html doc" )
 set(INSTALL_CMAKE_DIR lib/cmake/ACVD CACHE PATH "Installation directory for CMake files" )
 
+set(ACVD_VTK_VERSION "9" CACHE STRING "Major version of vtk ")
+
 # Make relative paths absolute (needed later on)
 foreach(p LIB BIN INCLUDE CMAKE)
   set(var INSTALL_${p}_DIR)
@@ -30,6 +32,30 @@ foreach(p LIB BIN INCLUDE CMAKE)
   endif()
 endforeach()
 
+message (STATUS "ACVD_VTK_VERSION: ${ACVD_VTK_VERSION}")
+if (${ACVD_VTK_VERSION} VERSION_LESS "9")
+  # find_package
+  find_package(VTK REQUIRED COMPONENTS 
+              vtkCommonCore
+              vtkCommonDataModel
+              vtkRenderingCore
+              vtkCommonSystem
+              vtkIOImport
+              vtkIOExport
+              vtkIOImage
+              vtkIOGeometry
+              vtkIOPLY
+              vtkFiltersSources
+              vtkInteractionStyle
+              vtkFiltersHybrid
+              vtkRenderingLabel
+              vtkIOMINC
+              vtkFiltersModeling
+              vtkFiltersGeneral
+              vtkmetaio
+              vtkImagingGeneral
+)
+else ()
 # find_package
 find_package(VTK REQUIRED COMPONENTS 
             CommonCore
@@ -51,6 +77,7 @@ find_package(VTK REQUIRED COMPONENTS
             metaio
             ImagingGeneral
 )
+endif()
 
 #include(${VTK_USE_FILE})
 

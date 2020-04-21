@@ -22,18 +22,28 @@ endif(USE_LLOYDCLUSTERING)
 
  # --------------------------------------------------------------------------
  # Library compilation
-add_library(
-vtkDiscreteRemeshing
-vtkTestUniformClustering.cxx
-vtkManifoldSimplification.cxx
+set(lib_sources
+  vtkTestUniformClustering.cxx
+  vtkManifoldSimplification.cxx
 )
 
-target_link_libraries(vtkDiscreteRemeshing vtkSurface)
 
-vtk_module_autoinit(
-  TARGETS vtkDiscreteRemeshing
-  MODULES ${VTK_LIBRARIES}
-  )
+if (VTK_VERSION VERSION_LESS "8.90.0")
+  # old system
+  include(${VTK_USE_FILE})
+  add_library(vtkDiscreteRemeshing ${lib_sources} )
+  target_link_libraries(vtkDiscreteRemeshing vtkSurface  ${VTK_LIBRARIES})
+else ()
+  # include all components
+  add_library(vtkDiscreteRemeshing ${lib_sources} )
+  target_link_libraries(vtkDiscreteRemeshing vtkSurface ${VTK_LIBRARIES})
+
+  # vtk_module_autoinit is needed
+  vtk_module_autoinit(
+    TARGETS vtkDiscreteRemeshing
+    MODULES ${VTK_LIBRARIES}
+    )
+endif () 
 
 
 set_target_properties(vtkDiscreteRemeshing PROPERTIES
