@@ -28,10 +28,11 @@ Auteur:   Sebastien Valette,
 *
 *  The fact that you are presently reading this means that you have had
 *  knowledge of the CeCILL-B license and that you accept its terms.
-* ------------------------------------------------------------------------ */  
-// .NAME ACVDQ 
+* ------------------------------------------------------------------------ */
+// .NAME ACVDQ
 // .SECTION Description
 #include <sstream>
+#include <cstring>
 #include <vtkPLYWriter.h>
 #include <vtkSTLWriter.h>
 #include <vtkCellData.h>
@@ -41,20 +42,20 @@ Auteur:   Sebastien Valette,
 /////////////////////////////////////////////////////////////////////////////////////////
 // ACVDQ program:
 /////////////////////////////////////////////////////////////////////////////////////////
-// 
+//
 // Adaptive coarsening of triangular meshes (Quadrics enhanced)
 // This program should be run with 3 arguments:
 // run: "acvd file nvertices gradation [options]"
 // file is the name of the mesh file to read
-// nverticew is the desired number of vertices (note: if the number of input 
-// gradation is the gradation parameter (0 is uniform, higher values give more and more importance 
+// nverticew is the desired number of vertices (note: if the number of input
+// gradation is the gradation parameter (0 is uniform, higher values give more and more importance
 //									to regions with high curvature)
 //
-// Additionnal options : 
+// Additionnal options :
 // -d x : sets the graphics display (0 : no display. 1: display. 2 :iterative display)
 //			default value : 1
 //
-// -s x : sets the subsampling threshold (Higher values give better results	 but the input 
+// -s x : sets the subsampling threshold (Higher values give better results	 but the input
 //			mesh will be subdivided more times)
 //			default value : 10
 // -np x : sets the number of wanted threads (useful only with multi-processors machines)
@@ -64,232 +65,250 @@ Auteur:   Sebastien Valette,
 //
 //////////////////////////////////////////////////////////////////////////////////////////
 // References:
-// [1] " Approximated Centroidal Voronoi Diagrams for Uniform 
+// [1] " Approximated Centroidal Voronoi Diagrams for Uniform
 // Polygonal Mesh Coarsening", Valette & Chassery, Eurographics 2004.
 // [2] "Adaptive Polygonal Mesh Simplification With Discrete Centroidal Voronoi Diagrams"
-//  by, S. Valette, I. Kompatsiaris and J.-M. Chassery 
+//  by, S. Valette, I. Kompatsiaris and J.-M. Chassery
 // + non published work....
 /////////////////////////////////////////////////////////////////////////////////////////
 
-int main( int argc, char *argv[] ) {
+int main(int argc, char *argv[])
+{
 
 	//******************************************************************************************
 	// Input parameters:
-	int display = 0;				// defines whether there will be a graphic display (0: No, 1: yes)
-	int numberOfSamples = 500;		// number of desired vertices
-	double gradation = 0;			// gamma parameter for simplification (if gamma=0: uniform)
-									// other appropriates values range between 0 and 2
-	int subsamplingThreshold = 10;	// subsampling threshold
-	char* outputDirectory = 0;		// output directory
+	int display = 0;							 // defines whether there will be a graphic display (0: No, 1: yes)
+	int numberOfSamples = 500;		 // number of desired vertices
+	double gradation = 0;					 // gamma parameter for simplification (if gamma=0: uniform)
+																 // other appropriates values range between 0 and 2
+	int subsamplingThreshold = 10; // subsampling threshold
+	char *outputDirectory = 0;		 // output directory
 	vtkIdList *fixedVertices = 0;
 	//*******************************************************************************************
 
-	char filename[ 5000 ];
+	char filename[5000];
 
-	if( argc > 1 ) {
+	if (argc > 1)
+	{
 
-		std::cout << "load : " << argv[ 1 ] << std::endl;
-		std::strcpy( filename, argv[ 1 ] );
+		std::cout << "load : " << argv[1] << std::endl;
+		std::strcpy(filename, argv[1]);
+	}
+	else
+	{
 
-	} else {
-
-		std::cout<<"Usage : ACVD file nvertices gradation [options]"<<std::endl;
-		std::cout<<"nvertices is the desired number of vertices"<<std::endl;
-		std::cout<<"gradation defines the influence of local curvature (0=uniform meshing)"<<std::endl;
-		std::cout<<std::endl<<"Optionnal arguments : "<<std::endl;
+		std::cout << "Usage : ACVD file nvertices gradation [options]" << std::endl;
+		std::cout << "nvertices is the desired number of vertices" << std::endl;
+		std::cout << "gradation defines the influence of local curvature (0=uniform meshing)" << std::endl;
+		std::cout << std::endl
+							<< "Optionnal arguments : " << std::endl;
 		std::cout << "-b 0/1 : sets mesh boundary fixing off/on (default : 0)" << std::endl;
-		std::cout<<"-s threshold : defines the subsampling threshold i.e. the input mesh will be subdivided until its number ";
-		std::cout<<" of vertices is above nvertices*threshold (default=10)"<<std::endl;
-		std::cout<<"-d 0/1/2 : enables display (default : 0)"<<std::endl;
+		std::cout << "-s threshold : defines the subsampling threshold i.e. the input mesh will be subdivided until its number ";
+		std::cout << " of vertices is above nvertices*threshold (default=10)" << std::endl;
+		std::cout << "-d 0/1/2 : enables display (default : 0)" << std::endl;
 		std::cout << "-l ratio : split the edges longer than ( averageLength * ratio )" << std::endl;
-		std::cout << "-q 1/2/3 : qets number of eigenvalues used for quadric-based vertex relocation to 0/1/2 (default : 3)"<< std::endl;
-		std::cout<<"-cd file : set custom imagedata file containing density information"<<std::endl;
-		std::cout<<"-cmin value : set minimum custom indicator value"<<std::endl;
-		std::cout<<"-cmax value : set maximum custom indicator value"<<std::endl;
-		std::cout<<"-cf value : set custom indicator multiplication factor"<<std::endl;
-		std::cout<<"-m 0/1 : enforce a manifold output ON/OFF (default : 0)"<<std::endl;
+		std::cout << "-q 1/2/3 : qets number of eigenvalues used for quadric-based vertex relocation to 0/1/2 (default : 3)" << std::endl;
+		std::cout << "-cd file : set custom imagedata file containing density information" << std::endl;
+		std::cout << "-cmin value : set minimum custom indicator value" << std::endl;
+		std::cout << "-cmax value : set maximum custom indicator value" << std::endl;
+		std::cout << "-cf value : set custom indicator multiplication factor" << std::endl;
+		std::cout << "-m 0/1 : enforce a manifold output ON/OFF (default : 0)" << std::endl;
 		return 0;
-
 	}
 
 	vtkSurface *mesh = vtkSurface::New();
 	vtkQIsotropicDiscreteRemeshing *remesh = vtkQIsotropicDiscreteRemeshing::New();
-	mesh->CreateFromFile( filename );
+	mesh->CreateFromFile(filename);
 	mesh->GetCellData()->Initialize();
 	mesh->GetPointData()->Initialize();
 	mesh->DisplayMeshProperties();
 
 	// get mandatory arguments
-	if( argc > 2 ) {
+	if (argc > 2)
+	{
 
-		numberOfSamples = atoi( argv[ 2 ] );
-
-	} else {
+		numberOfSamples = atoi(argv[2]);
+	}
+	else
+	{
 
 		std::cout << "Number of vertices ? ";
 		std::cin >> numberOfSamples;
-
 	}
 
-	if( argc > 3 ) gradation = atof( argv[ 3 ] );
-	else {
+	if (argc > 3)
+		gradation = atof(argv[3]);
+	else
+	{
 
 		std::cout << "Gradation ? ";
 		std::cin >> gradation;
-
 	}
 
 	// Parse optionnal arguments
 	int argumentsIndex = 4;
 
-	while ( argumentsIndex < argc ) {
+	while (argumentsIndex < argc)
+	{
 
-		char* key = argv[ argumentsIndex ];
-		char* value = argv[ argumentsIndex + 1 ];
+		char *key = argv[argumentsIndex];
+		char *value = argv[argumentsIndex + 1];
 
-		if ( strcmp( key, "-m" ) == 0 ) {
+		if (strcmp(key, "-m") == 0)
+		{
 
-			remesh->SetForceManifold( atoi( value ) );
-			std::cout << "Force Manifold=" << atoi( value ) << std::endl;
+			remesh->SetForceManifold(atoi(value));
+			std::cout << "Force Manifold=" << atoi(value) << std::endl;
+		}
+		else if (strcmp(key, "-s") == 0)
+		{
 
-		} else if ( strcmp( key, "-s" ) == 0 ) {
-
-			subsamplingThreshold = atoi( value );
+			subsamplingThreshold = atoi(value);
 			std::cout << "Subsampling Threshold=" << subsamplingThreshold << std::endl;
+		}
+		else if (strcmp(key, "-d") == 0)
+		{
 
-		} else if ( strcmp( key, "-d" ) == 0 ) {
-
-			display = atoi( value );
+			display = atoi(value);
 			std::cout << "Display=" << display << std::endl;
-
 		}
 
 #ifdef DOmultithread
-		if ( strcmp( key, "-np" ) == 0 )
+		if (strcmp(key, "-np") == 0)
 		{
-			int NumberOfThreads = atoi( value );
+			int NumberOfThreads = atoi(value);
 			std::cout << "Number of threads=" << NumberOfThreads << std::endl;
-			remesh->SetNumberOfThreads( NumberOfThreads );
+			remesh->SetNumberOfThreads(NumberOfThreads);
 		}
 #endif
-		if ( strcmp( key, "-o" ) == 0 ) {
+		if (strcmp(key, "-o") == 0)
+		{
 
 			outputDirectory = value;
 			std::cout << "OutputDirectory: " << outputDirectory << std::endl;
-			remesh->SetOutputDirectory( value );
+			remesh->SetOutputDirectory(value);
+		}
+		else if (strcmp(key, "-l") == 0)
+		{
 
-		} else if ( strcmp( key, "-l" ) == 0 ) {
-
-			mesh->SplitLongEdges( atof( value ) );
+			mesh->SplitLongEdges(atof(value));
 			std::cout << "Splitting edges longer than "
-				<< atof( value ) << " times the average edge length" << std::endl;
+								<< atof(value) << " times the average edge length" << std::endl;
+		}
+		else if (strcmp(key, "-w") == 0)
+		{
 
-		} else if ( strcmp( key,"-w" ) == 0 ) {
-
-			std::cout << "Setting writing energy log file to " << atoi( value ) << std::endl;
-			remesh->SetWriteToGlobalEnergyLog( atoi( value ) );
-
+			std::cout << "Setting writing energy log file to " << atoi(value) << std::endl;
+			remesh->SetWriteToGlobalEnergyLog(atoi(value));
 		}
 
 #ifdef DOmultithread
-		if ( strcmp( key, "-p" ) == 0 ) {
+		if (strcmp(key, "-p") == 0)
+		{
 
-			std::cout << "Thread pooling ratio: " << atoi( value ) << std::endl;
-			remesh->SetPoolingRatio( atoi( value ) );
-
+			std::cout << "Thread pooling ratio: " << atoi(value) << std::endl;
+			remesh->SetPoolingRatio(atoi(value));
 		}
 #endif
 
-		if ( strcmp( key, "-q" ) == 0 ) {
+		if (strcmp(key, "-q") == 0)
+		{
 
-			std::cout << "Setting number of eigenvalues for quadrics to " << atoi( value ) << std::endl;
-			remesh->GetMetric()->SetQuadricsOptimizationLevel( atoi( value ) );
-
-		} else if ( strcmp( key, "-cd" ) == 0 ) {
+			std::cout << "Setting number of eigenvalues for quadrics to " << atoi(value) << std::endl;
+			remesh->GetMetric()->SetQuadricsOptimizationLevel(atoi(value));
+		}
+		else if (strcmp(key, "-cd") == 0)
+		{
 
 			std::cout << "Setting number custom file for density info : " << value << std::endl;
-			remesh->SetInputDensityFile( value );
-
-		} else if ( strcmp( key, "-cmax" ) == 0 ) {
+			remesh->SetInputDensityFile(value);
+		}
+		else if (strcmp(key, "-cmax") == 0)
+		{
 
 			std::cout << "Setting maximum custom density to : " << value << std::endl;
-			remesh->SetMaxCustomDensity( atof( value ) );
-
-		} else if ( strcmp( key, "-cmin" ) == 0 ) {
+			remesh->SetMaxCustomDensity(atof(value));
+		}
+		else if (strcmp(key, "-cmin") == 0)
+		{
 
 			std::cout << "Setting minimum custom density to : " << value << std::endl;
-			remesh->SetMinCustomDensity( atof( value ) );
-
-		} if (strcmp( key, "-cf" ) == 0 ) {
+			remesh->SetMinCustomDensity(atof(value));
+		}
+		if (strcmp(key, "-cf") == 0)
+		{
 
 			std::cout << "Setting custom density multiplication factor to : " << value << std::endl;
-			remesh->SetCustomDensityMultiplicationFactor( atof( value ) );
-
-		} else if ( strcmp( key, "-b" ) == 0 ) {
+			remesh->SetCustomDensityMultiplicationFactor(atof(value));
+		}
+		else if (strcmp(key, "-b") == 0)
+		{
 
 			std::cout << "Setting boundary fixing to : " << value << std::endl;
-			remesh->SetBoundaryFixing( atoi( value ) );
-
-		} else if ( strcmp( key, "-fv" ) == 0 ) {
+			remesh->SetBoundaryFixing(atoi(value));
+		}
+		else if (strcmp(key, "-fv") == 0)
+		{
 
 			std::ifstream input;
-			input.open( value );
+			input.open(value);
 			int id;
 			fixedVertices = vtkIdList::New();
-			while( input >> id ) fixedVertices->InsertNextId( id );
+			while (input >> id)
+				fixedVertices->InsertNextId(id);
 			input.close();
-
-		} else if ( strcmp( key, "-ft" ) == 0 ) {
+		}
+		else if (strcmp(key, "-ft") == 0)
+		{
 
 			std::ifstream input;
-			input.open( value );
-			bool* fixed = new bool[ mesh->GetNumberOfPoints() ];
+			input.open(value);
+			bool *fixed = new bool[mesh->GetNumberOfPoints()];
 			fixedVertices = vtkIdList::New();
 			int id, n = 0;
 
-			for ( int i = 0; i < mesh->GetNumberOfPoints(); i++ )
-				fixed[ i ] = false;
+			for (int i = 0; i < mesh->GetNumberOfPoints(); i++)
+				fixed[i] = false;
 
-			while( input >> id ) {
+			while (input >> id)
+			{
 
 				n++;
 				vtkIdType v1, v2, v3;
-				mesh->GetFaceVertices( id, v1, v2, v3 );
-				fixed[ v1 ] = fixed[ v2 ] = fixed[ v3 ] = true;
-
+				mesh->GetFaceVertices(id, v1, v2, v3);
+				fixed[v1] = fixed[v2] = fixed[v3] = true;
 			}
 
-			for ( int i = 0; i < mesh->GetNumberOfPoints(); i++ )
-				if ( fixed[ i ] ) fixedVertices->InsertNextId( i );
+			for (int i = 0; i < mesh->GetNumberOfPoints(); i++)
+				if (fixed[i])
+					fixedVertices->InsertNextId(i);
 
 			input.close();
 			std::cout << "Added " << n << " constraints on triangles" << std::endl;
-			delete [] fixed;
-
+			delete[] fixed;
 		}
 
 		argumentsIndex += 2;
-
 	}
 
 	RenderWindow *window = 0;
 
-	if ( display ) {
+	if (display)
+	{
 
 		window = RenderWindow::New();
 		vtkPolyData *visu = vtkPolyData::New();
-		visu->ShallowCopy( mesh );
-		window->SetInputData( visu );
+		visu->ShallowCopy(mesh);
+		window->SetInputData(visu);
 		visu->Delete();
-		remesh->SetAnchorRenderWindow( window );
+		remesh->SetAnchorRenderWindow(window);
 		window->Render();
-		window->SetWindowName( filename );
-		window->GetCamera()->Zoom( 1.2 );
+		window->SetWindowName(filename);
+		window->GetCamera()->Zoom(1.2);
 		window->Interact();
-
 	}
 
-/*
+	/*
 	double bounds[ 6 ];
 	mesh->GetBounds( bounds );
 	double middle = 0.5 * ( bounds[ 0 ] + bounds [ 1 ] );
@@ -303,72 +322,76 @@ int main( int argc, char *argv[] ) {
 	std::cout << "List size : " << fixedVertices->GetNumberOfIds() << std::endl;
 */
 
-	remesh->SetInput( mesh );
-	remesh->SetFileLoadSaveOption( 0 );
-	remesh->SetConsoleOutput( 2 );
-	remesh->SetSubsamplingThreshold( subsamplingThreshold );
-	remesh->GetMetric()->SetGradation( gradation );
-	remesh->SetDisplay( display );
-	remesh->SetUnconstrainedInitialization( 1 );
+	remesh->SetInput(mesh);
+	remesh->SetFileLoadSaveOption(0);
+	remesh->SetConsoleOutput(2);
+	remesh->SetSubsamplingThreshold(subsamplingThreshold);
+	remesh->GetMetric()->SetGradation(gradation);
+	remesh->SetDisplay(display);
+	remesh->SetUnconstrainedInitialization(1);
 
-	if ( fixedVertices ) {
+	if (fixedVertices)
+	{
 
-		remesh->SetFixedClusters( fixedVertices );
-		remesh->SetNumberOfClusters( numberOfSamples + fixedVertices->GetNumberOfIds() );
+		remesh->SetFixedClusters(fixedVertices);
+		remesh->SetNumberOfClusters(numberOfSamples + fixedVertices->GetNumberOfIds());
 		std::cout << "Read " << fixedVertices->GetNumberOfIds() << " fixed Ids" << std::endl;
 
-		for ( int i = 0; i < fixedVertices->GetNumberOfIds(); i++ )
-			remesh->GetCluster( i )->AnchorItem = fixedVertices->GetId( i );
-
-	} else remesh->SetNumberOfClusters( numberOfSamples );
+		for (int i = 0; i < fixedVertices->GetNumberOfIds(); i++)
+			remesh->GetCluster(i)->AnchorItem = fixedVertices->GetId(i);
+	}
+	else
+		remesh->SetNumberOfClusters(numberOfSamples);
 
 	remesh->Remesh();
 
 	// check that vertex constraints are respected
-	if ( fixedVertices ) {
+	if (fixedVertices)
+	{
 
 		vtkSurface *mesh2 = remesh->GetOutput();
 
-		for ( int i = 0; i < fixedVertices->GetNumberOfIds(); i++ ) {
+		for (int i = 0; i < fixedVertices->GetNumberOfIds(); i++)
+		{
 
-			double c1[ 3 ], c2[ 3 ];
-			vtkIdType v = fixedVertices->GetId( i );
-			mesh->GetPointCoordinates( v, c1 );
-			mesh2->GetPointCoordinates( i, c2 );
+			double c1[3], c2[3];
+			vtkIdType v = fixedVertices->GetId(i);
+			mesh->GetPointCoordinates(v, c1);
+			mesh2->GetPointCoordinates(i, c2);
 
-			for ( int j = 0; j < 3; j++) {
+			for (int j = 0; j < 3; j++)
+			{
 
-				if ( c1[ j ] == c2[ j ] ) continue;
+				if (c1[j] == c2[j])
+					continue;
 				std::cout << "Error, vertex " << v << " has been lost" << std::endl;
-				exit( 1 );
-
+				exit(1);
 			}
-
-
 		}
 
 		std::cout << "Constraints on vertices have been checked" << std::endl;
 		fixedVertices->Delete();
-
 	}
 
 	// save the output mesh to .ply format
-	char realFile[ 5000 ];
-	
-	if ( outputDirectory ) {
+	char realFile[5000];
 
-		strcpy ( realFile, outputDirectory );
-		strcat ( realFile, "simplification.ply" );
-	
-	} else strcpy( realFile, "simplification.ply" );
-	
+	if (outputDirectory)
+	{
+
+		strcpy(realFile, outputDirectory);
+		strcat(realFile, "simplification.ply");
+	}
+	else
+		strcpy(realFile, "simplification.ply");
+
 	vtkPLYWriter *plyWriter = vtkPLYWriter::New();
-	plyWriter->SetInputData( remesh->GetOutput() );
-	plyWriter->SetFileName( realFile );
+	plyWriter->SetInputData(remesh->GetOutput());
+	plyWriter->SetFileName(realFile);
 	plyWriter->Write();
 	plyWriter->Delete();
 	remesh->Delete();
 	mesh->Delete();
-	if ( display ) window->Delete();
-
+	if (display)
+		window->Delete();
 }
