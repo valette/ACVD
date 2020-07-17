@@ -1076,7 +1076,7 @@ RenderWindow::SetDisplayIdsOn ()
 		visPts->SetSelection (xmin, xmax, ymin, ymax);
 		visPts->SelectInvisibleOff();
 		vtkLabeledDataMapper *ldm = vtkLabeledDataMapper::New ();
-		ldm->SetInputData (visPts->GetOutput ());
+		ldm->SetInputConnection ( visPts->GetOutputPort ());
 //		ldm->SetLabelModeToLabelIds ();
 		ldm->SetLabelModeToLabelFieldData ();
 
@@ -1088,7 +1088,7 @@ RenderWindow::SetDisplayIdsOn ()
 
 		vtkSelectVisiblePoints *visCells =
 			vtkSelectVisiblePoints::New ();
-		visCells->SetInputData (cc->GetOutput ());
+		visCells->SetInputConnection (cc->GetOutputPort ());
 		visCells->SetRenderer (this->GetMeshRenderer());
 		visCells->SelectInvisibleOff();
 		visCells->SelectionWindowOn ();
@@ -1096,7 +1096,7 @@ RenderWindow::SetDisplayIdsOn ()
 
 		vtkLabeledDataMapper *cellMapper =
 			vtkLabeledDataMapper::New ();
-		cellMapper->SetInputData (visCells->GetOutput ());
+		cellMapper->SetInputConnection (visCells->GetOutputPort ());
 //		cellMapper->SetLabelFormat ("%g");
 		cellMapper->SetLabelModeToLabelFieldData ();
 //		cellMapper->SetLabelModeToLabelIds ();
