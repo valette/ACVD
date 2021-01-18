@@ -7,6 +7,7 @@ set(COMMON_EXAMPLES
   ExamplevtkSurface
   CleanMesh
   mesh2vtk
+  meshComponents
   vtk2ply
   stl2ply
   CheckOrientation

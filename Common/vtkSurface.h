@@ -147,6 +147,9 @@ public:
 	/// returns a vtkSurface made of the biggest connected component
 	vtkSurface *GetBiggestConnectedComponent();
 
+	/// returns a vtkSurface made of the n biggest connected components
+	vtkSurface *GetBiggestConnectedComponents( int numberOfComponents );
+
    /// Computes the mesh minimal angle, average minimal angle, minimal triangle quality and average triangle quality
    /// usefull to give an objective quality criterion of the mesh
    void ComputeTrianglesStatistics(double &Amin, double & Aav,double &Qmin, double &Qav, double &P30);

@@ -54,6 +54,83 @@
 #include "RenderWindow.h"
 #endif
 
+bool sortByDecreasingSecond( const std::pair< int,int > &a, const std::pair< int,int > &b ) {
+    return ( a.second > b.second );
+}
+
+vtkSurface *vtkSurface::GetBiggestConnectedComponents( int numberOfComponents )
+{
+	vtkIdListCollection *Collection=this->GetConnectedComponents();
+	std::vector< std::pair< int, int > > components;
+
+	if ( Collection->GetNumberOfItems() < numberOfComponents )
+		numberOfComponents = Collection->GetNumberOfItems();
+
+	for (int i=0;i<Collection->GetNumberOfItems();i++)
+		components.push_back(
+			std::make_pair( i, Collection->GetItem(i)->GetNumberOfIds() ) );
+
+    sort(components.begin(), components.end(), sortByDecreasingSecond); 
+
+
+	for ( int i = 0; i < components.size(); i++) {
+		cout<< components[ i ].first << ":" << components[ i ].second << endl;
+	}
+
+	vtkIdType *Ids=new vtkIdType[this->GetNumberOfPoints()];
+
+	for (vtkIdType i=0;i<this->GetNumberOfPoints();i++)
+		Ids[i]=-1;
+
+	vtkSurface *NewMesh=vtkSurface::New();
+
+	for ( int comp = 0; comp < numberOfComponents; comp++ ) {
+
+		vtkIdList *List=Collection->GetItem( components[ comp ].first );
+		double Point[ 3 ];
+		for (vtkIdType i=0;i<List->GetNumberOfIds();i++) {
+
+			vtkIdType PtId=List->GetId(i);
+			this->GetPoint(PtId,Point);
+			Ids[PtId] = NewMesh->AddVertex(Point);
+
+		}
+
+	}
+
+	int NumCells=this->GetNumberOfCells();
+	vtkIdType *pts, npts;
+	vtkIdType NewVertices[1000];
+
+	for (vtkIdType i=0;i<NumCells;i++)
+	{
+		this->GetCellPoints(i,npts, pts);
+		bool keep=true;
+		for (int j=0;j<npts;j++)
+			if (Ids[pts[j]]<0)
+				keep=false;
+
+		if (keep)
+		{
+			for (int j=0;j<npts;j++)
+			{
+				vtkIdType NewVertex=Ids[pts[j]];
+				if (NewVertex<0)
+				{
+					cout<<"Error in GetBiggestConnectedComponent()"<<endl;
+					exit(1);
+				}
+				NewVertices[j]=NewVertex;
+			}
+			NewMesh->AddPolygon(npts,NewVertices);
+		}
+	}
+
+	delete [] Ids;
+	return (NewMesh);
+}
+
+
 vtkSurface *vtkSurface::GetBiggestConnectedComponent()
 {
 	vtkIdListCollection *Collection=this->GetConnectedComponents();
