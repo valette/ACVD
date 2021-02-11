@@ -49,7 +49,7 @@ int main( int argc, char *argv[] ) {
 	}
 
 	int display = 1;
-	int argumentsIndex = 3;
+	int argumentsIndex = 2;
 
 	while( argumentsIndex < argc) {
 
