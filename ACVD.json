@@ -71,7 +71,7 @@
 					"required": true
 				}
 			],
-			"executable": "bin/VolumeOOCSlice"
+			"executable": "bin/clipMesh"
 		},
 		"acvd": {
 			"description": "Performs simplification/remeshing of 3D triangular meshes",
