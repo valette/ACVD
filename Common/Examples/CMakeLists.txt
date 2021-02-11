@@ -1,6 +1,7 @@
 include_directories( ${ACVD_SOURCE_DIR}/Common )
 
 set(COMMON_EXAMPLES
+  clipMesh
   viewer
   viewer2
   RandomTriangulation
