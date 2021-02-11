@@ -6,6 +6,7 @@ set(COMMON_EXAMPLES
   RandomTriangulation
   ExamplevtkSurface
   CleanMesh
+  icp
   mesh2vtk
   meshComponents
   vtk2ply
