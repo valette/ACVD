@@ -1,8 +1,70 @@
 {
 	"actions": {
+		"icp": {
+			"parameters": [
+				{
+					"name": "sourceMesh",
+					"type": "file",
+					"required": "true"
+				},
+				{
+					"name": "targetMesh",
+					"type": "file",
+					"required": "true"
+				}
+			],
+			"executable": "bin/icp"
+		},
+		"clipMesh": {
+			"parameters": [
+				{
+					"name": "inputMesh",
+					"type": "file",
+					"required": "true"
+				},
+				{
+					"name": "ox",
+					"type": "float",
+					"required": true
+				},
+				{
+					"name": "oy",
+					"type": "float",
+					"required": true
+				},
+				{
+					"name": "oz",
+					"type": "float",
+					"required": true
+				},
+				{
+					"name": "nx",
+					"type": "float",
+					"required": true
+				},
+				{
+					"name": "ny",
+					"type": "float",
+					"required": true
+				},
+				{
+					"name": "nz",
+					"type": "float",
+					"required": true
+				},
+				{
+					"text" : "-d 0"
+				}
+			],
+			"executable": "bin/clipMesh"
+		},
 		"VolumeOOCSlice": {
 			"parameters": [
-				{},
+				{
+					"name": "inputVolume",
+					"type": "file",
+					"required": "true"
+				},
 				{
 					"name": "slice",
 					"type": "int",
