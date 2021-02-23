@@ -15,6 +15,16 @@
 			],
 			"executable": "bin/icp"
 		},
+		"meshDifference": {
+			"parameters": [
+				{
+					"name": "meshes",
+					"type": "file",
+					"required": "true"
+				}
+			],
+			"executable": "bin/meshDifference"
+		},
 		"clipMesh": {
 			"parameters": [
 				{

@@ -10,6 +10,7 @@ set(COMMON_EXAMPLES
   icp
   mesh2vtk
   meshComponents
+  meshDifference
   vtk2ply
   stl2ply
   CheckOrientation
