@@ -653,7 +653,7 @@ void vtkDiscreteRemeshing < Metric >::SamplingPreProcessing () {
 				if (this->FileLoadSaveOption != 0)
 				{
 					fstream CurvatureOutput;
-					CurvatureOutput.open ("curvature.dat", ofstream::out | ofstream::trunc | ios::binary);
+					CurvatureOutput.open ("curvature.dat", std::ofstream::out | std::ofstream::trunc | std::ios::binary);
 					int NumberOfItems;
 					vtkSurface *InputSurface;
 					if (this->OriginalInput)
@@ -687,7 +687,7 @@ void vtkDiscreteRemeshing < Metric >::SamplingPreProcessing () {
 			CellsIndicators->SetNumberOfValues (this->GetNumberOfItems());
 
 			fstream CurvatureInput;
-			CurvatureInput.open ("curvature.dat",ofstream::in | ios::binary);
+			CurvatureInput.open ("curvature.dat",std::ofstream::in | std::ios::binary);
 
 			for (i = 0; i < this->GetNumberOfItems (); i++)
 			{
@@ -898,7 +898,7 @@ template < class Metric > void vtkDiscreteRemeshing < Metric >::Remesh ()
 
 			fstream ClusteringOutput;
 			ClusteringOutput.open( "clustering.dat",
-				ofstream::out | ofstream::trunc | ios::binary );
+				std::ofstream::out | std::ofstream::trunc | std::ios::binary );
 
 			for ( int i = 0; i < this->GetNumberOfItems (); i++ ) {
 
@@ -914,7 +914,7 @@ template < class Metric > void vtkDiscreteRemeshing < Metric >::Remesh ()
 
 		this->Init ();
 		fstream ClusteringInput;
-		ClusteringInput.open( "clustering.dat", ofstream::in | ios::binary );
+		ClusteringInput.open( "clustering.dat", std::ofstream::in | std::ios::binary );
 
 		for ( int i = 0; i < this->GetNumberOfItems (); i++) {
 
@@ -969,7 +969,8 @@ void vtkDiscreteRemeshing <Metric >::GetDualItemNeighbourClusters ( vtkIdType it
 
 	} else {
 
-		vtkIdType *Vertices, NumberOfVertices;
+		const vtkIdType *Vertices;
+		vtkIdType NumberOfVertices;
 		List->Reset ();
 		this->Input->GetCellPoints( item, NumberOfVertices, Vertices );
 

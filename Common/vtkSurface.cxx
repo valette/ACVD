@@ -99,8 +99,8 @@ vtkSurface *vtkSurface::GetBiggestConnectedComponents( int numberOfComponents )
 	}
 
 	int NumCells=this->GetNumberOfCells();
-	vtkIdType *pts, npts;
-	vtkIdType NewVertices[1000];
+	const vtkIdType *pts;
+	vtkIdType npts, NewVertices[1000];
 
 	for (vtkIdType i=0;i<NumCells;i++)
 	{
@@ -165,8 +165,8 @@ vtkSurface *vtkSurface::GetBiggestConnectedComponent()
 	}
 
 	int NumCells=this->GetNumberOfCells();
-	vtkIdType *pts, npts;
-	vtkIdType NewVertices[1000];
+	const vtkIdType *pts;
+	vtkIdType npts, NewVertices[1000];
 
 	for (vtkIdType i=0;i<NumCells;i++)
 	{
@@ -768,8 +768,8 @@ void vtkSurface::GetMeshProperties(std::stringstream &stream)
 	stream<<"              [" <<bounds[1] <<", " <<bounds[3] <<", " <<bounds[5] <<"] " <<endl;
 	
 	vtkIdType nPoly=0,nTri=0,nQuad=0;
-	vtkIdType NV,*Vertices;
-	vtkIdType NumberOfEmptySlots=0;
+	const vtkIdType *Vertices;
+	vtkIdType NV, NumberOfEmptySlots=0;
 	for (i=0;i<this->GetNumberOfCells();i++)
 	{
 		if (this->IsFaceActive(i)==1)
@@ -893,7 +893,7 @@ void vtkSurface::SaveConnectivity(const char * FileName)
 	vtkIdType  i;
 	vtkIdType  v1,v2,v3;
 	std::ofstream OutputFile;
-	OutputFile.open (FileName, ofstream::out | ofstream::trunc);
+	OutputFile.open (FileName, std::ofstream::out | std::ofstream::trunc);
 	for (i=0;i<this->GetNumberOfCells();i++)
 	{
 		this->GetFaceVertices(i,v1,v2,v3);
@@ -1378,7 +1378,7 @@ vtkDoubleArray* vtkSurface::GetVerticesAreas()
 void vtkSurface::GetCellMassProperties(vtkIdType CellId, double &Area, double *Baricenter)
 {
 	vtkIdType  i,j;
-	vtkIdType *Pts;
+	const vtkIdType *Pts;
 	vtkIdType v1,v2,v3;
 	double Pf1[3],Pf2[3],Pf3[3];
 	vtkIdType  NumberOfVertices;
@@ -1529,7 +1529,7 @@ void vtkSurface::ComputeQualityHistogram(const char *FileName)
 	}
 
 	std::ofstream OutputFile;
-	OutputFile.open (FileName, ofstream::out | ofstream::trunc);
+	OutputFile.open (FileName, std::ofstream::out | std::ofstream::trunc);
 	for (i=0;i<100;i++)
 	{
 		OutputFile<<Histogram[i]<<endl;
@@ -1586,7 +1586,7 @@ void vtkSurface::WriteInventor(const char *filename)
 {
 
 	std::ofstream File;
-	File.open (filename, ofstream::out | ofstream::trunc);
+	File.open (filename, std::ofstream::out | std::ofstream::trunc);
 	vtkIdType i, v1, v2, v3;
 	double P[3];
 
@@ -1631,7 +1631,7 @@ void vtkSurface::WriteInventor(const char *filename)
 void vtkSurface::WriteSMF(const char *filename)
 {
 	std::ofstream File;
-	File.open (filename, ofstream::out | ofstream::trunc);
+	File.open (filename, std::ofstream::out | std::ofstream::trunc);
 
 	vtkIdType i;
 	vtkIdType nverts=this->GetNumberOfPoints();

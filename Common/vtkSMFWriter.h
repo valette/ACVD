@@ -52,7 +52,7 @@ protected:
 	void WriteData()
 	{
 		std::ofstream File;
-		File.open (this->FileName, ofstream::out | ofstream::trunc);
+		File.open (this->FileName, std::ofstream::out | std::ofstream::trunc);
 
 		vtkIdType i;
 		vtkIdType nverts=this->GetInput()->GetNumberOfPoints();
@@ -69,8 +69,8 @@ protected:
 			File << "v "<< P[0] << " " << P[1] << " " << P[2] << endl;
 		}
 
-		vtkIdType  *Vertices,NumberOfVertices;
-		vtkIdType  j;
+		const vtkIdType *Vertices;
+		vtkIdType j,NumberOfVertices;
 		for(i=0; i<nfaces; i++)
 		{
 			this->GetInput()->GetCellPoints(i,NumberOfVertices,Vertices);

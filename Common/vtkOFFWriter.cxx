@@ -58,7 +58,7 @@ void vtkOFFWriter::WriteData()
 	}
 
 	vtkIdType nbPtsCell;
-	vtkIdType *ptIdList;
+	const vtkIdType *ptIdList;
 	register vtkIdType j;
 
 	// * write the faces *
