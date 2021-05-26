@@ -69,6 +69,8 @@ int main( int argc, char *argv[] )
 	vtkDoubleArray *maxErrors = vtkDoubleArray::New();
 	vtkDoubleArray *averageErrors = vtkDoubleArray::New();
 	int numberOfPoints;
+	double globalMaxDistance = 0;
+	int globalMaxId = -1;
 
 	for ( int i = 0; i < files.size(); i += 2 ) {
 
@@ -104,6 +106,10 @@ int main( int argc, char *argv[] )
 			double distance = sqrt( vtkMath::Distance2BetweenPoints( pt1, pt2 ) );
 			if ( distance > maxErrors->GetValue( j ) ) maxErrors->SetValue( j, distance );
 			averageErrors->SetValue( j, averageErrors->GetValue( j ) + distance / ( files.size() / 2 ) );
+			if ( distance > globalMaxDistance ) {
+				globalMaxDistance = distance;
+				globalMaxId = i;
+			}
 
 		}
 
@@ -123,6 +129,8 @@ int main( int argc, char *argv[] )
 	mesh->GetPointData()->SetScalars( maxErrors );
 	mesh->WriteToFile( "maxErrors.vtk" );
 	mesh->Delete();
+
+	cout << "Global Max distance = " << globalMaxDistance << " for id= " << globalMaxId << endl;
 
 	return (0);
 }
