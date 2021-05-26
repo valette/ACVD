@@ -989,7 +989,6 @@ template < class Metric >
 vtkIdType vtkDiscreteRemeshing < Metric >::AddFace( vtkIdType v1, vtkIdType v2, vtkIdType v3) {
 
 	if ( ( v1 == v2 ) || ( v1 == v3 ) || ( v2 == v3 ) ) return (-1);
-
 	if ( this->Output->IsFace( v1, v2, v3 ) < 0 )
 		return ( this->Output->AddFace( v1, v2, v3 ) );
 	else return -1;
