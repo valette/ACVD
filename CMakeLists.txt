@@ -1,10 +1,10 @@
 project(ACVD)
 
-cmake_minimum_required(VERSION 2.8.7)
+cmake_minimum_required(VERSION 3.14)
 
-if( POLICY CMP0042 )
-  cmake_policy( SET CMP0042 NEW )
-endif()
+# if( POLICY CMP0042 )
+#   cmake_policy( SET CMP0042 NEW )
+# endif()
 
 # version
 set( ACVD_MAJOR_VERSION 1 )
@@ -22,6 +22,8 @@ set(INSTALL_INCLUDE_DIR include CACHE PATH "Installation directory for header fi
 set(INSTALL_DOC_DIR share/doc/ACVD CACHE PATH "Installation directory for html doc" )
 set(INSTALL_CMAKE_DIR lib/cmake/ACVD CACHE PATH "Installation directory for CMake files" )
 
+set(ACVD_VTK_VERSION "9" CACHE STRING "Major version of vtk ")
+
 # Make relative paths absolute (needed later on)
 foreach(p LIB BIN INCLUDE CMAKE)
   set(var INSTALL_${p}_DIR)
@@ -30,9 +32,54 @@ foreach(p LIB BIN INCLUDE CMAKE)
   endif()
 endforeach()
 
+message (STATUS "ACVD_VTK_VERSION: ${ACVD_VTK_VERSION}")
+if (${ACVD_VTK_VERSION} VERSION_LESS "9")
+  # find_package
+  find_package(VTK REQUIRED COMPONENTS 
+              vtkCommonCore
+              vtkCommonDataModel
+              vtkRenderingCore
+              vtkCommonSystem
+              vtkIOImport
+              vtkIOExport
+              vtkIOImage
+              vtkIOGeometry
+              vtkIOPLY
+              vtkFiltersSources
+              vtkInteractionStyle
+              vtkFiltersHybrid
+              vtkRenderingLabel
+              vtkIOMINC
+              vtkFiltersModeling
+              vtkFiltersGeneral
+              vtkmetaio
+              vtkImagingGeneral
+)
+else ()
 # find_package
-find_package(VTK REQUIRED NO_MODULE)
-include(${VTK_USE_FILE})
+find_package(VTK REQUIRED COMPONENTS 
+            CommonCore
+            CommonDataModel
+            RenderingCore
+            CommonSystem
+            IOImport
+            IOExport
+            IOImage
+            IOGeometry
+            IOPLY
+            FiltersSources
+            InteractionStyle
+            FiltersHybrid
+            RenderingLabel
+            IOMINC
+            FiltersModeling
+            FiltersGeneral
+            metaio
+            ImagingGeneral
+)
+endif()
+
+#include(${VTK_USE_FILE})
 
 option(BUILD_SHARED_LIBS "Build vtkSurface with shared libraries." ON)
 option(BUILD_DOCUMENTATION "Build the html documentation with doxygen." OFF)

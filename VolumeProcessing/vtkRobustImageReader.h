@@ -59,7 +59,7 @@ public :
 			std::string matrixPrefix;
 			std::string anatomicalOrientation;
 
-			ifstream is(FileName);
+			std::ifstream is(FileName);
 			std::string line, prefix;
 			double transformationMatrix[9] ;
 

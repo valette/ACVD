@@ -165,7 +165,8 @@ vtkSurface *vtkSurface::GetBiggestConnectedComponent()
 	}
 
 	int NumCells=this->GetNumberOfCells();
-	vtkIdType *pts, npts;
+	const vtkIdType *pts;
+	vtkIdType npts;
 	vtkIdType NewVertices[1000];
 
 	for (vtkIdType i=0;i<NumCells;i++)
@@ -219,14 +220,20 @@ vtkSurface* vtkSurface::CleanMemory()
 	{
 		if (this->IsFaceActive(Id)==1)
 		{
-			vtkIdType *Vertices,NVertices;
-			this->GetFaceVertices(Id, NVertices,Vertices);
+			vtkIdType NVertices;
+			const vtkIdType *Vertices;
+
+			this->GetFaceVertices(Id, NVertices, Vertices);
+			vtkIdType *New_Vertices = new vtkIdType [NVertices];
+			for (int i=0;i<NVertices;i++)
+				New_Vertices[i]=Vertices[i];
 
 			// Change vertices Ids according to the cleaning phase
 			for (int i=0;i<NVertices;i++)
-				Vertices[i]=Ids[Vertices[i]];
+				New_Vertices[i]=Ids[New_Vertices[i]];
 
-			Output->AddPolygon(NVertices,Vertices);
+			Output->AddPolygon(NVertices,New_Vertices);
+			delete New_Vertices;
 		}
 	}
 
@@ -440,7 +447,8 @@ void Split2(vtkSurface *Mesh, int f,int v1, int v2, int v3, int v12)
 void vtkSurface::SplitLongEdges(double Ratio)
 {
 	vtkIdType i;
-	vtkIdType NumberOfVertices,*Vertices;
+	vtkIdType NumberOfVertices;
+	const vtkIdType *Vertices;
 
 	// prevent the vertices deletion when spliting faces
 	int BackupCleanEdges=this->GetCleanEdgesState();
@@ -768,7 +776,8 @@ void vtkSurface::GetMeshProperties(std::stringstream &stream)
 	stream<<"              [" <<bounds[1] <<", " <<bounds[3] <<", " <<bounds[5] <<"] " <<endl;
 	
 	vtkIdType nPoly=0,nTri=0,nQuad=0;
-	vtkIdType NV,*Vertices;
+	vtkIdType NV;
+	const vtkIdType *Vertices;
 	vtkIdType NumberOfEmptySlots=0;
 	for (i=0;i<this->GetNumberOfCells();i++)
 	{
@@ -893,7 +902,7 @@ void vtkSurface::SaveConnectivity(const char * FileName)
 	vtkIdType  i;
 	vtkIdType  v1,v2,v3;
 	std::ofstream OutputFile;
-	OutputFile.open (FileName, ofstream::out | ofstream::trunc);
+	OutputFile.open (FileName, std::ofstream::out | std::ofstream::trunc);
 	for (i=0;i<this->GetNumberOfCells();i++)
 	{
 		this->GetFaceVertices(i,v1,v2,v3);
@@ -1343,7 +1352,8 @@ double vtkSurface::GetVertexArea(vtkIdType Vertex)
 	this->GetVertexNeighbourFaces(Vertex,CList);
 	vtkIdType i;
 	double Area;
-	vtkIdType NumberOfVertices,*Vertices;
+	vtkIdType NumberOfVertices;
+	const vtkIdType *Vertices;
 
 	Area=0;
 	for (i=0;i<CList->GetNumberOfIds();i++)
@@ -1378,7 +1388,7 @@ vtkDoubleArray* vtkSurface::GetVerticesAreas()
 void vtkSurface::GetCellMassProperties(vtkIdType CellId, double &Area, double *Baricenter)
 {
 	vtkIdType  i,j;
-	vtkIdType *Pts;
+	const vtkIdType *Pts;
 	vtkIdType v1,v2,v3;
 	double Pf1[3],Pf2[3],Pf3[3];
 	vtkIdType  NumberOfVertices;
@@ -1529,7 +1539,7 @@ void vtkSurface::ComputeQualityHistogram(const char *FileName)
 	}
 
 	std::ofstream OutputFile;
-	OutputFile.open (FileName, ofstream::out | ofstream::trunc);
+	OutputFile.open (FileName, std::ofstream::out | std::ofstream::trunc);
 	for (i=0;i<100;i++)
 	{
 		OutputFile<<Histogram[i]<<endl;
@@ -1586,7 +1596,7 @@ void vtkSurface::WriteInventor(const char *filename)
 {
 
 	std::ofstream File;
-	File.open (filename, ofstream::out | ofstream::trunc);
+	File.open (filename, std::ofstream::out | std::ofstream::trunc);
 	vtkIdType i, v1, v2, v3;
 	double P[3];
 
@@ -1631,7 +1641,7 @@ void vtkSurface::WriteInventor(const char *filename)
 void vtkSurface::WriteSMF(const char *filename)
 {
 	std::ofstream File;
-	File.open (filename, ofstream::out | ofstream::trunc);
+	File.open (filename, std::ofstream::out | std::ofstream::trunc);
 
 	vtkIdType i;
 	vtkIdType nverts=this->GetNumberOfPoints();
@@ -1675,14 +1685,14 @@ void vtkSurface::ComputeSharpVertices(double treshold)
 	double v3[3];
 	double n;
 
-	register vtkIdType i;
-	register vtkIdType s1;
-	register vtkIdType s2;
-	register vtkIdType s3;
-	register vtkIdType f1;
-	register vtkIdType f2;
-	register vtkIdType j;
-	register bool ok;
+	vtkIdType i;
+	vtkIdType s1;
+	vtkIdType s2;
+	vtkIdType s3;
+	vtkIdType f1;
+	vtkIdType f2;
+	vtkIdType j;
+	bool ok;
 
 	vtkPoints *points = this->GetPoints();
 
