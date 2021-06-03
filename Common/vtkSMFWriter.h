@@ -69,7 +69,12 @@ protected:
 			File << "v "<< P[0] << " " << P[1] << " " << P[2] << endl;
 		}
 
+#if ( (VTK_MAJOR_VERSION < 9))
+		vtkIdType *Vertices;
+#else
 		const vtkIdType *Vertices;
+# endif
+
 		vtkIdType j,NumberOfVertices;
 		for(i=0; i<nfaces; i++)
 		{

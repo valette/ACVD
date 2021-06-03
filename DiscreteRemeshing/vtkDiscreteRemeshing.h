@@ -969,10 +969,10 @@ void vtkDiscreteRemeshing <Metric >::GetDualItemNeighbourClusters ( vtkIdType it
 
 	} else {
 
-		const vtkIdType *Vertices;
+		vtkIdType *Vertices;
 		vtkIdType NumberOfVertices;
 		List->Reset ();
-		this->Input->GetCellPoints( item, NumberOfVertices, Vertices );
+		this->Input->GetFaceVertices( item, NumberOfVertices, Vertices );
 
 		for( vtkIdType i = 0; i < NumberOfVertices; i++ ) {
 

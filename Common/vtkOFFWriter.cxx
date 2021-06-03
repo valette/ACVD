@@ -58,8 +58,12 @@ void vtkOFFWriter::WriteData()
 	}
 
 	vtkIdType nbPtsCell;
-	const vtkIdType *ptIdList;
-	register vtkIdType j;
+#if ( (VTK_MAJOR_VERSION < 9))
+		vtkIdType *ptIdList;
+#else
+		const vtkIdType *ptIdList;
+# endif
+	vtkIdType j;
 
 	// * write the faces *
 	for (i = 0; i <nbcls;i++)

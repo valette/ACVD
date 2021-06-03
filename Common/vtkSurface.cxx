@@ -99,12 +99,12 @@ vtkSurface *vtkSurface::GetBiggestConnectedComponents( int numberOfComponents )
 	}
 
 	int NumCells=this->GetNumberOfCells();
-	const vtkIdType *pts;
+	vtkIdType *pts;
 	vtkIdType npts, NewVertices[1000];
 
 	for (vtkIdType i=0;i<NumCells;i++)
 	{
-		this->GetCellPoints(i,npts, pts);
+		this->GetFaceVertices(i,npts, pts);
 		bool keep=true;
 		for (int j=0;j<npts;j++)
 			if (Ids[pts[j]]<0)
@@ -165,12 +165,12 @@ vtkSurface *vtkSurface::GetBiggestConnectedComponent()
 	}
 
 	int NumCells=this->GetNumberOfCells();
-	const vtkIdType *pts;
+	vtkIdType *pts;
 	vtkIdType npts, NewVertices[1000];
 
 	for (vtkIdType i=0;i<NumCells;i++)
 	{
-		this->GetCellPoints(i,npts, pts);
+		this->GetFaceVertices(i,npts, pts);
 		bool keep=true;
 		for (int j=0;j<npts;j++)
 			if (Ids[pts[j]]<0)
@@ -768,13 +768,13 @@ void vtkSurface::GetMeshProperties(std::stringstream &stream)
 	stream<<"              [" <<bounds[1] <<", " <<bounds[3] <<", " <<bounds[5] <<"] " <<endl;
 	
 	vtkIdType nPoly=0,nTri=0,nQuad=0;
-	const vtkIdType *Vertices;
+	vtkIdType *Vertices;
 	vtkIdType NV, NumberOfEmptySlots=0;
 	for (i=0;i<this->GetNumberOfCells();i++)
 	{
 		if (this->IsFaceActive(i)==1)
 		{
-			this->GetCellPoints(i,NV,Vertices);
+			this->GetFaceVertices(i,NV,Vertices);
 			if (NV==3)
 				nTri++;
 			else
@@ -1314,22 +1314,19 @@ vtkDoubleArray* vtkSurface::GetTrianglesNormals()
 double vtkSurface::GetFaceArea(vtkIdType Face)
 {
 	int j;
-	vtkCell *Cell;
 	vtkIdType v1,v2,v3;
 	double Area;
 	double Pf1[3],Pf2[3],Pf3[3];
-	int NumberOfVertices;
-
 	Area=0;
-	Cell=this->GetCell(Face);
-	NumberOfVertices=Cell->GetNumberOfPoints();
-	v1=Cell->PointIds->GetId(0);
+	vtkIdType *vertices, NumberOfVertices;
+	this->GetFaceVertices( Face, NumberOfVertices, vertices );
+	v1 = vertices[ 0 ];
 	this->GetPoint(v1,Pf1);
 
 	for (j=0;j<NumberOfVertices-2;j++)
 	{
-		v2=Cell->PointIds->GetId(j+1);
-		v3=Cell->PointIds->GetId(j+2);
+		v2=vertices[ j+1 ];
+		v3=vertices[ j+2 ];
 		this->GetPoint(v2,Pf2);
 		this->GetPoint(v3,Pf3);
 		Area+=vtkTriangle::TriangleArea(Pf1,Pf2,Pf3);
@@ -1378,13 +1375,13 @@ vtkDoubleArray* vtkSurface::GetVerticesAreas()
 void vtkSurface::GetCellMassProperties(vtkIdType CellId, double &Area, double *Baricenter)
 {
 	vtkIdType  i,j;
-	const vtkIdType *Pts;
+	vtkIdType *Pts;
 	vtkIdType v1,v2,v3;
 	double Pf1[3],Pf2[3],Pf3[3];
 	vtkIdType  NumberOfVertices;
 	double Area2;
 
-	this->GetCellPoints(CellId,NumberOfVertices,Pts);
+	this->GetFaceVertices(CellId,NumberOfVertices,Pts);
 
 	Area=0;
 	v1=Pts[0];

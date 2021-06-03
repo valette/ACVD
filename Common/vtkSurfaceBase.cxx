@@ -560,8 +560,7 @@ void vtkSurfaceBase::DeleteFace(vtkIdType f1)
 	if (this->IsFaceActive(f1)==0)
 		return;
 		
-	vtkIdType NumberOfPoints,*Points,Loc;
-	//Loc = this->Cells->GetCellLocation(f1);
+	vtkIdType NumberOfPoints,*Points;
 	vtkIdType i;
 	vtkIdType Edge;
 
@@ -577,9 +576,13 @@ void vtkSurfaceBase::DeleteFace(vtkIdType f1)
 		Points[i]=Points[0];
 	}
 
-	this->DeleteCell(f1);
+	#if ( (VTK_MAJOR_VERSION < 9))
+//	this->DeleteCell(f1);
+	#endif
 	this->CellsGarbage[NumberOfPoints].push(f1);
 	this->ActivePolygons->SetValue(f1,0);
+	this->Polys->Modified();
+	this->Modified();
 }
 void vtkSurfaceBase::CleanEdge(vtkIdType Edge)
 {
@@ -1016,12 +1019,12 @@ void vtkSurfaceBase::GetNeighbours(vtkIdList *Input,vtkIdList *Output)
 
 vtkIdType vtkSurfaceBase::IsEdgeBetweenFaces(vtkIdType f1, vtkIdType f2)
 {
-	const vtkIdType *Vertices1;
+	vtkIdType *Vertices1;
 	vtkIdType NumberOfVertices1;
-	this->GetCellPoints(f1,NumberOfVertices1,Vertices1);
-	const vtkIdType *Vertices2;
+	this->GetFaceVertices(f1,NumberOfVertices1,Vertices1);
+	vtkIdType *Vertices2;
 	vtkIdType NumberOfVertices2;
-	this->GetCellPoints(f2,NumberOfVertices2,Vertices2);
+	this->GetFaceVertices(f2,NumberOfVertices2,Vertices2);
 	
 	vtkIdType Vertices[2];
 	
@@ -1339,11 +1342,15 @@ vtkIdType vtkSurfaceBase::AddPolygon(int NumberOfVertices,vtkIdType *Vertices)
 
 	if (this->CellsGarbage[NumberOfVertices].empty())
 	{
+#if ( (VTK_MAJOR_VERSION < 9))
+		face=this->Polys->InsertNextCell(NumberOfVertices);
+		for (int i=0;i<NumberOfVertices;i++)
+			this->Polys->InsertCellPoint(Vertices[i]);
+		int Loc=this->Polys->GetInsertLocation(NumberOfVertices);
+		this->Cells->InsertNextCell(Type,Loc);
+#else
 		face=this->Polys->InsertNextCell(NumberOfVertices, Vertices);
-//		for (int i=0;i<NumberOfVertices;i++)
-//			this->Polys->InsertCellPoint(Vertices[i]);
-//		int Loc=this->Polys->GetInsertLocation(NumberOfVertices);
-//		this->Cells->InsertNextCell(Type,Loc);
+#endif
 		while (face>=this->NumberOfAllocatedPolygonsAttributes)
 			this->AllocateMorePolygonsAttributes();
 	}
@@ -1351,11 +1358,13 @@ vtkIdType vtkSurfaceBase::AddPolygon(int NumberOfVertices,vtkIdType *Vertices)
 	{
 		face=this->CellsGarbage[NumberOfVertices].front();
 		this->CellsGarbage[NumberOfVertices].pop();
-		cout << "TODO! addpolygon" << endl;
-		exit( 1 );
-//		int Loc = this->Cells->GetCellLocation(face);
-//		this->Cells->InsertCell(face,Type,Loc);
+#if ( (VTK_MAJOR_VERSION < 9))
+		int loc = this->Cells->GetCellLocation(face);
+		this->Cells->InsertCell(face,Type,loc);
+		this->Polys->ReplaceCell(loc,NumberOfVertices,Vertices);
+#else
 		this->Polys->ReplaceCellAtId(face,NumberOfVertices,Vertices);
+#endif
 	}
 
 	for (int i=0;i<NumberOfVertices;i++)
@@ -1376,6 +1385,8 @@ vtkIdType vtkSurfaceBase::AddPolygon(int NumberOfVertices,vtkIdType *Vertices)
 	{
 		this->ConquerOrientationFromFace(face);
 	}
+
+	this->Polys->Modified();
 	this->Modified();
 	return (face);
 }
@@ -1492,16 +1503,22 @@ void vtkSurfaceBase::Init(int numPoints, int numFaces, int numEdges)
 
 	vtkCellArray *CellsArray1;
 	CellsArray1 = vtkCellArray::New();
+	#if ( (VTK_MAJOR_VERSION < 9))
+	CellsArray1->Allocate(4*numFaces,numFaces);
+	#else
 	CellsArray1->Allocate(3*numFaces,numFaces);
-	CellsArray1->Use64BitStorage();
+	#endif
 	this->SetPolys(CellsArray1);
 	CellsArray1->Delete();
+	#if ( (VTK_MAJOR_VERSION >= 9))
+	CellsArray1->Use64BitStorage();
+	#else
+	if (this->Cells)
+		this->Cells->Delete();
 
-//	if (this->Cells)
-//		this->Cells->Delete();
-	
-//	this->Cells = vtkCellTypes::New();
-//	this->Cells->Allocate(numFaces,numFaces);
+	this->Cells = vtkCellTypes::New();
+	this->Cells->Allocate(numFaces,numFaces);
+	#endif
 
 	// create and allocate memory for points
 	vtkPoints *Points1=vtkPoints::New();
@@ -1526,7 +1543,7 @@ void vtkSurfaceBase::CreateFromPolyData(vtkPolyData *input)
 {
 	vtkIdType i,j,v1,v2;
 	vtkIdType NumberOfVertices;
-	const vtkIdType *Vertices;
+	vtkIdType *Vertices;
 
 	// just copy the polydata in input
 	this->ShallowCopy(input);
@@ -1555,7 +1572,7 @@ void vtkSurfaceBase::CreateFromPolyData(vtkPolyData *input)
 	for (i=0;i<this->GetNumberOfCells();i++)
 	{
 		bool ActiveFace=false;
-		this->GetCellPoints(i,NumberOfVertices,Vertices);
+		this->GetFaceVertices(i,NumberOfVertices,Vertices);
 		if (NumberOfVertices>1)
 		{
 			// test whether the face is an active one (at least its first two vertices should be different)

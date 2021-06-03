@@ -453,6 +453,15 @@ inline void vtkSurfaceBase::GetFaceVertices(const vtkIdType &face, vtkIdType &v1
 	v2=pts[1];
 	v3=pts[2];
 }
+
+#if ( (VTK_MAJOR_VERSION < 9))
+inline void vtkSurfaceBase::GetFaceVertices(const vtkIdType& face,
+vtkIdType &NumberOfVertices, vtkIdType* &Vertices)
+{
+	this->Polys->GetCell( this->Cells->GetCellLocation( face ), NumberOfVertices, Vertices );
+}
+#else
+
 inline void vtkSurfaceBase::GetFaceVertices(const vtkIdType& face,
 vtkIdType &NumberOfVertices, vtkIdType* &Vertices)
 {
@@ -463,6 +472,8 @@ vtkIdType &NumberOfVertices, vtkIdType* &Vertices)
 	NumberOfVertices = offset2 - offset1;
 	Vertices = static_cast < vtkIdType *> ( connectivity->GetPointer( offset1 ) );
 }
+
+# endif
 inline void vtkSurfaceBase::GetVertexNeighbourEdges(const vtkIdType& v1,
 vtkIdType &NumberOfEdges, vtkIdType* &Edges)
 {
