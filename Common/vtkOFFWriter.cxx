@@ -36,8 +36,8 @@ void vtkOFFWriter::WriteData()
     }
 
 	// if input is correct , proceed.
-	register int i;
-	register double P[3];
+	int i;
+	double P[3];
 
 	vtkPolyData *polydata = this->GetInput();
 	vtkSurface *surfaceTemp = vtkSurface::New();

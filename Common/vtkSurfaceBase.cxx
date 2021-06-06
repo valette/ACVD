@@ -405,8 +405,8 @@ void vtkSurfaceBase::ConquerOrientationFromFace(vtkIdType Face)
 double vtkSurfaceBase::GetValenceEntropy()
 {
 
-	register int i;		// Loop counter
-	register int v1;	// Valence of given point
+	int i;		// Loop counter
+	int v1;	// Valence of given point
 	double inv_number;	// 1.0 / number of points
 	double inv_Log2;	// 1.0 / log(2.0)
 	double s;			// 
@@ -449,11 +449,11 @@ double vtkSurfaceBase::GetValenceEntropy()
 
 void vtkSurfaceBase::GetValenceTab(char *filename)
 {
-	register int i;
-	register int v1;
+	int i;
+	int v1;
 
-	register int min=0;
-	register int Max=0;
+	int min=0;
+	int Max=0;
 
 	// allocate array for valences
 	vtkIntArray *Vals=vtkIntArray::New();

@@ -1672,14 +1672,14 @@ void vtkSurface::ComputeSharpVertices(double treshold)
 	double v3[3];
 	double n;
 
-	register vtkIdType i;
-	register vtkIdType s1;
-	register vtkIdType s2;
-	register vtkIdType s3;
-	register vtkIdType f1;
-	register vtkIdType f2;
-	register vtkIdType j;
-	register bool ok;
+	vtkIdType i;
+	vtkIdType s1;
+	vtkIdType s2;
+	vtkIdType s3;
+	vtkIdType f1;
+	vtkIdType f2;
+	vtkIdType j;
+	bool ok;
 
 	vtkPoints *points = this->GetPoints();
 
