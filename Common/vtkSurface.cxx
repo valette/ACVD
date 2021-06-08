@@ -99,12 +99,12 @@ vtkSurface *vtkSurface::GetBiggestConnectedComponents( int numberOfComponents )
 	}
 
 	int NumCells=this->GetNumberOfCells();
-	vtkIdType *pts, npts;
-	vtkIdType NewVertices[1000];
+	vtkIdType *pts;
+	vtkIdType npts, NewVertices[1000];
 
 	for (vtkIdType i=0;i<NumCells;i++)
 	{
-		this->GetCellPoints(i,npts, pts);
+		this->GetFaceVertices(i,npts, pts);
 		bool keep=true;
 		for (int j=0;j<npts;j++)
 			if (Ids[pts[j]]<0)
@@ -165,12 +165,12 @@ vtkSurface *vtkSurface::GetBiggestConnectedComponent()
 	}
 
 	int NumCells=this->GetNumberOfCells();
-	vtkIdType *pts, npts;
-	vtkIdType NewVertices[1000];
+	vtkIdType *pts;
+	vtkIdType npts, NewVertices[1000];
 
 	for (vtkIdType i=0;i<NumCells;i++)
 	{
-		this->GetCellPoints(i,npts, pts);
+		this->GetFaceVertices(i,npts, pts);
 		bool keep=true;
 		for (int j=0;j<npts;j++)
 			if (Ids[pts[j]]<0)
@@ -768,13 +768,13 @@ void vtkSurface::GetMeshProperties(std::stringstream &stream)
 	stream<<"              [" <<bounds[1] <<", " <<bounds[3] <<", " <<bounds[5] <<"] " <<endl;
 	
 	vtkIdType nPoly=0,nTri=0,nQuad=0;
-	vtkIdType NV,*Vertices;
-	vtkIdType NumberOfEmptySlots=0;
+	vtkIdType *Vertices;
+	vtkIdType NV, NumberOfEmptySlots=0;
 	for (i=0;i<this->GetNumberOfCells();i++)
 	{
 		if (this->IsFaceActive(i)==1)
 		{
-			this->GetCellPoints(i,NV,Vertices);
+			this->GetFaceVertices(i,NV,Vertices);
 			if (NV==3)
 				nTri++;
 			else
@@ -893,7 +893,7 @@ void vtkSurface::SaveConnectivity(const char * FileName)
 	vtkIdType  i;
 	vtkIdType  v1,v2,v3;
 	std::ofstream OutputFile;
-	OutputFile.open (FileName, ofstream::out | ofstream::trunc);
+	OutputFile.open (FileName, std::ofstream::out | std::ofstream::trunc);
 	for (i=0;i<this->GetNumberOfCells();i++)
 	{
 		this->GetFaceVertices(i,v1,v2,v3);
@@ -1314,22 +1314,19 @@ vtkDoubleArray* vtkSurface::GetTrianglesNormals()
 double vtkSurface::GetFaceArea(vtkIdType Face)
 {
 	int j;
-	vtkCell *Cell;
 	vtkIdType v1,v2,v3;
 	double Area;
 	double Pf1[3],Pf2[3],Pf3[3];
-	int NumberOfVertices;
-
 	Area=0;
-	Cell=this->GetCell(Face);
-	NumberOfVertices=Cell->GetNumberOfPoints();
-	v1=Cell->PointIds->GetId(0);
+	vtkIdType *vertices, NumberOfVertices;
+	this->GetFaceVertices( Face, NumberOfVertices, vertices );
+	v1 = vertices[ 0 ];
 	this->GetPoint(v1,Pf1);
 
 	for (j=0;j<NumberOfVertices-2;j++)
 	{
-		v2=Cell->PointIds->GetId(j+1);
-		v3=Cell->PointIds->GetId(j+2);
+		v2=vertices[ j+1 ];
+		v3=vertices[ j+2 ];
 		this->GetPoint(v2,Pf2);
 		this->GetPoint(v3,Pf3);
 		Area+=vtkTriangle::TriangleArea(Pf1,Pf2,Pf3);
@@ -1384,7 +1381,7 @@ void vtkSurface::GetCellMassProperties(vtkIdType CellId, double &Area, double *B
 	vtkIdType  NumberOfVertices;
 	double Area2;
 
-	this->GetCellPoints(CellId,NumberOfVertices,Pts);
+	this->GetFaceVertices(CellId,NumberOfVertices,Pts);
 
 	Area=0;
 	v1=Pts[0];
@@ -1529,7 +1526,7 @@ void vtkSurface::ComputeQualityHistogram(const char *FileName)
 	}
 
 	std::ofstream OutputFile;
-	OutputFile.open (FileName, ofstream::out | ofstream::trunc);
+	OutputFile.open (FileName, std::ofstream::out | std::ofstream::trunc);
 	for (i=0;i<100;i++)
 	{
 		OutputFile<<Histogram[i]<<endl;
@@ -1586,7 +1583,7 @@ void vtkSurface::WriteInventor(const char *filename)
 {
 
 	std::ofstream File;
-	File.open (filename, ofstream::out | ofstream::trunc);
+	File.open (filename, std::ofstream::out | std::ofstream::trunc);
 	vtkIdType i, v1, v2, v3;
 	double P[3];
 
@@ -1631,7 +1628,7 @@ void vtkSurface::WriteInventor(const char *filename)
 void vtkSurface::WriteSMF(const char *filename)
 {
 	std::ofstream File;
-	File.open (filename, ofstream::out | ofstream::trunc);
+	File.open (filename, std::ofstream::out | std::ofstream::trunc);
 
 	vtkIdType i;
 	vtkIdType nverts=this->GetNumberOfPoints();
@@ -1675,14 +1672,14 @@ void vtkSurface::ComputeSharpVertices(double treshold)
 	double v3[3];
 	double n;
 
-	register vtkIdType i;
-	register vtkIdType s1;
-	register vtkIdType s2;
-	register vtkIdType s3;
-	register vtkIdType f1;
-	register vtkIdType f2;
-	register vtkIdType j;
-	register bool ok;
+	vtkIdType i;
+	vtkIdType s1;
+	vtkIdType s2;
+	vtkIdType s3;
+	vtkIdType f1;
+	vtkIdType f2;
+	vtkIdType j;
+	bool ok;
 
 	vtkPoints *points = this->GetPoints();
 

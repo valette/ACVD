@@ -232,7 +232,7 @@ int main( int argc, char *argv[] ) {
 
 		} else if ( strcmp( key, "-fv" ) == 0 ) {
 
-			ifstream input;
+			std::ifstream input;
 			input.open( value );
 			int id;
 			fixedVertices = vtkIdList::New();
@@ -241,7 +241,7 @@ int main( int argc, char *argv[] ) {
 
 		} else if ( strcmp( key, "-ft" ) == 0 ) {
 
-			ifstream input;
+			std::ifstream input;
 			input.open( value );
 			bool* fixed = new bool[ mesh->GetNumberOfPoints() ];
 			fixedVertices = vtkIdList::New();

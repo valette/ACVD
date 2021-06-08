@@ -181,11 +181,12 @@ void vtkSurfaceClustering<Metric>::SetInput(vtkSurface *Input)
 	if (this->Input)
 		this->Input->UnRegister(this);
 
-	vtkIdType NV, *Vertices;
+	vtkIdType NV;
+	vtkIdType *Vertices;
 	bool trianglesOnly = true;
 	for (vtkIdType i = 0; i < Input->GetNumberOfCells(); i++) {
 		if (Input->IsFaceActive(i)) {
-			Input->GetCellPoints(i, NV, Vertices);
+			Input->GetFaceVertices(i, NV, Vertices);
 			if (NV != 3) {
 				trianglesOnly = false;
 				break;

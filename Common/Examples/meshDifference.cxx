@@ -49,7 +49,7 @@ int main( int argc, char *argv[] )
 
 
 	std::string line;
-	ifstream file( argv[ 1 ] );
+	std::ifstream file( argv[ 1 ] );
 	std::vector<std::string> files;
 
 	while( std::getline( file,line ) ) {

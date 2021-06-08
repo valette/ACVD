@@ -279,6 +279,8 @@ void vtkOOCMetaImageReader::ReadImageParameters ( ) {
 	char pathName[255];
 	char fName[255];
 
+	cout << "FIXME!!! vtkOOCMetaImageREader.cxx" << endl;
+	exit( 1 );/*
 	usePath = vtkmetaio::MET_GetFilePath( FileName, pathName );
 
 	if(usePath)
@@ -290,7 +292,7 @@ void vtkOOCMetaImageReader::ReadImageParameters ( ) {
 		strcpy(fName, MetaImagePtr->ElementDataFileName());
 	}
 	strcpy( FileName, fName );
-	parametersAlreadyRead = true;
+	parametersAlreadyRead = true;*/
 }
 
 // This method returns the largest data that can be generated.
@@ -985,7 +987,7 @@ int vtkOOCMetaImageReader::CanReadFile(const char* fname)
 	}
 
 	// Now check the file content
-	ifstream inputStream;
+	std::ifstream inputStream;
 
 #ifdef __sgi
 	inputStream.open( fname, ios::in );

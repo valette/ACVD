@@ -383,6 +383,7 @@ private:
 	/// Garbage collector for deleted 
 	std::queue<int> EdgesGarbage;
 };
+
 inline void vtkSurfaceBase::SetFace(const vtkIdType& f1,
 									const vtkIdType& v1,const vtkIdType& v2,const vtkIdType& v3)
 {
@@ -443,21 +444,36 @@ inline void vtkSurfaceBase::GetEdgeVertices(const vtkIdType& edge, vtkIdType &v1
 	v2 = this->Vertex2->GetValue(edge);
 }
 
-inline void vtkSurfaceBase::GetFaceVertices(const vtkIdType &face, vtkIdType &v1,
-											vtkIdType &v2, vtkIdType &v3)
+inline void vtkSurfaceBase::GetFaceVertices(const vtkIdType &face, vtkIdType &v1, vtkIdType &v2, vtkIdType &v3)
 {
-	vtkIdType n,*pts;
-	this->Polys->GetCell(
-			this->Cells->GetCellLocation(face),n,pts);
+	vtkIdType n;
+	vtkIdType *pts;
+	this->GetFaceVertices( face, n, pts );
 	v1=pts[0];
 	v2=pts[1];
 	v3=pts[2];
 }
+
+#if ( (VTK_MAJOR_VERSION < 9))
 inline void vtkSurfaceBase::GetFaceVertices(const vtkIdType& face,
 vtkIdType &NumberOfVertices, vtkIdType* &Vertices)
 {
-	this->Polys->GetCell(this->Cells->GetCellLocation(face),NumberOfVertices,Vertices);
+	this->Polys->GetCell( this->Cells->GetCellLocation( face ), NumberOfVertices, Vertices );
 }
+#else
+
+inline void vtkSurfaceBase::GetFaceVertices(const vtkIdType& face,
+vtkIdType &NumberOfVertices, vtkIdType* &Vertices)
+{
+	auto connectivity = this->Polys->GetConnectivityArray64();
+	auto offsets = this->Polys->GetOffsetsArray64();
+	auto offset1 = offsets->GetValue( face );
+	auto offset2 = offsets->GetValue( face + 1 );
+	NumberOfVertices = offset2 - offset1;
+	Vertices = static_cast < vtkIdType *> ( connectivity->GetPointer( offset1 ) );
+}
+
+# endif
 inline void vtkSurfaceBase::GetVertexNeighbourEdges(const vtkIdType& v1,
 vtkIdType &NumberOfEdges, vtkIdType* &Edges)
 {
