@@ -3,9 +3,6 @@ ACVD
 <!---[![Build Status](https://travis-ci.org/valette/ACVD.png)](https://travis-ci.org/valette/ACVD) --> 
 
 
-## VTK 9 version is coming! Current experimental branch here :  [/valette/ACVD/tree/vtk9](https://github.com/valette/ACVD/tree/vtk9) 
-
-
 <p align="center">
   <img src="https://www.creatis.insa-lyon.fr/~valette/public/project/acvd/featured.jpg">
 </p>
@@ -28,8 +25,8 @@ This code is distributed under the CeCILL-B license (BSD-compatible)
 
 ###  Dependencies ###
 * VTK www.vtk.org
-  * Version 6.x and 7.x : use this branch
-  * Version 5.x use the vtk5 branch : https://github.com/valette/ACVD/tree/vtk5
+  * Version above 6.x : use this branch
+  * Version 5.x : use the vtk5 branch : https://github.com/valette/ACVD/tree/vtk5
 * CMAKE www.cmake.org
 
 ###  Simple compilation HowTo under Linux ###
