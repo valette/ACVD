@@ -392,9 +392,9 @@ template < class Metric > void
 					if (Val1 == this->NumberOfClusters)
 					{
 						// I1 is not associated. Give it to the same cluster as I2
-						this->MetricContext.AddItemToCluster(I1,this->Clusters+Val2);
-						this->MetricContext.ComputeClusterCentroid(this->Clusters+Val2);
-						this->MetricContext.ComputeClusterEnergy(this->Clusters+Val2);
+						this->MetricContext.AddItemToCluster(I1,&this->Clusters[Val2]);
+						this->MetricContext.ComputeClusterCentroid(&this->Clusters[Val2]);
+						this->MetricContext.ComputeClusterEnergy(&this->Clusters[Val2]);
 							
 						(*this->ClustersSizes->GetPointer (Val2))++;
 						this->AddItemRingToProcess (I1,Process, Thread);
@@ -404,9 +404,9 @@ template < class Metric > void
 					else if (Val2 ==this->NumberOfClusters)
 					{
 						// I2 is not associated. Give it to the same cluster as I1
-						this->MetricContext.AddItemToCluster(I2,this->Clusters+Val1);
-						this->MetricContext.ComputeClusterCentroid(this->Clusters+Val1);
-						this->MetricContext.ComputeClusterEnergy(this->Clusters+Val1);
+						this->MetricContext.AddItemToCluster(I2,&this->Clusters[Val1]);
+						this->MetricContext.ComputeClusterCentroid(&this->Clusters[Val1]);
+						this->MetricContext.ComputeClusterEnergy(&this->Clusters[Val1]);
 						(*this->ClustersSizes->GetPointer (Val1))++;
 						this->AddItemRingToProcess (I2,Process,Thread);
 						this->Clustering->SetValue (I2,Val1);
@@ -424,8 +424,8 @@ template < class Metric > void
 						    &&((this->IsClusterFreezed->GetValue(Val1)==0)
 								&&(this->IsClusterFreezed->GetValue(Val2)==0)))
 						{
-							Cluster1 = this->Clusters + Val1;
-							Cluster2 = this->Clusters + Val2;
+							Cluster1 = &this->Clusters[Val1];
+							Cluster2 = &this->Clusters[Val2];
 
 							Size1 = this->ClustersSizes->GetPointer (Val1);
 							Size2 = this->ClustersSizes->GetPointer (Val2);
@@ -604,9 +604,9 @@ template < class Metric > void
 					if (Val1 == this->NumberOfClusters)
 					{
 						// I1 is not associated. Give it to the same cluster as I2
-						this->MetricContext.AddItemToCluster(I1,this->Clusters+Val2);
-						this->MetricContext.ComputeClusterCentroid(this->Clusters+Val2);
-						this->MetricContext.ComputeClusterEnergy(this->Clusters+Val2);
+						this->MetricContext.AddItemToCluster(I1,&this->Clusters[Val2]);
+						this->MetricContext.ComputeClusterCentroid(&this->Clusters[Val2]);
+						this->MetricContext.ComputeClusterEnergy(&this->Clusters[Val2]);
 
 						(*this->ClustersSizes->GetPointer (Val2))++;
 						this->AddItemRingToProcess (I1,Process, Thread);
@@ -616,9 +616,9 @@ template < class Metric > void
 					else if (Val2 ==this->NumberOfClusters)
 					{
 						// I2 is not associated. Give it to the same cluster as I1
-						this->MetricContext.AddItemToCluster(I2,this->Clusters+Val1);
-						this->MetricContext.ComputeClusterCentroid(this->Clusters+Val1);
-						this->MetricContext.ComputeClusterEnergy(this->Clusters+Val1);
+						this->MetricContext.AddItemToCluster(I2,&this->Clusters[Val1]);
+						this->MetricContext.ComputeClusterCentroid(&this->Clusters[Val1]);
+						this->MetricContext.ComputeClusterEnergy(&this->Clusters[Val1]);
 						(*this->ClustersSizes->GetPointer (Val1))++;
 						this->AddItemRingToProcess (I2,Process,Thread);
 						this->Clustering->SetValue (I2,Val1);
@@ -636,8 +636,8 @@ template < class Metric > void
 						    &&((this->IsClusterFreezed->GetValue(Val1)==0)
 								&&(this->IsClusterFreezed->GetValue(Val2)==0)))
 						{
-							Cluster1=this->Clusters+Val1;
-							Cluster2=this->Clusters+Val2;
+							Cluster1=&this->Clusters[Val1];
+							Cluster2=&this->Clusters[Val2];
 
 							Size1=this->ClustersSizes->GetPointer(Val1);
 							Size2=this->ClustersSizes->GetPointer(Val2);
