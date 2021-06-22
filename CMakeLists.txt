@@ -32,7 +32,11 @@ endforeach()
 
 # find_package
 find_package(VTK REQUIRED NO_MODULE)
-include(${VTK_USE_FILE})
+if(VTK_USE_FILE)
+  include(${VTK_USE_FILE})
+else()
+  include_directories(${VTK_INCLUDE_DIRS})
+endif()
 
 option(BUILD_SHARED_LIBS "Build vtkSurface with shared libraries." ON)
 option(BUILD_DOCUMENTATION "Build the html documentation with doxygen." OFF)
