@@ -49,3 +49,7 @@ additionnally, when running ACVD, a file output_1.ply is also written. It is the
 note that to enforce a manifold output mesh, such as explained in [3], you need to use the -m 1 option.
 
 comments, suggestions : https://github.com/valette/ACVD/issues
+
+### Python port
+
+A part of ACVD has been ported to python here: https://github.com/pyvista/pyacvd
