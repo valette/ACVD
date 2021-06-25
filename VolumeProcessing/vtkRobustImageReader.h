@@ -6,11 +6,13 @@
 #include <vtkImageData.h>
 #include <vtkImageFlip.h>
 #include <vtkImageReader2Factory.h>
+#include <vtkImageShiftScale.h>
 #include <vtkMatrix4x4.h>
 #include <vtkMetaImageReader.h>
 #include <vtkNIFTIImageReader.h>
 #include <vtkObjectFactory.h>
 
+// v2 : shift and scale values read by nifti reader when needed
 // v1
 
 class vtkRobustImageReader : public vtkObject 
@@ -128,6 +130,27 @@ public :
             Origin[i] = Origin[i] - Spacing[i] * ( Dimensions[i] - 1);
 			Output->SetOrigin(Origin);
         }
+
+		if (strcmp (Reader->GetClassName(), "vtkNIFTIImageReader") == 0) {
+		    vtkNIFTIImageReader *niftiReader = (vtkNIFTIImageReader *) Reader;
+
+			double slope = niftiReader->GetRescaleSlope();
+			double intercept = niftiReader->GetRescaleIntercept();
+
+			if ( ( slope != 1.0 ) || ( intercept != 0 ) ) {
+
+				vtkImageShiftScale *shiftScale = vtkImageShiftScale::New();
+				shiftScale->SetShift( intercept );
+				shiftScale->SetScale( slope );
+				shiftScale->SetInputData( Output );
+				shiftScale->Update();
+				Output = shiftScale->GetOutput();
+				std::cout << "Warning : RobustReader shifting nifti volume values" << std::endl;
+
+			}
+
+		}
+
 	}
 
 	vtkGetObjectMacro(Output, vtkImageData)
