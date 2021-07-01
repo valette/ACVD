@@ -14,6 +14,8 @@ PURPOSE.  See the above copyright notice for more information.
 =========================================================================*/
 #include "vtkOOCMetaImageReader.h"
 
+#include <cmath>
+
 #include <vtkByteSwap.h>
 #include <vtkDataArray.h>
 #include <vtkImageData.h>
