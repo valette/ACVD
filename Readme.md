@@ -52,7 +52,7 @@ comments, suggestions : https://github.com/valette/ACVD/issues
 
 ### Examples
 
-#### Remeshing the stanford bunny to 3000 vertices : ####
+#### Remeshing the Stanford bunny to 3000 vertices : ####
 	wget https://github.com/alecjacobson/common-3d-test-models/raw/master/data/stanford-bunny.obj
 	bin/ACVD stanford-bunny.obj 3000 0
 
