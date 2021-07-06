@@ -64,6 +64,10 @@ taking into account curvature:
 	wget https://github.com/alecjacobson/common-3d-test-models/raw/master/data/fandisk.obj
 	bin/ACVDQ fandisk.obj 3000 0
 
+#### Remeshing the horse to 1000 vertices with anisotropic metric: ####
+	wget https://github.com/alecjacobson/common-3d-test-models/raw/master/data/horse.obj
+	bin/AnisotropicRemeshingQ horse.obj 1000 1.5
+
 for all the examples above, interactive visualization of the processing can be triggered by adding "-d 2" to the command lines
 
 ### Python port
