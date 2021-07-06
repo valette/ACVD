@@ -33,7 +33,7 @@
 #ifndef _VTKUNIFORMCLUSTERING_H_
 #define _VTKUNIFORMCLUSTERING_H_
 
-#include <algorithm>
+#include <random>
 #include <vector>
 #include <vtkCommand.h>
 #include <vtkMath.h>
@@ -1192,7 +1192,12 @@ void vtkUniformClustering<Metric,EdgeType>::ComputeInitialRandomSampling(
 
 	// shuffle the Ids ordering
 	for	( int i = 0; i < NumberOfRemainingItems; i++ ) Items[ i ]=i;
-	std::random_shuffle( Items, Items + NumberOfRemainingItems );
+	std::mt19937 rng;
+	rng.seed( 0 );
+	int n = this->GetNumberOfItems();
+	for ( int i = n - 1; i > 0; --i ) {
+		std::swap( Items[ i ], Items[ rng() % n ] );
+	}
 
 	// compute total weight
 	double SWeights = 0;
@@ -1257,7 +1262,7 @@ void vtkUniformClustering<Metric,EdgeType>::ComputeInitialRandomSampling(
 	for ( vtkIdType i = 0; i < this->NumberOfClusters; i++ )
 		this->ClustersSizes->SetValue( i, 0 );
 
-	// shuffle the Ids ordering
+	// compute sizes
 	for	( int i = 0; i < this->GetNumberOfItems(); i++ ) {
 
 		Items[ i ] = i;
@@ -1267,10 +1272,12 @@ void vtkUniformClustering<Metric,EdgeType>::ComputeInitialRandomSampling(
 
 	}
 
-	std::random_shuffle( Items, Items + this->GetNumberOfItems() );
-	FirstItem = 0;
+	for ( int i = n - 1; i > 0; --i ) {
+		std::swap( Items[ i ], Items[ rng() % n ] );
+	}
 
-cout << "NumberOfRemainingRegions : " << NumberOfRemainingRegions << endl;
+	FirstItem = 0;
+	cout << "NumberOfRemainingRegions : " << NumberOfRemainingRegions << endl;
 
 	while( NumberOfRemainingRegions ) {
 
