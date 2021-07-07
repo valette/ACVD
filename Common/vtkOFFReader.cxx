@@ -75,8 +75,6 @@ vtkOFFReader::vtkOFFReader()
   this->FileName = NULL;
 
   this->SetInfoOnCellsOff();
-  this->NumberOfPoints = 0;
-  this->NumberOfCells  = 0;
 }
 
 //----------------------------------------------------------------------------
@@ -89,22 +87,15 @@ vtkOFFReader::~vtkOFFReader()
     }
 }
 
-//----------------------------------------------------------------------------
-// 
-void vtkOFFReader::ExecuteInformation()
+int vtkOFFReader::RequestData(vtkInformation* vtkNotUsed(request),
+  vtkInformationVector** vtkNotUsed(inputVector), vtkInformationVector* outputVector)
 {
-  vtkPolyData *output = this->GetOutput();
+	// get the info object
+	vtkInformation* outInfo = outputVector->GetInformationObject(0);
 
-  //output->SetMaximumNumberOfPieces(-1); vtk6
-}
-
-
-//----------------------------------------------------------------------------
-// 
-void vtkOFFReader::Execute()
-{
+	// get the output
+	vtkPolyData* output_mesh = vtkPolyData::SafeDownCast(outInfo->Get(vtkDataObject::DATA_OBJECT()));
 	vtkPoints *temp_points=vtkPoints::New();
-	vtkPolyData *output_mesh=this->GetOutput();
 	vtkCellArray *temp_cells=vtkCellArray::New();
 
 	FILE *stream;
@@ -119,7 +110,9 @@ void vtkOFFReader::Execute()
 
 	// this variable is only used to avoid compilation warnings...
 	int UnusedResult;
-	
+	int NumberOfPoints;
+	int NumberOfCells;
+
 	float tampon; 
 
 	// ouverture pas propre
@@ -132,30 +125,30 @@ void vtkOFFReader::Execute()
 
 		// recuperation de la ligne d info : nb de points
 		UnusedResult=fscanf( stream, "%d", &buffer);
-		this->NumberOfPoints = buffer;
+		NumberOfPoints = buffer;
 
 #if ALEX_DEBUG 
 		cout << "nb de points " << buffer << endl;
 #endif
 
 		// allocation memoire pour les points aue nous allons lire
-		temp_points->Allocate(this->NumberOfPoints);
+		temp_points->Allocate(NumberOfPoints);
 
 		// recuperation de la ligne d info : nb de cellules
 		UnusedResult=fscanf( stream, "%d", &buffer);
-		this->NumberOfCells=buffer;
+		NumberOfCells=buffer;
 #if ALEX_DEBUG
 		cout << "nb of cellules " << buffer << endl;
 #endif
 
 		// allocation memoire pour les cellules que nous allons lire
-		temp_cells->Allocate(this->NumberOfCells);
+		temp_cells->Allocate(NumberOfCells);
 
 		// lecture de la ligne d info : nombre d'arretes
 		UnusedResult=fscanf( stream, "%d", &buffer );
 
 		// boucle sur les points : lecture des coordonnees
-		for (i=0;i<this->NumberOfPoints;i++)
+		for (i=0;i<NumberOfPoints;i++)
 		{
 
 #if ALEX_DEBUG			
@@ -195,7 +188,7 @@ void vtkOFFReader::Execute()
 		}
 
 		// boucle sur les cellules : lecture des coordonnees 
-		for (i=0;i<this->NumberOfCells;i++)
+		for (i=0;i<NumberOfCells;i++)
 		{
 			// lecture du nombre de points de la cellule
 			UnusedResult=fscanf( stream, "%Ld", &CellType);
@@ -232,8 +225,8 @@ void vtkOFFReader::Execute()
 
 		}
 	
-	// fermeture du fichier
-	fclose( stream );
+		// fermeture du fichier
+		fclose( stream );
 	
 	}
 	
@@ -244,6 +237,7 @@ void vtkOFFReader::Execute()
 	// copy de la liste de cellules dans la structure et desallocation de la memoire
 	output_mesh->SetPolys(temp_cells);
 	temp_cells->Delete();
+	return 1;
 }
 
 

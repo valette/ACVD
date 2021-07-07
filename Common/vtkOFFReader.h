@@ -45,23 +45,19 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef __vtkOFFReader_h
 #define __vtkOFFReader_h
 
-#include <vtkPolyDataAlgorithm.h>
-#include <vtkPolyDataMapper.h>
+#include <vtkAbstractPolyDataReader.h>
+#include <vtkInformation.h>
+#include <vtkInformationVector.h>
 #include <vtkPolyData.h>
 
 #define VTK_FILE_BYTE_ORDER_BIG_ENDIAN 0
 #define VTK_FILE_BYTE_ORDER_LITTLE_ENDIAN 1
 
-class VTK_EXPORT vtkOFFReader : public vtkPolyDataAlgorithm
+class VTK_EXPORT vtkOFFReader : public vtkAbstractPolyDataReader
 {
 public:
   static vtkOFFReader *New();
-  vtkTypeMacro(vtkOFFReader,vtkPolyDataAlgorithm);
-
-  // Description:
-  // Specify file name.
-  vtkSetStringMacro(FileName);
-  vtkGetStringMacro(FileName);
+  vtkTypeMacro(vtkOFFReader,vtkAbstractPolyDataReader);
 
   void SetInfoOnCellsOn() {this->InfoOnCells = 1;};
   void SetInfoOnCellsOff() {this->InfoOnCells = 0;};
@@ -70,14 +66,9 @@ protected:
   vtkOFFReader();
   ~vtkOFFReader();
 
-  char *FileName;
   int SwapBytes;
+  int RequestData(vtkInformation* vtkNotUsed(request), vtkInformationVector** vtkNotUsed(inputVector), vtkInformationVector* outputVector);
 
-  int NumberOfPoints;
-  int NumberOfCells;
-  
-  void ExecuteInformation();
-  void Execute();
 
 private:
   vtkOFFReader(const vtkOFFReader&);  // Not implemented.

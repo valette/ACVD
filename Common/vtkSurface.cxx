@@ -25,6 +25,7 @@
 #include <vtkObjectFactory.h>
 #include <vtkMath.h>
 #include <vtkDoubleArray.h>
+#include <vtkMapper.h>
 #include <vtkVRMLImporter.h>
 #include <vtkPLYReader.h>
 #include <vtkPolyDataReader.h>
