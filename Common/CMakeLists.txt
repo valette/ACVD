@@ -14,7 +14,6 @@ add_library(vtkSurface
  vtkVolumeProperties.cxx
  vtkNeighbourhoodComputation.cxx
  vtkCurvatureMeasure.cxx
- vtkMyMinimalStandardRandomSequence.cxx
 #  vtkJSWriter.cxx
  )
 target_link_libraries(vtkSurface ${VTK_LIBRARIES})
