@@ -185,7 +185,7 @@
 					"prefix": "-n "
 				},
 				{
-					"name": "simlification_method",
+					"name": "simplification_method",
 					"type": "int",
 					"min": "0",
 					"max": "1",
