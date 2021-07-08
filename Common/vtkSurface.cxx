@@ -45,7 +45,6 @@
 
 #include "vtkSurface.h"
 #include "vtkOFFReader.h"
-#include "vtkSMFReader.h"
 #include "vtkVolumeProperties.h"
 
 // this variable allows the creation of render windows when cleaning a mesh.
@@ -2100,18 +2099,6 @@ void vtkSurface::CreateFromFile(const char *FileName)
 		return;
 	}
 
-	ch='.';
-	strcpy (fin,".smf");
-	terminaison = strstr(filename,fin);
-	if (terminaison!=NULL)
-	{
-		vtkSMFReader *Reader = vtkSMFReader::New();
-		Reader->SetFileName(FileName);
-		Reader->Update();
-		this->CreateFromPolyData(Reader->GetOutput());
-		Reader->Delete();
-		return;
-	}
 }
 
 // ****************************************************************

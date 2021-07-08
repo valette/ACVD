@@ -59,7 +59,6 @@
 
 #include "RenderWindow.h"
 #include "vtkSurfaceIterators.h"
-#include "vtkSMFWriter.h"
 
 #define _RANDOM_SEED 1000
 

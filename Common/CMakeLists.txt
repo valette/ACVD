@@ -8,7 +8,6 @@ add_library(vtkSurface
  vtkOFFWriter.cxx
  vtkQuadricTools.cxx
  vtkRandomTriangulation.cxx
- vtkSMFReader.cxx
  vtkSurface.cxx
  vtkSurfaceBase.cxx
  vtkVolumeProperties.cxx
