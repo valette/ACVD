@@ -33,7 +33,6 @@
 #ifndef _VTKUNIFORMCLUSTERING_H_
 #define _VTKUNIFORMCLUSTERING_H_
 
-#include <algorithm>
 #include <vector>
 #include <random>
 #include <vtkCommand.h>
@@ -1260,7 +1259,7 @@ void vtkUniformClustering<Metric,EdgeType>::ComputeInitialRandomSampling(
 	for ( vtkIdType i = 0; i < this->NumberOfClusters; i++ )
 		this->ClustersSizes->SetValue( i, 0 );
 
-	// shuffle the Ids ordering
+	// compute sizes
 	for	( int i = 0; i < this->GetNumberOfItems(); i++ ) {
 
 		Items[ i ] = i;
@@ -1271,9 +1270,9 @@ void vtkUniformClustering<Metric,EdgeType>::ComputeInitialRandomSampling(
 	}
 
 	std::shuffle( Items, Items + this->GetNumberOfItems(), g );
-	FirstItem = 0;
 
-cout << "NumberOfRemainingRegions : " << NumberOfRemainingRegions << endl;
+	FirstItem = 0;
+	cout << "NumberOfRemainingRegions : " << NumberOfRemainingRegions << endl;
 
 	while( NumberOfRemainingRegions ) {
 

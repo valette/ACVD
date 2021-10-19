@@ -8,13 +8,11 @@ add_library(vtkSurface
  vtkOFFWriter.cxx
  vtkQuadricTools.cxx
  vtkRandomTriangulation.cxx
- vtkSMFReader.cxx
  vtkSurface.cxx
  vtkSurfaceBase.cxx
  vtkVolumeProperties.cxx
  vtkNeighbourhoodComputation.cxx
  vtkCurvatureMeasure.cxx
- vtkMyMinimalStandardRandomSequence.cxx
 #  vtkJSWriter.cxx
  )
 target_link_libraries(vtkSurface ${VTK_LIBRARIES})

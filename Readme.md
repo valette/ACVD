@@ -50,6 +50,26 @@ note that to enforce a manifold output mesh, such as explained in [3], you need 
 
 comments, suggestions : https://github.com/valette/ACVD/issues
 
+### Examples
+
+#### Remeshing the Stanford bunny to 3000 vertices : ####
+	wget https://github.com/alecjacobson/common-3d-test-models/raw/master/data/stanford-bunny.obj
+	bin/ACVD stanford-bunny.obj 3000 0
+
+taking into account curvature:
+
+	bin/ACVD stanford-bunny.obj 3000 1.5
+
+#### Remeshing the fandisk to 3000 vertices, taking into account sharp features with ACVDQ: ####
+	wget https://github.com/alecjacobson/common-3d-test-models/raw/master/data/fandisk.obj
+	bin/ACVDQ fandisk.obj 3000 0
+
+#### Remeshing the horse to 1000 vertices with anisotropic metric: ####
+	wget https://github.com/alecjacobson/common-3d-test-models/raw/master/data/horse.obj
+	bin/AnisotropicRemeshingQ horse.obj 1000 1.5
+
+for all the examples above, interactive visualization of the processing can be triggered by adding "-d 2" to the command lines
+
 ### Python port
 
 A part of ACVD has been ported to python here: https://github.com/pyvista/pyacvd
