@@ -33,7 +33,7 @@
 #include <vtkObjectFactory.h>
 #include <vtkDataArrayCollection.h>
 #include <vtkFloatArray.h>
-#include <vtkCriticalSection.h>
+#include <vtkSimpleCriticalSection.h>
 #include "vtkSurface.h"
 #include "RenderWindow.h"
 class VTK_EXPORT vtkCurvatureMeasure : public vtkObject

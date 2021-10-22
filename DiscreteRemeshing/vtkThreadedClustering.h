@@ -37,7 +37,7 @@ Auteur:    Sebastien VALETTE
 #include <vtkTimerLog.h>
 #include <vtkMultiThreader.h>
 #include <vtkPriorityQueue.h>
-#include <vtkCriticalSection.h>
+#include <vtkSimpleCriticalSection.h>
 
 #include "vtkUniformClustering.h"
 
