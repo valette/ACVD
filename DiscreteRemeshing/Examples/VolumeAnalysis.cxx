@@ -26,7 +26,7 @@ Auteur:   Sebastien Valette
 #include <vtkImageResample.h>
 #include <vtkImageThreshold.h>
 #include <vtkMultiThreader.h>
-#include <vtkMutexLock.h>
+#include <mutex>
 #include <vtkPLYWriter.h>
 #include <vtkPointData.h>
 #include <vtkPolyDataWriter.h>
@@ -49,7 +49,7 @@ class MyThreaderHelperClass
 public:
     vtkImageData *Image;
     vtkIdList *Labels;
-    vtkMutexLock *Lock;
+    std::mutex *Lock;
     int MaximumNumberOfVertices;
 	std::vector < std::vector<double> > ProcessingTimes;
 	std::vector < std::vector<double> > MaximumTimes;
@@ -90,7 +90,7 @@ public:
 		this->ForceManifold=0;
 		this->FillHoles=0;
 		this->Anisotropy=0;
-		this->Lock=vtkMutexLock::New();
+		this->Lock=new std::mutex;
 		this->MaximumNumberOfVertices=(1<<15) -1;
 		this->SimplificationType=0;
 		this->NumberOfSmoothingSteps=0;
@@ -101,7 +101,7 @@ public:
 
 	~MyThreaderHelperClass()
 	{
-		this->Lock->Delete();
+		delete this->Lock;
 	}
 };
 
@@ -163,11 +163,11 @@ VTK_THREAD_RETURN_TYPE ThreadedSurfaceExtraction (void *arg)
 			ToClean->CreateFromPolyData(Mesh);
 			vtkSurface *Cleaned = ToClean->GetBiggestConnectedComponent();
 			Cleaned->EnsureOutwardsNormals();
-			Helper->Lock->Lock();
+			Helper->Lock->lock();
 			Mesh->ShallowCopy(Cleaned);
 			Cleaned->Delete();
 			ToClean->Delete();
-			Helper->Lock->Unlock();
+			Helper->Lock->unlock();
 			/*
 			vtkPolyDataConnectivityFilter *Connectivity=vtkPolyDataConnectivityFilter::New();
 			Connectivity->SetExtractionModeToLargestRegion();
@@ -293,18 +293,18 @@ VTK_THREAD_RETURN_TYPE ThreadedSurfaceExtraction (void *arg)
 					AnisoRemesh->SetNumberOfClusters(WantedNumberOfVertices);
 					AnisoRemesh->SetConsoleOutput(0);
 					AnisoRemesh->Remesh();
-					Helper->Lock->Lock();
+					Helper->Lock->lock();
 					Mesh->ShallowCopy(AnisoRemesh->GetOutput());
 					Remesh->Delete();
 					AnisoRemesh->Delete();
 					Mesh2->Delete();
-					Helper->Lock->Unlock();
+					Helper->Lock->unlock();
 				} else {
-					Helper->Lock->Lock();
+					Helper->Lock->lock();
 					Mesh->ShallowCopy(Remesh->GetOutput());
 					Remesh->Delete();
 					Mesh2->Delete();
-					Helper->Lock->Unlock();
+					Helper->Lock->unlock();
 				}
 			}
 			Timer->StopTimer();
@@ -321,9 +321,9 @@ VTK_THREAD_RETURN_TYPE ThreadedSurfaceExtraction (void *arg)
 			Smoother->SetNumberOfIterations(Helper->NumberOfSmoothingSteps);
 			Smoother->Update();
 			Mesh->ShallowCopy(Smoother->GetOutput());
-			Helper->Lock->Lock();
+			Helper->Lock->lock();
 			Smoother->Delete();
-			Helper->Lock->Unlock();
+			Helper->Lock->unlock();
 		}
 
 		Writer->SetInputData(Mesh);
@@ -331,9 +331,9 @@ VTK_THREAD_RETURN_TYPE ThreadedSurfaceExtraction (void *arg)
 		Writer->Write();
 		Timer->StopTimer();
 		
-		Helper->Lock->Lock();
+		Helper->Lock->lock();
 		cout<< "Label " << Level << " done"<<endl;
-		Helper->Lock->Unlock();
+		Helper->Lock->unlock();
 
 		Helper->ProcessingTimes[MyId][4]+=Timer->GetElapsedTime();
 		if (Helper->MaximumTimes[MyId][4]<Timer->GetElapsedTime())
@@ -345,13 +345,13 @@ VTK_THREAD_RETURN_TYPE ThreadedSurfaceExtraction (void *arg)
 			Helper->MaximumTimes[MyId][5]=GlobalTime;		
 	}
 
-	Helper->Lock->Lock();
+	Helper->Lock->lock();
 	Contour->Delete();
 	Writer->Delete();
 	Image->Delete();
 	Timer->Delete();
 	cout<< "Thread " << MyId << " done"<<endl;
-	Helper->Lock->Unlock();
+	Helper->Lock->unlock();
 	return (VTK_THREAD_RETURN_VALUE);
 }
 

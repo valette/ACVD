@@ -37,13 +37,13 @@ Auteur:    Sebastien VALETTE
 #include <vtkTimerLog.h>
 #include <vtkMultiThreader.h>
 #include <vtkPriorityQueue.h>
-#include <vtkSimpleCriticalSection.h>
+#include <mutex>
 
 #include "vtkUniformClustering.h"
 
 
 // define our derived class, with TryLock() method
-class VTK_EXPORT vtkMySimpleCriticalSection : public vtkSimpleCriticalSection
+class VTK_EXPORT vtkMySimpleCriticalSection : public std::mutex
 {
 public:
 	static vtkMySimpleCriticalSection *New()
@@ -53,16 +53,16 @@ public:
 
 	// Description:
 	// Unlock the vtkCriticalSection
-	int TryLock()
-	{
-		#ifdef VTK_USE_PTHREADS
-		return pthread_mutex_trylock( &this->CritSec);
-		#else
-		return 0;
-		#endif
+	// int TryLock()
+	// {
+	// 	#ifdef VTK_USE_PTHREADS
+	// 	return pthread_mutex_trylock( &this->CritSec);
+	// 	#else
+	// 	return 0;
+	// 	#endif
 		
-		//// TODO : other architectures (Win32 etc...)
-	};
+	// 	//// TODO : other architectures (Win32 etc...)
+	// };
 
 	void Delete() {delete this;};
 	vtkMySimpleCriticalSection() {};
@@ -214,7 +214,7 @@ protected:
 
 	// Context used to allocate processes in the pool
 	// **********************************************
-	vtkSimpleCriticalSection *PoolAllocationLock,*PoolAllocationLock2;
+	std::mutex *PoolAllocationLock,*PoolAllocationLock2;
 	vtkPriorityQueue *PoolQueue1,*PoolQueue2;
 
 	// The push and pop queues used to track the edges laying between different clusters
@@ -286,9 +286,9 @@ template < class Metric >	VTK_THREAD_RETURN_TYPE vtkThreadedClustering
 
 	while (1)
 	{
-		Clustering->PoolAllocationLock->Lock();
+		Clustering->PoolAllocationLock->lock();
 		int Process=Clustering->PoolQueue1->Pop();
-		Clustering->PoolAllocationLock->Unlock();
+		Clustering->PoolAllocationLock->unlock();
 				
 		if ((Process<0))
 			break;
@@ -301,9 +301,9 @@ template < class Metric >	VTK_THREAD_RETURN_TYPE vtkThreadedClustering
 		else
 			Clustering->ExecuteProcessWithDistances (Process,MyId);
 		Time = Clustering->Timer->GetUniversalTime ()-Time;
-		Clustering->PoolAllocationLock2->Lock();
+		Clustering->PoolAllocationLock2->lock();
 		Clustering->PoolQueue2->Insert (-Time,Process);
-		Clustering->PoolAllocationLock2->Unlock();
+		Clustering->PoolAllocationLock2->unlock();
 	}
 
 	Clustering->StopTimes[MyId] = Clustering->Timer->GetUniversalTime ();
@@ -352,37 +352,37 @@ template < class Metric > void
 					if (Val1<Val2)
 					{
 						#ifdef VTK_USE_PTHREADS
-						if (this->ClustersLocks[Val1]->TryLock()!=0)
+						if (this->ClustersLocks[Val1]->try_lock()!=0)
 						{
 							this->NumberOfLockingCollisions[Thread]++;
-							this->ClustersLocks[Val1]->Lock();
+							this->ClustersLocks[Val1]->lock();
 						}
-						if (this->ClustersLocks[Val2]->TryLock()!=0)
+						if (this->ClustersLocks[Val2]->try_lock()!=0)
 						{
 							this->NumberOfLockingCollisions[Thread]++;
-							this->ClustersLocks[Val2]->Lock();
+							this->ClustersLocks[Val2]->lock();
 						}
 						#else
-						this->ClustersLocks[Val1]->Lock();
-						this->ClustersLocks[Val2]->Lock();
+						this->ClustersLocks[Val1]->lock();
+						this->ClustersLocks[Val2]->lock();
 						#endif					
 					}
 					else
 					{
 						#ifdef VTK_USE_PTHREADS
-						if (this->ClustersLocks[Val2]->TryLock()!=0)
+						if (this->ClustersLocks[Val2]->try_lock()!=0)
 						{
 							this->NumberOfLockingCollisions[Thread]++;
-							this->ClustersLocks[Val2]->Lock();
+							this->ClustersLocks[Val2]->lock();
 						}
-						if (this->ClustersLocks[Val1]->TryLock()!=0)
+						if (this->ClustersLocks[Val1]->try_lock()!=0)
 						{
 							this->NumberOfLockingCollisions[Thread]++;
-							this->ClustersLocks[Val1]->Lock();
+							this->ClustersLocks[Val1]->lock();
 						}
 						#else
-						this->ClustersLocks[Val2]->Lock();
-						this->ClustersLocks[Val1]->Lock();
+						this->ClustersLocks[Val2]->lock();
+						this->ClustersLocks[Val1]->lock();
 						#endif					
 					}
 
@@ -521,8 +521,8 @@ template < class Metric > void
 					}
 #ifdef THREADSAFECLUSTERING
 				// release the lock on the clusters
-				this->ClustersLocks[Val1]->Unlock();
-				this->ClustersLocks[Val2]->Unlock();
+				this->ClustersLocks[Val1]->unlock();
+				this->ClustersLocks[Val2]->unlock();
 #endif	
 				}
 			}
@@ -564,37 +564,37 @@ template < class Metric > void
 					if (Val1<Val2)
 					{
 						#ifdef VTK_USE_PTHREADS
-						if (this->ClustersLocks[Val1]->TryLock()!=0)
+						if (this->ClustersLocks[Val1]->try_lock()!=0)
 						{
 							this->NumberOfLockingCollisions[Thread]++;
-							this->ClustersLocks[Val1]->Lock();
+							this->ClustersLocks[Val1]->lock();
 						}
-						if (this->ClustersLocks[Val2]->TryLock()!=0)
+						if (this->ClustersLocks[Val2]->try_lock()!=0)
 						{
 							this->NumberOfLockingCollisions[Thread]++;
-							this->ClustersLocks[Val2]->Lock();
+							this->ClustersLocks[Val2]->lock();
 						}
 						#else
-						this->ClustersLocks[Val1]->Lock();
-						this->ClustersLocks[Val2]->Lock();
+						this->ClustersLocks[Val1]->lock();
+						this->ClustersLocks[Val2]->lock();
 						#endif
 					}
 					else
 					{
 						#ifdef VTK_USE_PTHREADS
-						if (this->ClustersLocks[Val2]->TryLock()!=0)
+						if (this->ClustersLocks[Val2]->try_lock()!=0)
 						{
 							this->NumberOfLockingCollisions[Thread]++;
-							this->ClustersLocks[Val2]->Lock();
+							this->ClustersLocks[Val2]->lock();
 						}
-						if (this->ClustersLocks[Val1]->TryLock()!=0)
+						if (this->ClustersLocks[Val1]->try_lock()!=0)
 						{
 							this->NumberOfLockingCollisions[Thread]++;
-							this->ClustersLocks[Val1]->Lock();
+							this->ClustersLocks[Val1]->lock();
 						}
 						#else
-						this->ClustersLocks[Val2]->Lock();
-						this->ClustersLocks[Val1]->Lock();
+						this->ClustersLocks[Val2]->lock();
+						this->ClustersLocks[Val1]->lock();
 						#endif
 					}
 
@@ -700,8 +700,8 @@ template < class Metric > void
 					}
 #ifdef THREADSAFECLUSTERING
 				// release the lock on the clusters
-				this->ClustersLocks[Val1]->Unlock();
-				this->ClustersLocks[Val2]->Unlock();
+				this->ClustersLocks[Val1]->unlock();
+				this->ClustersLocks[Val2]->unlock();
 #endif
 				}
 			}
@@ -1060,8 +1060,8 @@ template < class Metric >
 	this->DisplayThreadsTimingsFlag = 0;
 
 	this->Timer = vtkTimerLog::New ();
-	this->PoolAllocationLock = new vtkSimpleCriticalSection;
-	this->PoolAllocationLock2 = new vtkSimpleCriticalSection;
+	this->PoolAllocationLock = new std::mutex;
+	this->PoolAllocationLock2 = new std::mutex;
 	this->EdgesProcess = 0;
 
 #ifdef THREADSAFECLUSTERING

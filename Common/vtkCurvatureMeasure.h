@@ -33,7 +33,7 @@
 #include <vtkObjectFactory.h>
 #include <vtkDataArrayCollection.h>
 #include <vtkFloatArray.h>
-#include <vtkSimpleCriticalSection.h>
+#include <mutex>
 #include "vtkSurface.h"
 #include "RenderWindow.h"
 class VTK_EXPORT vtkCurvatureMeasure : public vtkObject
@@ -91,7 +91,7 @@ protected:
 
 	// This Mutex is used for the gathering of statistics for the curvature measure
 	// Statistics are the number of matrices with bad conditionment and the number of cells with too small neighbourhood
-	vtkSimpleCriticalSection *StatisticsLock;
+	std::mutex *StatisticsLock;
 	int NumberOfBadMatrices;
 	int NumberOfCellsWithSmallNeighbourhood;
 

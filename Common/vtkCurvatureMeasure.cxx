@@ -702,11 +702,11 @@ vtkCurvatureMeasure::ThreadedCurvatureComputation (void *arg)
 				std::flush;
 		}
 	}
-	CurvatureMeasure->StatisticsLock->Lock ();
+	CurvatureMeasure->StatisticsLock->lock ();
 	CurvatureMeasure->NumberOfBadMatrices += Measure->NumberOfBadMatrices;
 	CurvatureMeasure->NumberOfCellsWithSmallNeighbourhood +=
 		Measure->NumberOfCellsWithSmallNeighbourhood;
-	CurvatureMeasure->StatisticsLock->Unlock ();
+	CurvatureMeasure->StatisticsLock->unlock ();
 	FList->Delete ();
 	Neighbourhood->Delete ();
 	Measure->Delete ();
@@ -1185,7 +1185,7 @@ vtkCurvatureMeasure::vtkCurvatureMeasure ()
 	this->ComputeCurvatureInfoFlag = 1;
 	this->CellsCurvatureInfo = 0;
 	
-	this->StatisticsLock = new vtkSimpleCriticalSection();
+	this->StatisticsLock = new std::mutex();
 	this->Timer = vtkTimerLog::New ();
 	this->NumberOfBadMatrices = 0;
 	this->NumberOfCellsWithSmallNeighbourhood = 0;	
