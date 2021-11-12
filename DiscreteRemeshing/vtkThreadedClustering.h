@@ -323,7 +323,6 @@ template < class Metric > void
 					// get the lock on the clusters
 					if (Val1<Val2)
 					{
-						#ifdef VTK_USE_PTHREADS
 						if (!this->ClustersLocks[Val1].try_lock())
 						{
 							this->NumberOfLockingCollisions[Thread]++;
@@ -334,14 +333,9 @@ template < class Metric > void
 							this->NumberOfLockingCollisions[Thread]++;
 							this->ClustersLocks[Val2].lock();
 						}
-						#else
-						this->ClustersLocks[Val1].lock();
-						this->ClustersLocks[Val2].lock();
-						#endif					
 					}
 					else
 					{
-						#ifdef VTK_USE_PTHREADS
 						if (!this->ClustersLocks[Val2].try_lock())
 						{
 							this->NumberOfLockingCollisions[Thread]++;
@@ -352,10 +346,6 @@ template < class Metric > void
 							this->NumberOfLockingCollisions[Thread]++;
 							this->ClustersLocks[Val1].lock();
 						}
-						#else
-						this->ClustersLocks[Val2].lock();
-						this->ClustersLocks[Val1].lock();
-						#endif					
 					}
 
 #endif
@@ -535,7 +525,6 @@ template < class Metric > void
 					// get the lock on the clusters
 					if (Val1<Val2)
 					{
-						#ifdef VTK_USE_PTHREADS
 						if (!this->ClustersLocks[Val1].try_lock())
 						{
 							this->NumberOfLockingCollisions[Thread]++;
@@ -546,14 +535,9 @@ template < class Metric > void
 							this->NumberOfLockingCollisions[Thread]++;
 							this->ClustersLocks[Val2].lock();
 						}
-						#else
-						this->ClustersLocks[Val1].lock();
-						this->ClustersLocks[Val2].lock();
-						#endif
 					}
 					else
 					{
-						#ifdef VTK_USE_PTHREADS
 						if (!this->ClustersLocks[Val2].try_lock())
 						{
 							this->NumberOfLockingCollisions[Thread]++;
@@ -564,10 +548,6 @@ template < class Metric > void
 							this->NumberOfLockingCollisions[Thread]++;
 							this->ClustersLocks[Val1].lock();
 						}
-						#else
-						this->ClustersLocks[Val2].lock();
-						this->ClustersLocks[Val1].lock();
-						#endif
 					}
 
 #endif
