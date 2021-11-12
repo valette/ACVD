@@ -352,12 +352,12 @@ template < class Metric > void
 					if (Val1<Val2)
 					{
 						#ifdef VTK_USE_PTHREADS
-						if (this->ClustersLocks[Val1]->try_lock()!=0)
+						if (!this->ClustersLocks[Val1]->try_lock())
 						{
 							this->NumberOfLockingCollisions[Thread]++;
 							this->ClustersLocks[Val1]->lock();
 						}
-						if (this->ClustersLocks[Val2]->try_lock()!=0)
+						if (!this->ClustersLocks[Val2]->try_lock())
 						{
 							this->NumberOfLockingCollisions[Thread]++;
 							this->ClustersLocks[Val2]->lock();
@@ -370,12 +370,12 @@ template < class Metric > void
 					else
 					{
 						#ifdef VTK_USE_PTHREADS
-						if (this->ClustersLocks[Val2]->try_lock()!=0)
+						if (!this->ClustersLocks[Val2]->try_lock())
 						{
 							this->NumberOfLockingCollisions[Thread]++;
 							this->ClustersLocks[Val2]->lock();
 						}
-						if (this->ClustersLocks[Val1]->try_lock()!=0)
+						if (!this->ClustersLocks[Val1]->try_lock())
 						{
 							this->NumberOfLockingCollisions[Thread]++;
 							this->ClustersLocks[Val1]->lock();
@@ -564,12 +564,12 @@ template < class Metric > void
 					if (Val1<Val2)
 					{
 						#ifdef VTK_USE_PTHREADS
-						if (this->ClustersLocks[Val1]->try_lock()!=0)
+						if (!this->ClustersLocks[Val1]->try_lock())
 						{
 							this->NumberOfLockingCollisions[Thread]++;
 							this->ClustersLocks[Val1]->lock();
 						}
-						if (this->ClustersLocks[Val2]->try_lock()!=0)
+						if (!this->ClustersLocks[Val2]->try_lock())
 						{
 							this->NumberOfLockingCollisions[Thread]++;
 							this->ClustersLocks[Val2]->lock();
@@ -582,12 +582,12 @@ template < class Metric > void
 					else
 					{
 						#ifdef VTK_USE_PTHREADS
-						if (this->ClustersLocks[Val2]->try_lock()!=0)
+						if (!this->ClustersLocks[Val2]->try_lock())
 						{
 							this->NumberOfLockingCollisions[Thread]++;
 							this->ClustersLocks[Val2]->lock();
 						}
-						if (this->ClustersLocks[Val1]->try_lock()!=0)
+						if (!this->ClustersLocks[Val1]->try_lock())
 						{
 							this->NumberOfLockingCollisions[Thread]++;
 							this->ClustersLocks[Val1]->lock();
