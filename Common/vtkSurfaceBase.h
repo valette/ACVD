@@ -33,6 +33,7 @@
 #ifndef __vtkSurfaceBase_h
 #define __vtkSurfaceBase_h
 
+#include <map>
 #include <queue>
 
 #include <vtkIntArray.h>
@@ -42,10 +43,6 @@
 #include <vtkCell.h>
 #include <vtkCommand.h>
 #include <vtkCellArray.h>
-
-/// this variable defines the maximal number of possible vertices in a polygon (100 is a rather high value...)
-#define MAXCELLSIZE 100
-
 
 /**
  *  An efficient class for 3D triangular mesh processing.
@@ -379,7 +376,7 @@ private:
 	/// Garbage collector for deleted vertices
 	std::queue<vtkIdType> VerticesGarbage;
 	/// Garbage collector for deleted cells
-	std::queue<int> CellsGarbage[MAXCELLSIZE];
+	std::map<int, std::queue<int>> CellsGarbage;
 	/// Garbage collector for deleted 
 	std::queue<int> EdgesGarbage;
 };
