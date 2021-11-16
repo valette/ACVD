@@ -273,23 +273,12 @@ void vtkSurfaceBase::SQueeze()
 	{
 		if (numEdges>numAllocatedEdges)
 			cout<<"Problem while squeezing!!!!!"<<endl;
-		vtkIdList **NewArray=0;
-		if (numEdges!=0)
+		for (int i=numEdges;i<numAllocatedEdges;i++)
 		{
-			NewArray=new vtkIdList*[numEdges];
-			memcpy(NewArray, this->EdgesNonManifoldFaces,numEdges * sizeof(vtkIdList*));
+			if (this->EdgesNonManifoldFaces[i])
+				this->EdgesNonManifoldFaces[i]->Delete();
 		}
-		if (this->EdgesNonManifoldFaces)
-		{
-			int i;
-			for (i=numEdges;i<numAllocatedEdges;i++)
-			{
-				if (this->EdgesNonManifoldFaces[i])
-					this->EdgesNonManifoldFaces[i]->Delete();
-			}
-			delete [] this->EdgesNonManifoldFaces;
-		}
-		this->EdgesNonManifoldFaces=NewArray;
+		this->EdgesNonManifoldFaces.resize(numEdges) ;
 	}
 	this->NumberOfAllocatedEdgesAttributes=numEdges;
 
@@ -1443,18 +1432,7 @@ void vtkSurfaceBase::AllocateEdgesAttributes(int NumberOfEdges)
 	if (this->NumberOfAllocatedEdgesAttributes>=NumberOfEdges)
 		return;
 
-	// create a new tab for non manifold edges
-	int EDGE;
-	vtkIdList **NewArray=new vtkIdList*[NumberOfEdges];
-	// copy the old tab into the new one
-	for (EDGE=0;EDGE<this->NumberOfEdges;EDGE++)
-		NewArray[EDGE]=this->EdgesNonManifoldFaces[EDGE];
-	for (EDGE=this->NumberOfEdges;EDGE<NumberOfEdges;EDGE++)
-		NewArray[EDGE]=0;
-	//replace the old tab by the new
-	if (this->EdgesNonManifoldFaces)
-		delete [] this->EdgesNonManifoldFaces;
-	this->EdgesNonManifoldFaces=NewArray;
+	this->EdgesNonManifoldFaces.resize(NumberOfEdges);
 
 	if (!this->Poly2)
 		this->Poly1=vtkIdTypeArray::New();
@@ -1624,7 +1602,6 @@ vtkSurfaceBase::vtkSurfaceBase()
 	this->Poly2 = 0;
 	this->Vertex1 = 0;
 	this->Vertex2 = 0;
-	this->EdgesNonManifoldFaces=0;
 	this->ActiveEdges=0;
 
 	// faces attributes 
@@ -1660,17 +1637,13 @@ vtkSurfaceBase::~vtkSurfaceBase() //Destructeur
 	if (this->Vertex1) this->Vertex1->Delete();
 	if (this->Vertex2) this->Vertex2->Delete();
 
-	if (this->EdgesNonManifoldFaces)
+	for (i=0;i<this->NumberOfAllocatedEdgesAttributes;i++)
 	{
-		vtkIdList*List;
-		for (i=0;i<this->NumberOfAllocatedEdgesAttributes;i++)
-		{
-			List=this->EdgesNonManifoldFaces[i];
-			if (List)
-				List->Delete();
-		}
-		delete [] this->EdgesNonManifoldFaces;
+		vtkIdList *List=this->EdgesNonManifoldFaces[i];
+		if (List)
+			List->Delete();
 	}
+
 	if (this->VisitedPolygons)
 		this->VisitedPolygons->Delete();
 		

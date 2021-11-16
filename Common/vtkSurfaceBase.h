@@ -348,7 +348,7 @@ private:
 
 	///  lists of other faces adjacent to the edges.
 	///  if no more than two faces are adjacent to the edge, then EdgesNonManifoldFaces[edge]=0
-	vtkIdList **EdgesNonManifoldFaces;
+	std::vector<vtkIdList*> EdgesNonManifoldFaces;
 	// This array determines whether an edge slot is used or not
 	vtkBitArray *ActiveEdges;
 		
@@ -376,7 +376,7 @@ private:
 	std::queue<vtkIdType> VerticesGarbage;
 	/// Garbage collector for deleted cells
 	std::map<int, std::queue<int>> CellsGarbage;
-	/// Garbage collector for deleted 
+	/// Garbage collector for deleted edges
 	std::queue<int> EdgesGarbage;
 };
 
