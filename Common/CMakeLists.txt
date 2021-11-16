@@ -4,6 +4,7 @@ add_library(vtkSurface
  RenderWindow.cxx
  vtkDelaunay.cxx
  vtkDualMeshDisplay.cxx
+ vtkManifoldSimplification.cxx
  vtkOFFReader.cxx
  vtkOFFWriter.cxx
  vtkQuadricTools.cxx
@@ -13,7 +14,6 @@ add_library(vtkSurface
  vtkVolumeProperties.cxx
  vtkNeighbourhoodComputation.cxx
  vtkCurvatureMeasure.cxx
-#  vtkJSWriter.cxx
  )
 target_link_libraries(vtkSurface ${VTK_LIBRARIES})
 

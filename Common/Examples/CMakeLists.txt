@@ -14,6 +14,7 @@ set(COMMON_EXAMPLES
   vtk2ply
   stl2ply
   CheckOrientation
+  ManifoldSimplification
 )
 
 foreach(loop_var ${COMMON_EXAMPLES})
