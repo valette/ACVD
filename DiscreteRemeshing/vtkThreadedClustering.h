@@ -665,12 +665,17 @@ template < class Metric > void
 template < class Metric >
 int	vtkThreadedClustering < Metric >::ProcessOneLoop ()
 {
-	int i;
+
+#ifdef THREADSAFECLUSTERING
+	if ( this->ClustersLocks.size() != ( this->NumberOfClusters+1 ) )
+		this->ClustersLocks=std::vector< std::mutex >(this->NumberOfClusters+1);
+#endif
+
 	vtkMultiThreader *Threader=vtkMultiThreader::New();
 	Threader->SetSingleMethod (MyMainForClustering, (void *) this);
 	Threader->SetNumberOfThreads (this->NumberOfThreads);
 		
-	for (i=0;i<this->NumberOfThreads+1;i++)
+	for (int i=0;i<this->NumberOfThreads+1;i++)
 		this->NumberOfModifications[i]=0;
 
 	Threader->SingleMethodExecute ();
@@ -685,7 +690,7 @@ int	vtkThreadedClustering < Metric >::ProcessOneLoop ()
 	Threader->Delete();
 
 	int NumberOfModifications=0;
-	for (i=0;i<this->NumberOfThreads+1;i++)
+	for (int i=0;i<this->NumberOfThreads+1;i++)
 		NumberOfModifications+=this->NumberOfModifications[i];
 
 	this->DisplayThreadsTimings();
@@ -812,10 +817,6 @@ template < class Metric > void vtkThreadedClustering < Metric >::Init ()
 	// set initial queues state
 	this->ProcessesPushQueues=this->ProcessesQueues1;
 	this->ProcessesPopQueues=this->ProcessesQueues2;
-	
-#ifdef THREADSAFECLUSTERING
-	this->ClustersLocks=std::vector< std::mutex >(this->NumberOfClusters+1);
-#endif
 
 }
 
