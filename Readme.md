@@ -17,7 +17,7 @@ This code is the implementation deriving from those papers:
 [3] M. Audette, D. Rivière, M. Ewend, A. Enquobahrie, and S. Valette, "Approach-guided controlled resolution brain meshing for FE-based interactive neurosurgery simulation", Workshop on Mesh Processing in Medical Image Analysis, in conjunction with MICCAI 2011., Toronto, Canada, pp. 176--186, 09/2011.
 
 
-This code is cross-platform and should compile under Linux ,MacOS and Window$ OS.
+This code is cross-platform and should compile under Linux, MacOS and Windows.
 ### Licence ###
 This code is distributed under the CeCILL-B license (BSD-compatible)
 (copyright CNRS, INSA-Lyon, UCBL, INSERM.)
@@ -25,8 +25,6 @@ This code is distributed under the CeCILL-B license (BSD-compatible)
 
 ###  Dependencies ###
 * VTK www.vtk.org
-  * Version above 6.x : use this branch
-  * Version 5.x : use the vtk5 branch : https://github.com/valette/ACVD/tree/vtk5
 * CMAKE www.cmake.org
 
 ###  Simple compilation HowTo under Linux ###
