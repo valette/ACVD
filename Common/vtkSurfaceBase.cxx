@@ -1549,6 +1549,9 @@ vtkSurfaceBase::~vtkSurfaceBase() //Destructeur
 			delete [] Ring;
 	}
 
+	for ( auto it = this->Edges.begin(); it != this->Edges.end(); it++)
+		if ( it->NonManifoldFaces ) it->NonManifoldFaces->Delete();
+
 	if (this->VisitedPolygons)
 		this->VisitedPolygons->Delete();
 		
