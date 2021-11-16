@@ -90,7 +90,11 @@ int main( int argc, char *argv[] )
 	}
 	else
 	{
+#ifdef __ANISOTROPICREMESHINGQP__
 		cout<<"Usage : AnisotropicRemeshingQ file nvertices gradation [options]"<<endl;
+#else
+		cout<<"Usage : AnisotropicRemeshingQ file nvertices gradation [options]"<<endl;
+#endif
 		cout<<"nvertices is the desired number of vertices"<<endl;
 		cout<<"gradation defines the influence of local curvature (0=uniform meshing)"<<endl;
 		cout<<endl<<"Optionnal arguments : "<<endl;

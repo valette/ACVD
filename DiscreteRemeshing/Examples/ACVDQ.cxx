@@ -93,7 +93,11 @@ int main( int argc, char *argv[] ) {
 
 	} else {
 
-		cout<<"Usage : ACVD file nvertices gradation [options]"<<endl;
+#ifdef __ACVDQP__
+		cout<<"Usage : ACVDQP file nvertices gradation [options]"<<endl;
+#else
+		cout<<"Usage : ACVDQ file nvertices gradation [options]"<<endl;
+#endif
 		cout<<"nvertices is the desired number of vertices"<<endl;
 		cout<<"gradation defines the influence of local curvature (0=uniform meshing)"<<endl;
 		cout<<endl<<"Optionnal arguments : "<<endl;

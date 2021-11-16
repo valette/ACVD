@@ -75,7 +75,12 @@ int main( int argc, char *argv[] )
 		NumberOfSamples = atoi(argv[2]);
 		Gradation = atof(argv[3]);
 	} else {
+
+#ifdef __ACVDQP__
+		cout << "Usage : ACVDP file nvertices gradation [options]" << endl;
+#else
 		cout << "Usage : ACVD file nvertices gradation [options]" << endl;
+#endif
 		cout << "nvertices is the desired number of vertices" << endl;
 		cout << "gradation defines the influence of local curvature (0=uniform meshing)" << endl;
 		cout << endl << "Optionnal arguments : " << endl;

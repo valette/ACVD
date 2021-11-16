@@ -50,6 +50,9 @@ note that to enforce a manifold output mesh, such as explained in [3], you need 
 
 comments, suggestions : https://github.com/valette/ACVD/issues
 
+### Multithread versions ###
+For each program ACVD, ACVDQ and AnisotropicRemeshingQ, there is a parallel implementation, called ACVDP, ACVDQP and AnisotropicRemeshingQP. In the examples bellow, just add a trailing "T" to the executable to use all your processor cores. Note that the parallel versions are not deterministic, so running the programm twice with the same parameters will yield different remeshings. The parallel versions run much faster when quadrics are used (i.e. with ACVDQ or AnisotropcRemeshigQ), but the speedup is small with linear ACVD.
+
 ### Examples
 
 #### Remeshing the Stanford bunny to 3000 vertices : ####

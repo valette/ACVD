@@ -6,9 +6,12 @@ include_directories(
 
 set(DISCRETEREMESHING_EXAMPLES
 ACVD
+ACVDP
 ACVDQ
+ACVDQP
 AnisotropicRemeshing
 AnisotropicRemeshingQ
+AnisotropicRemeshingQP
 VolumeAnalysis
 ManifoldSimplification
 )
