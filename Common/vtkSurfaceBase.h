@@ -330,7 +330,7 @@ private:
 	/// - number of Edges in ring
 	/// - number of allocated edges slots
 	/// - the list of edges (in random order)
-	vtkIdType **VerticesAttributes;
+	std::vector <vtkIdType *> VerticesAttributes;
 
 	// This array determines whether a vertex slot is used or not
 	vtkBitArray *ActiveVertices;	

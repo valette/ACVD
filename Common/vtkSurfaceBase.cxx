@@ -291,23 +291,11 @@ void vtkSurfaceBase::SQueeze()
 	{
 		if (numVertices>numAllocatedVertices)
 			cout<<"Problem while squeezing!!!!!"<<endl;
-		vtkIdType **NewArray=0;
-		if (numVertices!=0)
-		{
-			NewArray=new vtkIdType*[numVertices];
-			memcpy(NewArray, this->VerticesAttributes,numVertices* sizeof(int*));
-		}
-		if (this->VerticesAttributes)
-		{
-			vtkIdType i;
-			for (i=numVertices;i<numAllocatedVertices;i++)
-			{
-				if (this->VerticesAttributes[i])
-					delete[] this->VerticesAttributes[i];
-			}
-			delete [] this->VerticesAttributes;
-		}
-		this->VerticesAttributes=NewArray;
+		for (int i=numVertices;i<numAllocatedVertices;i++)
+			if (this->VerticesAttributes[i])
+				delete[] this->VerticesAttributes[i];
+
+		this->VerticesAttributes.resize(numVertices);
 	}
 
 	this->NumberOfAllocatedVerticesAttributes=numVertices;
@@ -1390,26 +1378,18 @@ void vtkSurfaceBase::AllocateVerticesAttributes(int NumberOfVertices)
 	if (this->NumberOfAllocatedVerticesAttributes>=NumberOfVertices)
 		return;
 
-	vtkIdType **NewArray=new vtkIdType*[NumberOfVertices];
-	vtkIdType i;
-
-	for (i=0;i<this->NumberOfAllocatedVerticesAttributes;i++)
-		NewArray[i]=this->VerticesAttributes[i];
-	for (i=this->NumberOfAllocatedVerticesAttributes;i<NumberOfVertices;i++)
+	this->VerticesAttributes.resize(NumberOfVertices) ;
+	for (int i=this->NumberOfAllocatedVerticesAttributes;i<NumberOfVertices;i++)
 	{
-		NewArray[i]=new vtkIdType[VERTEX_EDGES+6];
-		NewArray[i][VERTEX_NUMBER_OF_EDGES]=0;
-		NewArray[i][VERTEX_NUMBER_OF_EDGES_SLOTS]=6;
+		this->VerticesAttributes[i]=new vtkIdType[VERTEX_EDGES+6];
+		this->VerticesAttributes[i][VERTEX_NUMBER_OF_EDGES]=0;
+		this->VerticesAttributes[i][VERTEX_NUMBER_OF_EDGES_SLOTS]=6;
 	}
-	if (this->VerticesAttributes)
-		delete []this->VerticesAttributes;
-	this->VerticesAttributes=NewArray;
 	this->NumberOfAllocatedVerticesAttributes=NumberOfVertices;
 
 	if (!this->ActiveVertices)
 		this->ActiveVertices=vtkBitArray::New();
 	this->ActiveVertices->Resize(NumberOfVertices);
-
 }
 
 void vtkSurfaceBase::AllocatePolygonsAttributes(int NumberOfPolygons)
@@ -1593,7 +1573,6 @@ vtkSurfaceBase::vtkSurfaceBase()
 	this->NumberOfAllocatedPolygonsAttributes=0;
 
 	// vertices attributes
-	this->VerticesAttributes=0;
 	this->ActiveVertices=0;
 
 
@@ -1618,18 +1597,11 @@ vtkSurfaceBase::vtkSurfaceBase()
 // ****************************************************************
 vtkSurfaceBase::~vtkSurfaceBase() //Destructeur
 {
-
-	vtkIdType i;
-	if (this->VerticesAttributes)
+	for (vtkIdType i=0;i<this->NumberOfAllocatedVerticesAttributes;i++)
 	{
-		vtkIdType *Ring;
-		for (i=0;i<this->NumberOfAllocatedVerticesAttributes;i++)
-		{
-			Ring=this->VerticesAttributes[i];
-			if (Ring)
-				delete [] Ring;
-		}
-		delete [] this->VerticesAttributes;
+		vtkIdType *Ring=this->VerticesAttributes[i];
+		if (Ring)
+			delete [] Ring;
 	}
 
 	if (this->Poly1) this->Poly1->Delete();
@@ -1637,7 +1609,7 @@ vtkSurfaceBase::~vtkSurfaceBase() //Destructeur
 	if (this->Vertex1) this->Vertex1->Delete();
 	if (this->Vertex2) this->Vertex2->Delete();
 
-	for (i=0;i<this->NumberOfAllocatedEdgesAttributes;i++)
+	for (vtkIdType i=0;i<this->NumberOfAllocatedEdgesAttributes;i++)
 	{
 		vtkIdList *List=this->EdgesNonManifoldFaces[i];
 		if (List)
