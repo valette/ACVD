@@ -30,14 +30,14 @@
 
 #include "vtkSurfaceBase.h"
 
-int vtkSurfaceBase::GetEdgeNumberOfAdjacentFaces(vtkIdType Edge)
+int vtkSurfaceBase::GetEdgeNumberOfAdjacentFaces(vtkIdType e)
 {
-	vtkIdList *NonManifoldFaces=this->EdgesNonManifoldFaces[Edge];
+	vtkIdList *NonManifoldFaces=this->Edges[e].NonManifoldFaces;
 	if (NonManifoldFaces!=0)
 		return (2+NonManifoldFaces->GetNumberOfIds());
 
 	vtkIdType f1,f2;
-	this->GetEdgeFaces(Edge,f1,f2);
+	this->GetEdgeFaces(e,f1,f2);
 	if (f2!=-1)
 		return (2);
 	if (f1!=-1)
@@ -46,13 +46,13 @@ int vtkSurfaceBase::GetEdgeNumberOfAdjacentFaces(vtkIdType Edge)
 		return (0);
 }
 
-vtkIdType vtkSurfaceBase::BisectEdge(vtkIdType Edge)
+vtkIdType vtkSurfaceBase::BisectEdge(vtkIdType e)
 {
 	vtkIdType v1,v2,v3;
 	vtkIdList *FList=vtkIdList::New();
 	
-	this->GetEdgeVertices(Edge,v1,v2);
-	this->GetEdgeFaces(Edge,FList);
+	this->GetEdgeVertices(e,v1,v2);
+	this->GetEdgeFaces(e,FList);
 	
 	double P1[3];
 	double P2[3];
@@ -63,9 +63,10 @@ vtkIdType vtkSurfaceBase::BisectEdge(vtkIdType Edge)
 		P1[i]=0.5*(P1[i]+P2[i]);
 
 	vtkIdType NewVertex=this->AddVertex(P1);
-	this->DeleteEdgeInRing(Edge,v1);
-	this->Vertex1->SetValue(Edge,NewVertex);
-	this->Vertex2->SetValue(Edge,v2);
+	this->DeleteEdgeInRing(e,v1);
+	Edge &edge = this->Edges[ e ];
+	edge.Vertex1 = NewVertex;
+	edge.Vertex2 = v2;
 
 	for (int i=0;i<FList->GetNumberOfIds();i++)
 	{
@@ -91,7 +92,7 @@ vtkIdType vtkSurfaceBase::BisectEdge(vtkIdType Edge)
 		this->AddEdge(v3,NewVertex,Face);
 	}
 	
-	this->InsertEdgeInRing(Edge,NewVertex);
+	this->InsertEdgeInRing(e,NewVertex);
 
 	FList->Delete();
 	return (NewVertex);
@@ -124,22 +125,23 @@ void vtkSurfaceBase::ChangeFaceVertex(vtkIdType Face, vtkIdType OldVertex, vtkId
 
 	for (int i=0;i<2;i++)
 	{
-		vtkIdType Edge=this->IsEdge(OldVertex,Neighbours[i]);
-		if ((Poly2->GetValue(Edge)<0)&&(this->IsEdge(NewVertex,Neighbours[i])<0))
+		vtkIdType e=this->IsEdge(OldVertex,Neighbours[i]);
+		Edge &edge = this->Edges[ e ];
+		if ((edge.Poly2<0)&&(this->IsEdge(NewVertex,Neighbours[i])<0))
 		{
 			// this edge has only one adjacent face (the face we are modifying right now).
 			// we just modify the edge
-			this->Vertex1->SetValue(Edge,NewVertex);
-			this->Vertex2->SetValue(Edge,Neighbours[i]);
-			this->DeleteEdgeInRing(Edge,OldVertex);
-			this->InsertEdgeInRing(Edge,NewVertex);
+			edge.Vertex1 = NewVertex;
+			edge.Vertex2 = Neighbours[i];
+			this->DeleteEdgeInRing(e,OldVertex);
+			this->InsertEdgeInRing(e,NewVertex);
 			this->CleanVertex(OldVertex);
 		}
 		else
 		{
 			// this edge has other adjacent faces, we will create a new one.
-			this->DeleteFaceInRing(Face,Edge);
-			this->CleanEdge(Edge);
+			this->DeleteFaceInRing(Face,e);
+			this->CleanEdge(e);
 			this->AddEdge(NewVertex,Neighbours[i],Face);
 		}
 	}
@@ -263,24 +265,7 @@ void vtkSurfaceBase::SQueeze()
 {
 	// Resize edges attributes
 	int numEdges=this->GetNumberOfEdges();
-	this->Vertex1->Resize(numEdges);
-	this->Vertex2->Resize(numEdges);
-	this->Poly1->Resize(numEdges);
-	this->Poly2->Resize(numEdges);
-
-	int numAllocatedEdges=this->NumberOfAllocatedEdgesAttributes;
-	if (numEdges!=numAllocatedEdges)
-	{
-		if (numEdges>numAllocatedEdges)
-			cout<<"Problem while squeezing!!!!!"<<endl;
-		for (int i=numEdges;i<numAllocatedEdges;i++)
-		{
-			if (this->EdgesNonManifoldFaces[i])
-				this->EdgesNonManifoldFaces[i]->Delete();
-		}
-		this->EdgesNonManifoldFaces.resize(numEdges) ;
-	}
-	this->NumberOfAllocatedEdgesAttributes=numEdges;
+	this->Edges.resize( numEdges );
 
 	// Resize vertices Atributes
 
@@ -489,15 +474,16 @@ void vtkSurfaceBase::GetValenceTab(char *filename)
 void vtkSurfaceBase::GetEdgeFaces(vtkIdType e1,vtkIdList *FList)
 {
 	FList->Reset();
-	vtkIdType Face=this->Poly1->GetValue(e1);
+	Edge &edge = this->Edges[ e1 ];
+	vtkIdType Face=edge.Poly1;
 	if (Face==-1)
 		return;
 	FList->InsertNextId(Face);
-	Face=this->Poly2->GetValue(e1);
+	Face=edge.Poly2;
 	if (Face==-1)
 		return;
 	FList->InsertNextId(Face);
-	vtkIdList *FList2=this->EdgesNonManifoldFaces[e1];
+	vtkIdList *FList2=edge.NonManifoldFaces;
 	if (FList2==0)
 		return;
 	int NumberOfFaces=FList2->GetNumberOfIds()-1;
@@ -516,10 +502,11 @@ void vtkSurfaceBase::DeleteVertex(vtkIdType v1)
 // ****************************************************************
 void vtkSurfaceBase::DeleteEdge(vtkIdType EdgeToRemove)
 {
-	if (this->Poly1->GetValue(EdgeToRemove)!=-1)
+	Edge &e = this->Edges[ EdgeToRemove ];
+	if (e.Poly1!=-1)
 		cout<<"ERROR: Trying to remove an edge which is not free !"<<endl;
 
-	this->ActiveEdges->SetValue(EdgeToRemove,0);
+	e.Active=false;
 	this->EdgesGarbage.push(EdgeToRemove);
 	vtkIdType v1,v2;
 	this->GetEdgeVertices(EdgeToRemove,v1,v2);
@@ -527,7 +514,7 @@ void vtkSurfaceBase::DeleteEdge(vtkIdType EdgeToRemove)
 	this->DeleteEdgeInRing(EdgeToRemove,v2);
 	this->CleanVertex(v1);
 	this->CleanVertex(v2);
-	this->Vertex2->SetValue(EdgeToRemove,v1);
+	e.Vertex2 = v1;
 }
 
 // ****************************************************************
@@ -562,14 +549,10 @@ void vtkSurfaceBase::DeleteFace(vtkIdType f1)
 	this->Polys->Modified();
 	this->Modified();
 }
-void vtkSurfaceBase::CleanEdge(vtkIdType Edge)
+void vtkSurfaceBase::CleanEdge(vtkIdType e)
 {
-	if (this->CleanEdges==0)
-		return;
-	if (this->Poly1->GetValue(Edge)==-1)
-	{
-		this->DeleteEdge(Edge);
-	}
+	if (this->CleanEdges==0) return;
+	if (this->Edges[e].Poly1==-1) this->DeleteEdge(e);
 }
 void vtkSurfaceBase::CleanVertex(vtkIdType Vertex)
 {
@@ -585,12 +568,12 @@ void vtkSurfaceBase::MergeVertices(vtkIdType v1, vtkIdType v2)
 	vtkIdList *List=vtkIdList::New();
 	vtkIdList *List2=vtkIdList::New();
 	
-	vtkIdType Edge=this->IsEdge(v1,v2);
+	vtkIdType e=this->IsEdge(v1,v2);
 	
 	// delete polygons adjacent to the edge [v1 v2] (if there are any)
-	if (Edge>=0)
+	if (e>=0)
 	{
-		this->GetEdgeFaces(Edge,List);
+		this->GetEdgeFaces(e,List);
 		for (int i=0;i<List->GetNumberOfIds();i++)
 			this->DeleteFace(List->GetId(i));
 	}
@@ -610,8 +593,8 @@ void vtkSurfaceBase::MergeVertices(vtkIdType v1, vtkIdType v2)
 	for (vtkIdType i=0;i<List->GetNumberOfIds();i++)
 	{
 		vtkIdType v3,v4;
-		Edge=List->GetId(i);
-		this->GetEdgeVertices(Edge,v3,v4);
+		e=List->GetId(i);
+		this->GetEdgeVertices(e,v3,v4);
 		if (v4==v2)
 		{
 			// ensure that v3==v2
@@ -625,26 +608,27 @@ void vtkSurfaceBase::MergeVertices(vtkIdType v1, vtkIdType v2)
 		if (Edge2>=0)
 		{
 			// the edge [v1 v4] already exists. Merge it with [v2 v4]
-			this->GetEdgeFaces(Edge,List2);
+			this->GetEdgeFaces(e,List2);
 			for (int j=0;j<List2->GetNumberOfIds();j++)
 			{
 				vtkIdType Face;
 				Face=List2->GetId(j);
-				this->DeleteFaceInRing(Face,Edge);
+				this->DeleteFaceInRing(Face,e);
 				this->InsertFaceInRing(Face,Edge2);
 			}
 			
 			// delete [v2 v4]
-			this->DeleteEdge(Edge);
+			this->DeleteEdge(e);
 		}
 		else
 		{
 			// the edge [v1 v4] does not exist. Just modify [v2 v4] to [v1 v4]
-			this->Vertex1->SetValue(Edge,v1);
-			this->Vertex2->SetValue(Edge,v4);
+			Edge &edge = this->Edges[ e ];
+			edge.Vertex1 = v1;
+			edge.Vertex2 = v4;
 
-			this->DeleteEdgeInRing(Edge,v2);
-			this->InsertEdgeInRing(Edge,v1);
+			this->DeleteEdgeInRing(e,v2);
+			this->InsertEdgeInRing(e,v1);
 		}
 	}
 	
@@ -712,7 +696,7 @@ vtkIdType vtkSurfaceBase::IsFace(vtkIdType v1, vtkIdType v2, vtkIdType v3)
 		return (f2);
 
 	// test whether there are non-manifold adjacent faces
-	vtkIdList *FList2=this->EdgesNonManifoldFaces[edge];
+	vtkIdList *FList2=this->Edges[edge].NonManifoldFaces;
 	if (FList2==0)
 		return (-1);
 	
@@ -830,8 +814,9 @@ vtkIdType vtkSurfaceBase::FlipEdgeSure(vtkIdType edge)
 	this->DeleteEdgeInRing(edge,v1);
 	this->DeleteEdgeInRing(edge,v2);
 
-	this->Vertex1->SetValue(edge,v3);
-	this->Vertex2->SetValue(edge,v4);
+	Edge &e = this->Edges[ edge ];
+	e.Vertex1 = v3;
+	e.Vertex2 = v4;
 
 	this->InsertEdgeInRing(edge,v3);
 	this->InsertEdgeInRing(edge,v4);
@@ -881,16 +866,18 @@ vtkIdType vtkSurfaceBase::FlipEdgeSure(vtkIdType edge)
 	}
 
 	edge1=this->IsEdge(v1,v4);
-	if (this->Poly1->GetValue(edge1)==f2)
-		this->Poly1->SetValue(edge1,f1);
+	Edge &e1 = this->Edges[ edge1 ];
+	if (e1.Poly1==f2)
+		e.Poly1 = f1;
 	else
-		this->Poly2->SetValue(edge1,f1);
+		e.Poly2 = f1;
 
 	edge1=this->IsEdge(v2,v3);
-	if (this->Poly1->GetValue(edge1)==f1)
-		this->Poly1->SetValue(edge1,f2);
+	Edge &e2 = this->Edges[ edge1 ];
+	if (e2.Poly1==f1)
+		e2.Poly1 =f2;
 	else
-		this->Poly2->SetValue(edge1,f2);
+		e2.Poly2= f2;
 
 	return (-1);
 }
@@ -898,17 +885,12 @@ vtkIdType vtkSurfaceBase::FlipEdgeSure(vtkIdType edge)
 // ** METHODE GetNumberOfBoundaries
 int vtkSurfaceBase::GetNumberOfBoundaries(vtkIdType v1)
 {
-	vtkIdType i;
-
 	int numBoundaries = 0;
 	vtkIdType *Edges,NumberOfEdges;
 	this->GetVertexNeighbourEdges(v1,NumberOfEdges,Edges);
 
-	for (i=0;i<NumberOfEdges;i++)
-	{
-		if (Poly2->GetValue(Edges[i])<0)
-			numBoundaries++;
-	}
+	for (vtkIdType i=0;i<NumberOfEdges;i++)
+		if (this->Edges[i].Poly2<0)	numBoundaries++;
 
 	return (numBoundaries/2);
 }
@@ -933,14 +915,13 @@ void vtkSurfaceBase::GetVertexNeighbourFaces(vtkIdType v1, vtkIdList *Output)
 	vtkIdType NumberOfEdges,*Edges;
 	this->GetVertexNeighbourEdges(v1,NumberOfEdges,Edges);
 	Output->Reset();
-	int i;
-	for (i=0;i<NumberOfEdges;i++)
+	for (int i=0;i<NumberOfEdges;i++)
 	{
 		this->GetEdgeFaces(Edges[i],f1,f2);
 		if (f1>=0) Output->InsertUniqueId(f1);
 		if (f2>=0) Output->InsertUniqueId(f2);
 		
-		vtkIdList *OtherFaces=this->EdgesNonManifoldFaces[Edges[i]];
+		vtkIdList *OtherFaces=this->Edges[Edges[i]].NonManifoldFaces;
 		if (OtherFaces)
 		{
 			for (int j=0;j<OtherFaces->GetNumberOfIds();j++)
@@ -953,18 +934,14 @@ void vtkSurfaceBase::GetVertexNeighbourFaces(vtkIdType v1, vtkIdList *Output)
 // ****************************************************************
 void vtkSurfaceBase::GetVertexNeighbours(vtkIdType v1, vtkIdList *Output)
 {
-	vtkIdType v2,edge;
-	vtkIdType i;
 	Output->Reset();
-	vtkIdType NumberOfEdges,*Edges;
-	this->GetVertexNeighbourEdges(v1,NumberOfEdges,Edges);
-	for (i=0;i<NumberOfEdges;i++)
+	vtkIdType NumberOfEdges,*NeighbourEdges;
+	this->GetVertexNeighbourEdges(v1,NumberOfEdges,NeighbourEdges);
+	for (vtkIdType i=0;i<NumberOfEdges;i++)
 	{
-		edge=Edges[i];
-
-		v2=this->Vertex1->GetValue(edge);
-
-		if (v2==v1)	Output->InsertNextId(this->Vertex2->GetValue(edge));
+		Edge &edge = this->Edges[ NeighbourEdges[i] ];
+		vtkIdType v2=edge.Vertex1;
+		if (v2==v1)	Output->InsertNextId(edge.Vertex2);
 		else		Output->InsertNextId(v2);
 	}
 }
@@ -973,22 +950,19 @@ void vtkSurfaceBase::GetVertexNeighbours(vtkIdType v1, vtkIdList *Output)
 // ****************************************************************
 void vtkSurfaceBase::GetNeighbours(vtkIdList *Input,vtkIdList *Output)
 {
-	vtkIdType i,v1,v2,edge,j;
 	Output->Reset();
-	vtkIdType NumberOfEdges,*Edges;
+	vtkIdType NumberOfEdges,*NeighbourEdges;
 
-	for (i=0;i<Input->GetNumberOfIds();i++)
+	for (vtkIdType i=0;i<Input->GetNumberOfIds();i++)
 	{
-		v1 = Input->GetId(i);
+		vtkIdType v1 = Input->GetId(i);
 		Output->InsertUniqueId(v1);
-		this->GetVertexNeighbourEdges(v1,NumberOfEdges,Edges);
-		for (j=0;j<NumberOfEdges;j++)
+		this->GetVertexNeighbourEdges(v1,NumberOfEdges,NeighbourEdges);
+		for (vtkIdType j=0;j<NumberOfEdges;j++)
 		{
-			edge = Edges[j];
-
-			v2 = this->Vertex1->GetValue(edge); 
-
-			if (v2==v1) Output->InsertUniqueId(this->Vertex2->GetValue(edge));
+			Edge &e = this->Edges[ NeighbourEdges[j] ];
+			vtkIdType v2 = e.Vertex1;
+			if (v2==v1) Output->InsertUniqueId(e.Vertex2);
 			else		Output->InsertUniqueId(v2);
 		}
 	}
@@ -1093,7 +1067,7 @@ void vtkSurfaceBase::AllocateMoreVerticesAttributes()
 
 void vtkSurfaceBase::AllocateMoreEdgesAttributes()
 {
-	int NumberOfAttributes=this->NumberOfAllocatedEdgesAttributes;
+	int NumberOfAttributes=this->Edges.size();
 	double number;
 	int NewNumberOfAttributes;
 	number=NumberOfAttributes;
@@ -1114,48 +1088,44 @@ void vtkSurfaceBase::AllocateMorePolygonsAttributes()
 
 // ****************************************************************
 // ****************************************************************
-void vtkSurfaceBase::InsertFaceInRing(vtkIdType Face,vtkIdType Edge)
+void vtkSurfaceBase::InsertFaceInRing(vtkIdType Face,vtkIdType e)
 {
 	vtkIdType F1,F2;
-	vtkIdList *FList;
-	this->GetEdgeFaces(Edge,F1,F2);
+	this->GetEdgeFaces(e,F1,F2);
+	Edge &edge = this->Edges[ e ];
 	if (F1==-1)
 	{
-		this->Poly1->SetValue(Edge,Face);
-		this->Poly2->SetValue(Edge,-1);
+		edge.Poly1 = Face;
 		return;
 	}
-	if (F1==Face)
-		return;
+	if (F1==Face) return;
 
 	if (F2==-1)
 	{
-		this->Poly2->SetValue(Edge,Face);
+		edge.Poly2 = Face;
 		return;
 	}
-	if (F2==Face)
-		return;
+	if (F2==Face) return;
 
-	FList=this->EdgesNonManifoldFaces[Edge];
+	vtkIdList *FList=edge.NonManifoldFaces;
 	if (!FList)
 	{
 		FList=vtkIdList::New();
-		this->EdgesNonManifoldFaces[Edge]=FList;
+		edge.NonManifoldFaces=FList;
 	}
 	FList->InsertUniqueId(Face);
 	return;
 }
 
-void vtkSurfaceBase::DeleteFaceInRing(vtkIdType Face,vtkIdType Edge)
+void vtkSurfaceBase::DeleteFaceInRing(vtkIdType Face,vtkIdType e)
 {
-	vtkIdList *FList=this->EdgesNonManifoldFaces[Edge];
-	vtkIdType *F1=this->Poly1->GetPointer(Edge);
-	vtkIdType *F2=this->Poly2->GetPointer(Edge);
+	Edge &edge = this->Edges[e ];
+	vtkIdList *FList=edge.NonManifoldFaces;
 	if (FList==0)
 	{
-		if (*F1==Face)
-			*F1=*F2;
-		*F2=-1;
+		if (edge.Poly1==Face)
+			edge.Poly1=edge.Poly2;
+		edge.Poly2=-1;
 		return;
 	}
 	vtkIdType Index=FList->IsId(Face);
@@ -1166,15 +1136,15 @@ void vtkSurfaceBase::DeleteFaceInRing(vtkIdType Face,vtkIdType Edge)
 		int LastPosition=FList->GetNumberOfIds()-1;
 		vtkIdType F3=FList->GetId(LastPosition);
 		FList->DeleteId(F3);
-		if (*F1==Face)
-			*F1=F3;
+		if (edge.Poly1==Face)
+			edge.Poly1=F3;
 		else
-			*F2=F3;
+			edge.Poly2=F3;
 	}
 	if (FList->GetNumberOfIds()==0)
 	{
 		FList->Delete();
-		this->EdgesNonManifoldFaces[Edge]=0;
+		edge.NonManifoldFaces=0;
 	}
 }
 
@@ -1220,33 +1190,34 @@ vtkIdType vtkSurfaceBase::AddEdge(vtkIdType v1,vtkIdType v2,vtkIdType f1)
 
 	if (edge>=0)
 	{
-		if (Poly1->GetValue(edge)<0)
+		Edge &e = this->Edges[edge];
+		if (e.Poly1<0)
 		{
-			Poly1->SetValue(edge,f1);
+			e.Poly1=f1;
 			return (edge);
 		}
 
-		if (Poly2->GetValue(edge)>=0)
+		if (e.Poly2>=0)
 		{
-			vtkIdList *LIST=this->EdgesNonManifoldFaces[edge];
+			vtkIdList *LIST=e.NonManifoldFaces;
 			if (!LIST)
 			{
 				LIST=vtkIdList::New();
-				this->EdgesNonManifoldFaces[edge]=LIST;
+				e.NonManifoldFaces=LIST;
 			}
 			LIST->InsertNextId(f1);
 			return (edge);
 		}
 		else
 		{
-			Poly2->SetValue(edge,f1);
+			e.Poly2=f1;
 			return (edge);
 		}
 	}
 
 	if (this->EdgesGarbage.empty())
 	{
-		if (this->NumberOfEdges>=this->NumberOfAllocatedEdgesAttributes)
+		if (this->NumberOfEdges>=this->Edges.size())
 			this->AllocateMoreEdgesAttributes();
 
 		edge=this->NumberOfEdges++;
@@ -1256,13 +1227,13 @@ vtkIdType vtkSurfaceBase::AddEdge(vtkIdType v1,vtkIdType v2,vtkIdType f1)
 		edge=this->EdgesGarbage.front();
 		this->EdgesGarbage.pop();
 	}
-	this->Vertex1->SetValue(edge,v1);//
-	this->Vertex2->SetValue(edge,v2);//
-	this->Poly1->SetValue(edge,f1);
-	this->Poly2->SetValue(edge,-1);
-	this->EdgesNonManifoldFaces[edge]=0;
-	this->ActiveEdges->SetValue(edge,1);
-
+	Edge &e = this->Edges[edge];
+	e.Vertex1=v1;
+	e.Vertex2=v2;
+	e.Poly1=f1;
+	e.Poly2=-1;
+	e.NonManifoldFaces=0;
+	e.Active=true;
 	this->InsertEdgeInRing(edge,v1);
 	this->InsertEdgeInRing(edge,v2);
 	return (edge);
@@ -1409,30 +1380,9 @@ void vtkSurfaceBase::AllocatePolygonsAttributes(int NumberOfPolygons)
 
 void vtkSurfaceBase::AllocateEdgesAttributes(int NumberOfEdges)
 {
-	if (this->NumberOfAllocatedEdgesAttributes>=NumberOfEdges)
+	if (this->Edges.size()>=NumberOfEdges)
 		return;
-
-	this->EdgesNonManifoldFaces.resize(NumberOfEdges);
-
-	if (!this->Poly1)
-		this->Poly1=vtkIdTypeArray::New();
-	if (!this->Poly2)
-		this->Poly2=vtkIdTypeArray::New();
-	if (!this->Vertex1)
-		this->Vertex1=vtkIdTypeArray::New();
-	if (!this->Vertex2)
-		this->Vertex2=vtkIdTypeArray::New();
-
-	this->Poly1->Resize(NumberOfEdges);
-	this->Poly2->Resize(NumberOfEdges);
-	this->Vertex1->Resize(NumberOfEdges);
-	this->Vertex2->Resize(NumberOfEdges);
-
-	if (!this->ActiveEdges)
-		this->ActiveEdges=vtkBitArray::New();
-	this->ActiveEdges->Resize(NumberOfEdges);
-
-	this->NumberOfAllocatedEdgesAttributes=NumberOfEdges;
+	this->Edges.resize( NumberOfEdges );
 }
 // ****************************************************************
 // ****************************************************************
@@ -1569,19 +1519,10 @@ vtkSurfaceBase::vtkSurfaceBase()
 
 	this->NumberOfEdges=0;
 	this->NumberOfAllocatedVerticesAttributes=0;
-	this->NumberOfAllocatedEdgesAttributes=0;
 	this->NumberOfAllocatedPolygonsAttributes=0;
 
 	// vertices attributes
 	this->ActiveVertices=0;
-
-
-	// edges attributes
-	this->Poly1 = 0;
-	this->Poly2 = 0;
-	this->Vertex1 = 0;
-	this->Vertex2 = 0;
-	this->ActiveEdges=0;
 
 	// faces attributes 
 	this->VisitedPolygons=0;
@@ -1604,26 +1545,11 @@ vtkSurfaceBase::~vtkSurfaceBase() //Destructeur
 			delete [] Ring;
 	}
 
-	if (this->Poly1) this->Poly1->Delete();
-	if (this->Poly2) this->Poly2->Delete();
-	if (this->Vertex1) this->Vertex1->Delete();
-	if (this->Vertex2) this->Vertex2->Delete();
-
-	for (vtkIdType i=0;i<this->NumberOfAllocatedEdgesAttributes;i++)
-	{
-		vtkIdList *List=this->EdgesNonManifoldFaces[i];
-		if (List)
-			List->Delete();
-	}
-
 	if (this->VisitedPolygons)
 		this->VisitedPolygons->Delete();
 		
 	if (this->ActivePolygons)
 		this->ActivePolygons->Delete();
-		
-	if (this->ActiveEdges)
-		this->ActiveEdges->Delete();
 		
 	if (this->ActiveVertices)
 		this->ActiveVertices->Delete();
