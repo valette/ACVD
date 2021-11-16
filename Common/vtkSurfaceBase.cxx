@@ -1414,7 +1414,7 @@ void vtkSurfaceBase::AllocateEdgesAttributes(int NumberOfEdges)
 
 	this->EdgesNonManifoldFaces.resize(NumberOfEdges);
 
-	if (!this->Poly2)
+	if (!this->Poly1)
 		this->Poly1=vtkIdTypeArray::New();
 	if (!this->Poly2)
 		this->Poly2=vtkIdTypeArray::New();
