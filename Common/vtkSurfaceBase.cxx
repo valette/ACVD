@@ -266,6 +266,7 @@ void vtkSurfaceBase::SQueeze()
 	this->Vertex1->Resize(numEdges);
 	this->Vertex2->Resize(numEdges);
 	this->Poly1->Resize(numEdges);
+	this->Poly2->Resize(numEdges);
 
 	int numAllocatedEdges=this->NumberOfAllocatedEdgesAttributes;
 	if (numEdges!=numAllocatedEdges)
@@ -299,7 +300,7 @@ void vtkSurfaceBase::SQueeze()
 
 	if (numVertices!=numAllocatedVertices)
 	{
-		if (numVertices<numAllocatedVertices)
+		if (numVertices>numAllocatedVertices)
 			cout<<"Problem while squeezing!!!!!"<<endl;
 		vtkIdType **NewArray=0;
 		if (numVertices!=0)

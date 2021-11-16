@@ -349,7 +349,6 @@ private:
 	///  lists of other faces adjacent to the edges.
 	///  if no more than two faces are adjacent to the edge, then EdgesNonManifoldFaces[edge]=0
 	vtkIdList **EdgesNonManifoldFaces;
-	
 	// This array determines whether an edge slot is used or not
 	vtkBitArray *ActiveEdges;
 		

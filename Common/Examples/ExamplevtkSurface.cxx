@@ -108,6 +108,7 @@ int main( int argc, char *argv[] )
 		test->AddFace(pts[i][0],pts[i][1],pts[i][2]);
 
 	traverse( test );
+	test->SQueeze();
 
 	//render again
 	Window->Render();
