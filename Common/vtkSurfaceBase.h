@@ -62,7 +62,6 @@
 #define VERTEX_NUMBER_OF_EDGES_SLOTS 1
 #define VERTEX_EDGES 2
 
-
 class VTK_EXPORT vtkSurfaceBase : public vtkPolyData
 {
 
@@ -112,7 +111,7 @@ public:
 	vtkIdType FlipEdgeSure(vtkIdType edge);
 
 	/// Bisects Edge by creating a new vertex at its midpoints and two new faces.
-	vtkIdType BisectEdge(vtkIdType Edge);
+	vtkIdType BisectEdge(vtkIdType e);
 
 	/// Call this function if you want the surface to be oriented.
 	/// By default, the surface is oriented.
@@ -166,7 +165,7 @@ public:
 	void GetEdgeVertices(const vtkIdType& edge, vtkIdType &v1, vtkIdType &v2);
 
 	// returns the number of faces adjacvent to the input edge
-	int GetEdgeNumberOfAdjacentFaces(vtkIdType Edge);
+	int GetEdgeNumberOfAdjacentFaces(vtkIdType e);
 	
 	/// Returns the vertices v1, v2 and v3 bounding the face
 	void GetFaceVertices(const vtkIdType& face,
@@ -200,7 +199,7 @@ vtkIdType* &Vertices);
 	void GetEdgeFaces(vtkIdType e1, vtkIdList *Flist);
 	
 	/// Returns true if the edge is a Manifold one (2 adjacent polygons)
-	bool IsEdgeManifold(const vtkIdType& Edge);
+	bool IsEdgeManifold(const vtkIdType& e);
 
 	/// returns true if the vertex is manifold.
     bool IsVertexManifold( const vtkIdType& iV);
@@ -269,7 +268,7 @@ vtkIdType* &Edges);
 	int IsFaceActive(vtkIdType Face) {return (this->ActivePolygons->GetValue(Face));};
 
 	/// returns 1 if Edge is actually used to store an edge (not deleted). Returns 0 otherwise	
-	int IsEdgeActive(vtkIdType Edge) {return this->Edges[Edge].Active;};
+	int IsEdgeActive(vtkIdType e) {return this->Edges[e].Active;};
 	
 	/// Checks the integrity of the structure. Returns true if the structure is OK
 	bool CheckStructure();
@@ -306,10 +305,6 @@ private:
 			NonManifoldFaces = 0;
 			Active = false;
 		}
-		~Edge(){
-			if ( NonManifoldFaces ) NonManifoldFaces->Delete();
-		}
-
 	};
 
 	/// adds an edge (v1,v2) to the vtkSurface, with possibly an adjacent face f1
@@ -325,13 +320,13 @@ private:
 	void DeleteEdgeInRing(vtkIdType e1,vtkIdType v1);
 
 	///  inserts Face in the ring of Edge
-	void InsertFaceInRing(vtkIdType Face,vtkIdType Edge);
+	void InsertFaceInRing(vtkIdType Face,vtkIdType e);
 	///  removes Face from the ring of Edge
-	void DeleteFaceInRing(vtkIdType Face,vtkIdType Edge);
+	void DeleteFaceInRing(vtkIdType Face,vtkIdType e);
 
 	/// deletes the edge if it is adjacent to no polygon
 	/// uneffective if CleanEdges is set to 0
-	void CleanEdge(vtkIdType Edge);
+	void CleanEdge(vtkIdType e);
 
 	/// deletes the vertex if it is not connected
 	/// uneffective if CleanVertices is set to 0

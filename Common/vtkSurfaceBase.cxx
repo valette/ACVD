@@ -265,6 +265,9 @@ void vtkSurfaceBase::SQueeze()
 {
 	// Resize edges attributes
 	int numEdges=this->GetNumberOfEdges();
+	for ( int i = numEdges; i < this->Edges.size(); i++ )
+		if ( this->Edges[ i ].NonManifoldFaces )
+			this->Edges[ i ].NonManifoldFaces->Delete();
 	this->Edges.resize( numEdges );
 
 	// Resize vertices Atributes
@@ -295,7 +298,7 @@ void vtkSurfaceBase::SQueeze()
 void vtkSurfaceBase::ConquerOrientationFromFace(vtkIdType Face)
 {
 	std::queue <vtkIdType> EdgesQueue;
-	vtkIdType v1,v2,v3,v4,f1,f2,Edge,Edge2;
+	vtkIdType v1,v2,v3,v4,f1,f2,Edge1,Edge2;
 	vtkIdType Visited1,Visited2;
 	vtkIdType NumberOfPoints1,NumberOfPoints2,*Face1,*Face2;
 	vtkIdType j;
@@ -304,9 +307,9 @@ void vtkSurfaceBase::ConquerOrientationFromFace(vtkIdType Face)
 	this->GetFaceVertices(Face,NumberOfPoints1,Face1);
 	for (j=0;j<NumberOfPoints1;j++)
 	{
-		Edge=this->IsEdge(Face1[j],Face1[(j+1)%NumberOfPoints1]);
-		if (this->IsEdgeManifold(Edge))
-			EdgesQueue.push(Edge);
+		Edge1=this->IsEdge(Face1[j],Face1[(j+1)%NumberOfPoints1]);
+		if (this->IsEdgeManifold(Edge1))
+			EdgesQueue.push(Edge1);
 	}
 
 	int Index1,Index2;
@@ -314,9 +317,9 @@ void vtkSurfaceBase::ConquerOrientationFromFace(vtkIdType Face)
 	while (EdgesQueue.size())
 	{
 		// pop an edge from the queue
-		Edge=EdgesQueue.front();
+		Edge1=EdgesQueue.front();
 		EdgesQueue.pop();
-		this->GetEdgeFaces(Edge,f1,f2);
+		this->GetEdgeFaces(Edge1,f1,f2);
 		if (f2>=0)
 		{
 			Visited1=this->VisitedPolygons->GetValue(f1);
@@ -335,7 +338,7 @@ void vtkSurfaceBase::ConquerOrientationFromFace(vtkIdType Face)
 				FlipFace=0;
 				this->GetFaceVertices(f1,NumberOfPoints1,Face1);
 				this->GetFaceVertices(f2,NumberOfPoints2,Face2);
-				this->GetEdgeVertices(Edge,v1,v2);
+				this->GetEdgeVertices(Edge1,v1,v2);
 				Index1=FindVertexIndex(Face1,v1,NumberOfPoints1);
 				Index2=FindVertexIndex(Face2,v1,NumberOfPoints2);
 
@@ -357,7 +360,7 @@ void vtkSurfaceBase::ConquerOrientationFromFace(vtkIdType Face)
 				for (j=0;j<NumberOfPoints2;j++)
 				{
 					Edge2=this->IsEdge(Face2[j],Face2[(j+1)%NumberOfPoints2]);
-					if ((Edge2!=Edge)&&(this->IsEdgeManifold(Edge2)==1))
+					if ((Edge2!=Edge1)&&(this->IsEdgeManifold(Edge2)==1))
 						EdgesQueue.push(Edge2);
 				}
 			}
@@ -527,14 +530,14 @@ void vtkSurfaceBase::DeleteFace(vtkIdType f1)
 		
 	vtkIdType NumberOfPoints,*Points;
 	vtkIdType i;
-	vtkIdType Edge;
+	vtkIdType e;
 
 	this->GetFaceVertices(f1,NumberOfPoints,Points);
 	for (i=0;i<NumberOfPoints;i++)
 	{
-		Edge=this->IsEdge(Points[i],Points[(i+1)%NumberOfPoints]);
-		this->DeleteFaceInRing(f1,Edge);
-		this->CleanEdge(Edge);
+		e=this->IsEdge(Points[i],Points[(i+1)%NumberOfPoints]);
+		this->DeleteFaceInRing(f1,e);
+		this->CleanEdge(e);
 	}
 	for (i=0;i<NumberOfPoints;i++)
 	{
@@ -759,13 +762,13 @@ void vtkSurfaceBase::GetFaceNeighbours(vtkIdType Face,vtkIdList *FList)
 
 	for (vtkIdType  i=0;i<NumberOfVertices;i++)
 	{
-		vtkIdType Edge;
+		vtkIdType e;
 		if (i<NumberOfVertices-1)
-			Edge=this->IsEdge(Vertices[i],Vertices[i+1]);
+			e=this->IsEdge(Vertices[i],Vertices[i+1]);
 		else
-			Edge=this->IsEdge(Vertices[i],Vertices[0]);
+			e=this->IsEdge(Vertices[i],Vertices[0]);
 
-		this->GetEdgeFaces(Edge,List);
+		this->GetEdgeFaces(e,List);
 		for (vtkIdType j=0;j<List->GetNumberOfIds();j++)
 			FList->InsertUniqueId(List->GetId(j));
 	}
@@ -1177,16 +1180,17 @@ vtkIdType vtkSurfaceBase::AddVertex(double x, double y, double z)
 // ****************************************************************
 vtkIdType vtkSurfaceBase::AddEdge(vtkIdType v1,vtkIdType v2,vtkIdType f1)
 {
-	while (v1>=this->NumberOfAllocatedVerticesAttributes)
-		this->AllocateMoreVerticesAttributes();
-	while (v2>=this->NumberOfAllocatedVerticesAttributes)
-		this->AllocateMoreVerticesAttributes();
-	vtkIdType edge=this->IsEdge(v1,v2);
 	if (v1==v2)
 	{
 		cout<<"Error : creation of a self-loop for vertex "<<v1<<endl;
 		return (-1);
 	}
+
+	while (v1>=this->NumberOfAllocatedVerticesAttributes)
+		this->AllocateMoreVerticesAttributes();
+	while (v2>=this->NumberOfAllocatedVerticesAttributes)
+		this->AllocateMoreVerticesAttributes();
+	vtkIdType edge=this->IsEdge(v1,v2);
 
 	if (edge>=0)
 	{
