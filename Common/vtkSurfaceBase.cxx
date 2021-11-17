@@ -1020,17 +1020,6 @@ void vtkSurfaceBase::DeleteEdgeInRing(vtkIdType e1,vtkIdType v1)
 
 }
 
-void vtkSurfaceBase::AllocateMorePolygonsAttributes()
-{
-	int NumberOfAttributes=this->NumberOfAllocatedPolygonsAttributes;
-	double number;
-	int NewNumberOfAttributes;
-	number=NumberOfAttributes;
-	number=1.0+number*1.1;
-	NewNumberOfAttributes=(int)number;
-	this->AllocatePolygonsAttributes(NewNumberOfAttributes);
-}
-
 // ****************************************************************
 // ****************************************************************
 void vtkSurfaceBase::InsertFaceInRing(vtkIdType Face,vtkIdType e)
@@ -1236,8 +1225,7 @@ vtkIdType vtkSurfaceBase::AddPolygon(int NumberOfVertices,vtkIdType *Vertices)
 #else
 		face=this->Polys->InsertNextCell(NumberOfVertices, Vertices);
 #endif
-		while (face>=this->NumberOfAllocatedPolygonsAttributes)
-			this->AllocateMorePolygonsAttributes();
+		this->AllocatePolygonsAttributes(face + 1);
 	}
 	else
 	{
@@ -1292,12 +1280,10 @@ void vtkSurfaceBase::AllocateVerticesAttributes(int NumberOfVertices)
 
 void vtkSurfaceBase::AllocatePolygonsAttributes(int NumberOfPolygons)
 {
-	if (this->NumberOfAllocatedPolygonsAttributes>=NumberOfPolygons)
-		return;
 	if (!this->VisitedPolygons)
 		this->VisitedPolygons=vtkBitArray::New();
+	if (this->VisitedPolygons->GetSize()>=NumberOfPolygons) return;
 	this->VisitedPolygons->Resize(NumberOfPolygons);
-	this->NumberOfAllocatedPolygonsAttributes=NumberOfPolygons;
 
 	if (!this->ActivePolygons)
 		this->ActivePolygons=vtkBitArray::New();
@@ -1444,7 +1430,6 @@ vtkSurfaceBase::vtkSurfaceBase()
 	this->SetOrientationOn();
 
 	this->NumberOfEdges=0;
-	this->NumberOfAllocatedPolygonsAttributes=0;
 
 	// vertices attributes
 	this->ActiveVertices=0;

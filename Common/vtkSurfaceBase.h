@@ -331,15 +331,11 @@ private:
 
 	///=true if we keep orientation of the surface
 	bool OrientedSurface;
-	
-	void AllocateMorePolygonsAttributes();
-
 	void AllocateVerticesAttributes(int NumberOfPoints);
 	void AllocateEdgesAttributes(int NumberOfEdges);
 	void AllocatePolygonsAttributes(int NumberOfPolygons);
-	
+
 	int NumberOfEdges;
-	int NumberOfAllocatedPolygonsAttributes;
 
 	// VertexRing contains all adjacent edges to a given vertex
 	typedef std::vector< vtkIdType > VertexRing;
