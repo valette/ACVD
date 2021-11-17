@@ -155,13 +155,13 @@ public:
 	void ChangeFaceVertex(vtkIdType Face, vtkIdType OldVertex, vtkIdType NewVertex);
 
 	/// Returns the number of edges in the vtkSurfaceBase Object
-	int GetNumberOfEdges() {return this->NumberOfEdges;};
+	int GetNumberOfEdges() {return this->Edges.size();};
 	
 	/// Returns v1 and v2 as the vertices bounding the edge 
 	void GetEdgeVertices(const vtkIdType& edge, vtkIdType &v1, vtkIdType &v2);
 
 	// returns the number of faces adjacvent to the input edge
-	int GetEdgeNumberOfAdjacentFaces(vtkIdType e);
+	int GetEdgeNumberOfAdjacentFaces(const vtkIdType &e);
 	
 	/// Returns the vertices v1, v2 and v3 bounding the face
 	void GetFaceVertices(const vtkIdType& face,
@@ -178,7 +178,7 @@ vtkIdType* &Vertices);
 	int GetValence(const vtkIdType& v1);
 	
 	/// Returns the number of boundaries at Point v1
-	int GetNumberOfBoundaries(vtkIdType v1);
+	int GetNumberOfBoundaries(const vtkIdType &v1);
 	
 	/// Conquer from a triangle f1 through the edge bounded by v1 and v2. 
 	/// f2 is the conquered triangle and v3 its third vertex 
@@ -219,7 +219,7 @@ vtkIdType* &Vertices);
 vtkIdType* &Edges);
 
 	/// Returns the list of faces adjacent to the point v1
-	void GetVertexNeighbourFaces(vtkIdType v1, vtkIdList *Output);
+	void GetVertexNeighbourFaces(const vtkIdType &v1, vtkIdList *Output);
 	
 	/// Returns the list of vertices adjacent to the list of vertices *Input.
 	/// Usefull for constructing n-rings
@@ -227,21 +227,21 @@ vtkIdType* &Edges);
 	
 	/// Returns the Id of the face having v1, v2 and v3 for vertices.
 	/// Returns -1 if the face doesn't exist.
-	vtkIdType IsFace(vtkIdType v1, vtkIdType v2, vtkIdType v3);
+	vtkIdType IsFace(const vtkIdType &v1, const vtkIdType &v2, const vtkIdType &v3);
 	
 	/// Returns the Id of the edge (v1,v2).
 	/// Returns -1 if the edge doesn't exist.
-	vtkIdType IsEdge(vtkIdType v1, vtkIdType v2);
+	vtkIdType IsEdge(const vtkIdType &v1, const vtkIdType &v2);
 	
 	/// Returns the Id of the edge between the faces f1 and f2
 	/// Returns -1 if the edge doesn't exist
-	vtkIdType IsEdgeBetweenFaces(vtkIdType f1, vtkIdType f2);
+	vtkIdType IsEdgeBetweenFaces(const vtkIdType &f1, const vtkIdType &f2);
 	
 	/// Returns the third Point of the face f1 (the two first Points are v1 and v2) 
 	vtkIdType GetThirdPoint(const vtkIdType& f1,const vtkIdType& v1,const vtkIdType& v2);
 	
 	/// Sets the coordinates of Point
-	void SetPointCoordinates(vtkIdType Point, double *x);
+	void SetPointCoordinates(const vtkIdType &Point, double *x);
 
 	/// Returns the first edge in the ring of v1
 	vtkIdType GetFirstEdge(const vtkIdType& v1);
@@ -259,13 +259,13 @@ vtkIdType* &Edges);
 	void SwitchOrientation();
 	
 	/// returns 1 if Vertex is actually used to store a polygon (not deleted). Returns 0 otherwise
-	int IsVertexActive(vtkIdType Vertex) {return (this->ActiveVertices->GetValue(Vertex));};
+	int IsVertexActive(const vtkIdType &Vertex) {return (this->ActiveVertices->GetValue(Vertex));};
 
 	/// returns 1 if Face is actually used to store a polygon (not deleted). Returns 0 otherwise
-	int IsFaceActive(vtkIdType Face) {return (this->ActivePolygons->GetValue(Face));};
+	int IsFaceActive(const vtkIdType &Face) {return (this->ActivePolygons->GetValue(Face));};
 
 	/// returns 1 if Edge is actually used to store an edge (not deleted). Returns 0 otherwise	
-	int IsEdgeActive(vtkIdType e) {return this->Edges[e].Active;};
+	int IsEdgeActive(const vtkIdType &e) {return this->Edges[e].Active;};
 	
 	/// Checks the integrity of the structure. Returns true if the structure is OK
 	bool CheckStructure();
@@ -305,58 +305,50 @@ private:
 	};
 
 	/// adds an edge (v1,v2) to the vtkSurface, with possibly an adjacent face f1
-	vtkIdType AddEdge(vtkIdType v1,vtkIdType v2,vtkIdType f1);
+	vtkIdType AddEdge(const vtkIdType &v1, const vtkIdType &v2, const vtkIdType &f1);
 
 	/// Replaces the definition of f1 by the face formed by v1,v2 and v3.
 	/// WARNING : f1 must already exist.
 	void SetFace(const vtkIdType& f1,const vtkIdType& v1,const vtkIdType& v2,const vtkIdType& v3);
 
 	/// inserts the edge e1 in the ring of v1
-	void InsertEdgeInRing(vtkIdType e1,vtkIdType v1);
+	void InsertEdgeInRing(const vtkIdType &e1, const vtkIdType &v1);
 	/// removes the edge e1 from the ring of v1
-	void DeleteEdgeInRing(vtkIdType e1,vtkIdType v1);
+	void DeleteEdgeInRing(const vtkIdType &e1, const vtkIdType &v1);
 
 	///  inserts Face in the ring of Edge
-	void InsertFaceInRing(vtkIdType Face,vtkIdType e);
+	void InsertFaceInRing(const vtkIdType &Face, const vtkIdType &e);
 	///  removes Face from the ring of Edge
-	void DeleteFaceInRing(vtkIdType Face,vtkIdType e);
+	void DeleteFaceInRing(const vtkIdType &Face, const vtkIdType &e);
 
 	/// deletes the edge if it is adjacent to no polygon
 	/// uneffective if CleanEdges is set to 0
-	void CleanEdge(vtkIdType e);
+	void CleanEdge(const vtkIdType &e);
 
 	/// deletes the vertex if it is not connected
 	/// uneffective if CleanVertices is set to 0
-	void CleanVertex(vtkIdType Vertex);
+	void CleanVertex(const vtkIdType &Vertex);
 
 	///=true if we keep orientation of the surface
 	bool OrientedSurface;
 	void AllocateVerticesAttributes(int NumberOfPoints);
-	void AllocateEdgesAttributes(int NumberOfEdges);
 	void AllocatePolygonsAttributes(int NumberOfPolygons);
 
-	int NumberOfEdges;
-
-	// VertexRing contains all adjacent edges to a given vertex
+	/// VertexRing contains all adjacent edges to a given vertex
 	typedef std::vector< vtkIdType > VertexRing;
 	std::vector <VertexRing> VerticesAttributes;
+	/// This array determines whether a vertex slot is used or not
+	vtkBitArray *ActiveVertices;
 
 	std::vector <Edge> Edges;
 
-	// This array determines whether a vertex slot is used or not
-	vtkBitArray *ActiveVertices;	
-
-		
-	////////////////////////////////////////////////
-	// Polygons Attributes:
 	/// Array determining the polygons which were already visited by the consistent-orientation keeping method
 	vtkBitArray *VisitedPolygons;
-	
-	// this flag is used only once, to set the face 0 as visited (and not after, when it is removed)
-	bool FirstTime;
-	
-	// This array determines whether a polygon slot is used or not
+	/// This array determines whether a polygon slot is used or not
 	vtkBitArray *ActivePolygons;
+
+	/// this flag is used only once, to set the face 0 as visited (and not after, when it is removed)
+	bool FirstTime;
 
 	/// the method which keeps the orientation of the faces consistent. This is called whenever a new face is created
 	void ConquerOrientationFromFace(vtkIdType Face);
@@ -525,7 +517,7 @@ inline bool vtkSurfaceBase::IsEdgeManifold(const vtkIdType& e)
 		return (true);
 }
 
-inline void vtkSurfaceBase::SetPointCoordinates(vtkIdType Point, double *x)
+inline void vtkSurfaceBase::SetPointCoordinates(const vtkIdType &Point, double *x)
 {
 	this->Points->SetPoint(Point,x);
 }
@@ -537,7 +529,7 @@ inline vtkIdType vtkSurfaceBase::GetFirstEdge(const vtkIdType&  v1)
 	return r[0];
 }
 
-inline vtkIdType vtkSurfaceBase::IsEdge(vtkIdType v1,vtkIdType v2)
+inline vtkIdType vtkSurfaceBase::IsEdge(const vtkIdType &v1, const vtkIdType &v2)
 {
 	vtkIdType NumberOfEdges,*EdgesArray;
 	this->GetVertexNeighbourEdges(v1,NumberOfEdges,EdgesArray);
