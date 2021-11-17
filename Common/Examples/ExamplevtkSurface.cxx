@@ -114,6 +114,14 @@ int main( int argc, char *argv[] )
 	Window->Render();
 	Window->Interact();
 
+	cout << "flip edge 0 : " << endl;
+	test->FlipEdge(0);
+	traverse( test );
+
+	//render again
+	Window->Render();
+	Window->Interact();
+
 	//delete objects
 	Window->Delete();
 	test->Delete();

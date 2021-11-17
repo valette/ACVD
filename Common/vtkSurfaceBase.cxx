@@ -892,6 +892,7 @@ vtkIdType vtkSurfaceBase::FlipEdgeSure(vtkIdType edge)
 	else
 		this->Poly2->SetValue(edge1,f2);
 
+	this->Polys->Modified();
 	return (-1);
 }
 
