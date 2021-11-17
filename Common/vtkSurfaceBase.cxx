@@ -275,17 +275,7 @@ void vtkSurfaceBase::SQueeze()
 	vtkIdType numVertices=this->GetNumberOfPoints();
 	vtkIdType numAllocatedVertices=this->NumberOfAllocatedVerticesAttributes;
 
-	if (numVertices!=numAllocatedVertices)
-	{
-		if (numVertices>numAllocatedVertices)
-			cout<<"Problem while squeezing!!!!!"<<endl;
-		for (int i=numVertices;i<numAllocatedVertices;i++)
-			if (this->VerticesAttributes[i])
-				delete[] this->VerticesAttributes[i];
-
-		this->VerticesAttributes.resize(numVertices);
-	}
-
+	this->VerticesAttributes.resize(numVertices);
 	this->NumberOfAllocatedVerticesAttributes=numVertices;
 
 	// Resize polygons Atributes
@@ -1006,55 +996,33 @@ vtkIdType vtkSurfaceBase::IsEdgeBetweenFaces(vtkIdType f1, vtkIdType f2)
 // ****************************************************************
 void vtkSurfaceBase::InsertEdgeInRing(vtkIdType e1,vtkIdType v1)
 {
-	vtkIdType NumberOfEdges,*Edges;
-	vtkIdType *VertexAttributes=this->VerticesAttributes[v1];
-	this->GetVertexNeighbourEdges(v1,NumberOfEdges,Edges);
-	
+
 	// test wether the vertices were allocated
 	if (v1>=this->NumberOfAllocatedVerticesAttributes)
 		this->AllocateVerticesAttributes(v1+1);
-	vtkIdType  *NewArray;
 
-	vtkIdType  i;
+	VertexRing &r=this->VerticesAttributes[v1];
+
 	// First test if the edge is not already in ring
-	for (i=0;i<NumberOfEdges;i++)
-	{
-		if (Edges[i]==e1)
-			return;
-	}
+	int NumberOfEdges = r.size();
+	for (vtkIdType i=0;i<NumberOfEdges;i++)
+		if (r[i]==e1) return;
 
-	// allocate new ring if needed
-	if (NumberOfEdges>=VertexAttributes[VERTEX_NUMBER_OF_EDGES_SLOTS])
-	{
-		NewArray=new vtkIdType[NumberOfEdges+1+VERTEX_EDGES];
-		for (i=0;i<NumberOfEdges+VERTEX_EDGES;i++)
-		{
-			NewArray[i]=VertexAttributes[i];
-		}
-		NewArray[VERTEX_NUMBER_OF_EDGES_SLOTS]=NumberOfEdges+1;
-
-		delete [] VertexAttributes;
-		Edges=NewArray+VERTEX_EDGES;
-		this->VerticesAttributes[v1]=NewArray;
-		VertexAttributes=NewArray;
-	}
-	Edges[NumberOfEdges]=e1;
-	VertexAttributes[VERTEX_NUMBER_OF_EDGES]=NumberOfEdges+1;
+	r.push_back(e1);
 }
 
 void vtkSurfaceBase::DeleteEdgeInRing(vtkIdType e1,vtkIdType v1)
 {
-	vtkIdType  NumberOfEdges,*Edges;
-	vtkIdType  i;
-	this->GetVertexNeighbourEdges(v1,NumberOfEdges,Edges);
-	for (i=0;i<NumberOfEdges;i++)
-	{
-		if (Edges[i]==e1)
-			break;
-	}
-	if (i<NumberOfEdges-1)
-		Edges[i]=Edges[NumberOfEdges-1];
-	this->VerticesAttributes[v1][VERTEX_NUMBER_OF_EDGES]--;
+	VertexRing &r = this->VerticesAttributes[v1];
+	int nEdges = r.size();
+	vtkIdType i;
+	for (i=0;i<nEdges;i++)
+		if (r[i]==e1) {
+			r[i]=r[nEdges-1];
+			r.pop_back();
+			return;
+		}
+
 }
 
 void vtkSurfaceBase::AllocateMoreVerticesAttributes()
@@ -1161,7 +1129,6 @@ vtkIdType vtkSurfaceBase::AddVertex(double x, double y, double z)
 		{
 			this->AllocateMoreVerticesAttributes();
 		}
-		this->VerticesAttributes[v1][VERTEX_NUMBER_OF_EDGES]=0;
 		this->ActiveVertices->SetValue(v1,1);
 		return (v1);
 	}
@@ -1169,7 +1136,7 @@ vtkIdType vtkSurfaceBase::AddVertex(double x, double y, double z)
 	{
 		v1=this->VerticesGarbage.front();
 		this->VerticesGarbage.pop();
-		this->VerticesAttributes[v1][VERTEX_NUMBER_OF_EDGES]=0;
+		this->VerticesAttributes[v1].resize(0);
 		this->GetPoints()->SetPoint(v1,x,y,z);
 		this->ActiveVertices->SetValue(v1,1);
 		return (v1);
@@ -1354,12 +1321,6 @@ void vtkSurfaceBase::AllocateVerticesAttributes(int NumberOfVertices)
 		return;
 
 	this->VerticesAttributes.resize(NumberOfVertices) ;
-	for (int i=this->NumberOfAllocatedVerticesAttributes;i<NumberOfVertices;i++)
-	{
-		this->VerticesAttributes[i]=new vtkIdType[VERTEX_EDGES+6];
-		this->VerticesAttributes[i][VERTEX_NUMBER_OF_EDGES]=0;
-		this->VerticesAttributes[i][VERTEX_NUMBER_OF_EDGES_SLOTS]=6;
-	}
 	this->NumberOfAllocatedVerticesAttributes=NumberOfVertices;
 
 	if (!this->ActiveVertices)
@@ -1542,12 +1503,6 @@ vtkSurfaceBase::vtkSurfaceBase()
 // ****************************************************************
 vtkSurfaceBase::~vtkSurfaceBase() //Destructeur
 {
-	for (vtkIdType i=0;i<this->NumberOfAllocatedVerticesAttributes;i++)
-	{
-		vtkIdType *Ring=this->VerticesAttributes[i];
-		if (Ring)
-			delete [] Ring;
-	}
 
 	for ( auto it = this->Edges.begin(); it != this->Edges.end(); it++)
 		if ( it->NonManifoldFaces ) it->NonManifoldFaces->Delete();

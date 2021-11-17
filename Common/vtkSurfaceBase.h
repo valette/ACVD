@@ -58,10 +58,6 @@
  *  edges labeling and easy update functionnalities.
  */
 
-#define VERTEX_NUMBER_OF_EDGES 0
-#define VERTEX_NUMBER_OF_EDGES_SLOTS 1
-#define VERTEX_EDGES 2
-
 class VTK_EXPORT vtkSurfaceBase : public vtkPolyData
 {
 
@@ -218,6 +214,7 @@ vtkIdType* &Vertices);
 
 	/// Returns the pointer to the edges in the ring of v1. Faster than the method with vtkIdList
 	/// Be carefull not to modify the pointed values, it would break the structure!
+	/// Note that when the mesh is modified, the data pointer might get invalidated
 	void GetVertexNeighbourEdges(const vtkIdType& v1, vtkIdType &NumberOfEdges,
 vtkIdType* &Edges);
 
@@ -348,19 +345,14 @@ private:
 	int NumberOfAllocatedPolygonsAttributes;
 	int NumberOfAllocatedVerticesAttributes;
 
-	/////////////////////////////////////////////
-	/// Vertices attributes. Information stored :
-	/// - number of Edges in ring
-	/// - number of allocated edges slots
-	/// - the list of edges (in random order)
-	std::vector <vtkIdType *> VerticesAttributes;
+	// VertexRing contains all adjacent edges to a given vertex
+	typedef std::vector< vtkIdType > VertexRing;
+	std::vector <VertexRing> VerticesAttributes;
 
 	std::vector <Edge> Edges;
 
 	// This array determines whether a vertex slot is used or not
 	vtkBitArray *ActiveVertices;	
-
-	/////////////////////////////////////////////
 
 		
 	////////////////////////////////////////////////
@@ -485,15 +477,15 @@ vtkIdType &NumberOfVertices, vtkIdType* &Vertices)
 inline void vtkSurfaceBase::GetVertexNeighbourEdges(const vtkIdType& v1,
 vtkIdType &NumberOfEdges, vtkIdType* &Edges)
 {
-	vtkIdType *VertexAttributes=this->VerticesAttributes[v1];
-	NumberOfEdges=VertexAttributes[VERTEX_NUMBER_OF_EDGES];
-	Edges=VertexAttributes+VERTEX_EDGES;
+	VertexRing &r = this->VerticesAttributes[v1];
+	NumberOfEdges = r.size();
+	Edges=r.data();
 }
 
 /// Compute the valence (number of adjacent edges) of the given.
 inline int vtkSurfaceBase::GetValence(const vtkIdType& v1)
 {
-	return (this->VerticesAttributes[v1][VERTEX_NUMBER_OF_EDGES]);
+	return this->VerticesAttributes[v1].size();
 }
 
 inline vtkIdType vtkSurfaceBase::GetBoundaryEdge(const vtkIdType& v1)
@@ -548,10 +540,9 @@ inline void vtkSurfaceBase::SetPointCoordinates(vtkIdType Point, double *x)
 
 inline vtkIdType vtkSurfaceBase::GetFirstEdge(const vtkIdType&  v1)
 {
-	if(this->VerticesAttributes[v1][VERTEX_NUMBER_OF_EDGES]==0)
-	return(-1);
-	else
-	return (this->VerticesAttributes[v1][VERTEX_EDGES]);
+	VertexRing &r = this->VerticesAttributes[v1];
+	if(!r.size()) return(-1);
+	return r[0];
 }
 
 inline vtkIdType vtkSurfaceBase::IsEdge(vtkIdType v1,vtkIdType v2)
