@@ -1272,16 +1272,11 @@ void vtkSurfaceBase::AllocateVerticesAttributes(int NumberOfVertices)
 {
 	if ( NumberOfVertices <= this->VerticesAttributes.size() ) return;
 	this->VerticesAttributes.resize(NumberOfVertices) ;
-
-	if (!this->ActiveVertices)
-		this->ActiveVertices=vtkBitArray::New();
 	this->ActiveVertices->Resize(NumberOfVertices);
 }
 
 void vtkSurfaceBase::AllocatePolygonsAttributes(int NumberOfPolygons)
 {
-	if (!this->VisitedPolygons)
-		this->VisitedPolygons=vtkBitArray::New();
 	if (this->VisitedPolygons->GetSize()>=NumberOfPolygons) return;
 	this->VisitedPolygons->Resize(NumberOfPolygons);
 
@@ -1432,11 +1427,11 @@ vtkSurfaceBase::vtkSurfaceBase()
 	this->NumberOfEdges=0;
 
 	// vertices attributes
-	this->ActiveVertices=0;
+	this->ActiveVertices = vtkBitArray::New();
 
 	// faces attributes 
-	this->VisitedPolygons=0;
-	this->ActivePolygons=0;
+	this->VisitedPolygons = vtkBitArray::New();
+	this->ActivePolygons = vtkBitArray::New();
 
 	this->CleanEdges=1;
 	this->CleanVertices=0;
@@ -1446,18 +1441,16 @@ vtkSurfaceBase::vtkSurfaceBase()
 
 // ****************************************************************
 // ****************************************************************
-vtkSurfaceBase::~vtkSurfaceBase() //Destructeur
+vtkSurfaceBase::~vtkSurfaceBase()
 {
 
 	for ( auto it = this->Edges.begin(); it != this->Edges.end(); it++)
 		if ( it->NonManifoldFaces ) it->NonManifoldFaces->Delete();
 
-	if (this->VisitedPolygons)
-		this->VisitedPolygons->Delete();
+	this->VisitedPolygons->Delete();
 		
 	if (this->ActivePolygons)
 		this->ActivePolygons->Delete();
 		
-	if (this->ActiveVertices)
-		this->ActiveVertices->Delete();
+	this->ActiveVertices->Delete();
 }
