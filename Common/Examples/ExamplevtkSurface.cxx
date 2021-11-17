@@ -27,6 +27,7 @@
 void traverse( vtkSurface *test ) {
 
 	vtkIdType v1,v2,v3;		// stockage de l'identite de points
+	cout << "*******************************************" << endl;
 
 	// display points coordinates
 	for (int i=0;i<test->GetNumberOfPoints();i++)
@@ -35,6 +36,8 @@ void traverse( vtkSurface *test ) {
 		test->GetPoint(i,Point);
 		cout<<"Coordinates for vertex "<<i<<" : "<<Point[0]<<" "<<Point[1]<<" "<<Point[2]<<endl;
 	}
+
+	cout << "*******************************************" << endl;
 
 	// loop on faces
 	for (int i=0;i<test->GetNumberOfCells();i++)
@@ -45,12 +48,22 @@ void traverse( vtkSurface *test ) {
 		cout << endl;
 	}
 
+	cout << "*******************************************" << endl;
 
 	// loop on edges
 	for (int i=0;i<test->GetNumberOfEdges();i++)
 	{
 		test->GetEdgeVertices(i,v1,v2);
 		cout<<"Edge "<<i<<" has vertices "<<v1<<" and "<<v2<<endl;
+	}
+
+	cout << "*******************************************" << endl;
+
+	// loop on edges
+	for (int i=0;i<test->GetNumberOfEdges();i++)
+	{
+		test->GetEdgeFaces(i,v1,v2);
+		cout<<"Edge "<<i<<" has adjacent faces "<<v1<<" and "<<v2<<endl;
 	}
 
 	cout << "*******************************************" << endl;
@@ -114,13 +127,16 @@ int main( int argc, char *argv[] )
 	Window->Render();
 	Window->Interact();
 
-	cout << "flip edge 0 : " << endl;
-	test->FlipEdge(0);
-	traverse( test );
+	while( true ) {
+		vtkIdType e = rand() % test->GetNumberOfEdges();
+		cout << "flip edge : " << e << endl;
+		test->FlipEdge(e);
+		traverse( test );
 
-	//render again
-	Window->Render();
-	Window->Interact();
+		//render again
+		Window->Render();
+		Window->Interact();
+	}
 
 	//delete objects
 	Window->Delete();
