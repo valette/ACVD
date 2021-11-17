@@ -513,24 +513,19 @@ void vtkSurfaceBase::DeleteEdge(vtkIdType EdgeToRemove)
 void vtkSurfaceBase::DeleteFace(vtkIdType f1)
 {
 	// test whether the face was already deleted
-	if (this->IsFaceActive(f1)==0)
-		return;
+	if (this->IsFaceActive(f1)==0) return;
 		
 	vtkIdType NumberOfPoints,*Points;
-	vtkIdType i;
-	vtkIdType e;
-
 	this->GetFaceVertices(f1,NumberOfPoints,Points);
-	for (i=0;i<NumberOfPoints;i++)
-	{
-		e=this->IsEdge(Points[i],Points[(i+1)%NumberOfPoints]);
+
+	for (vtkIdType i=0;i<NumberOfPoints;i++) {
+		vtkIdType e=this->IsEdge(Points[i],Points[(i+1)%NumberOfPoints]);
 		this->DeleteFaceInRing(f1,e);
 		this->CleanEdge(e);
 	}
-	for (i=0;i<NumberOfPoints;i++)
-	{
+
+	for (vtkIdType i=0;i<NumberOfPoints;i++)
 		Points[i]=Points[0];
-	}
 
 	#if ( (VTK_MAJOR_VERSION < 9))
 //	this->DeleteCell(f1);
@@ -1279,9 +1274,6 @@ void vtkSurfaceBase::AllocatePolygonsAttributes(int NumberOfPolygons)
 {
 	if (this->VisitedPolygons->GetSize()>=NumberOfPolygons) return;
 	this->VisitedPolygons->Resize(NumberOfPolygons);
-
-	if (!this->ActivePolygons)
-		this->ActivePolygons=vtkBitArray::New();
 	this->ActivePolygons->Resize(NumberOfPolygons);
 
 }
@@ -1441,16 +1433,12 @@ vtkSurfaceBase::vtkSurfaceBase()
 
 // ****************************************************************
 // ****************************************************************
-vtkSurfaceBase::~vtkSurfaceBase()
-{
+vtkSurfaceBase::~vtkSurfaceBase() {
 
 	for ( auto it = this->Edges.begin(); it != this->Edges.end(); it++)
 		if ( it->NonManifoldFaces ) it->NonManifoldFaces->Delete();
 
 	this->VisitedPolygons->Delete();
-		
-	if (this->ActivePolygons)
-		this->ActivePolygons->Delete();
-		
+	this->ActivePolygons->Delete();
 	this->ActiveVertices->Delete();
 }
