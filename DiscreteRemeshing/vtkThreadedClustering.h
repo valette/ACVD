@@ -105,10 +105,9 @@ protected:
 	// virtual function. Might be implemented in derived classes for speed issues
 	virtual void AddItemRingToProcess (vtkIdType Item, int ProcessId, int Thread)
 	{
-		vtkIdList *EList=this->ThreadsLists[Thread];
+		vtkIdList *EList=this->threadInfos[Thread].itemList;
 		this->GetItemEdges(Item,EList);
-		int i;
-		for (i=0;i<EList->GetNumberOfIds();i++)
+		for (int i=0;i<EList->GetNumberOfIds();i++)
 			this->AddEdgeToProcess(EList->GetId(i),ProcessId);
 	};
 	
@@ -174,6 +173,9 @@ protected:
 		int NumberOfLockingCollisions;
 		double StartTime;
 		double StopTime;
+		vtkIdList *itemList;
+		ThreadData() { itemList = vtkIdList::New(); };
+		~ThreadData() { itemList->Delete(); };
 	};
 
 	std::vector< ThreadData > threadInfos;
@@ -195,8 +197,6 @@ protected:
 	std::queue <int>**ProcessesPushQueues;
 	std::queue <int>**ProcessesPopQueues;
 	
-	vtkIdList **ThreadsLists;
-
 	// this method swaps the pop queues with the push queues.
 	void SwapQueues ();
 };
@@ -785,7 +785,6 @@ template < class Metric > void vtkThreadedClustering < Metric >::Init ()
 
 	// allocate statistics arrays
 	this->threadInfos.resize(this->NumberOfThreads+1);
-	this->ThreadsLists=new vtkIdList *[this->NumberOfThreads+1];
 
 	for ( auto &info : this->threadInfos ) {
 		info.NumberOfIterations = 0;
@@ -793,9 +792,6 @@ template < class Metric > void vtkThreadedClustering < Metric >::Init ()
 		info.NumberOfModifications = 0;
 		info.NumberOfLockingCollisions = 0;
 	}
-
-	for (i = 0; i < NumberOfThreads+1; i++)
-		ThreadsLists[i]=vtkIdList::New();
 
 	// allocate queues
 	this->ProcessesQueues1=new std::queue<int>*[this->PoolSize];
@@ -1041,10 +1037,6 @@ template < class Metric >
 		delete [] this->ProcessesQueues1;
 		delete [] this->ProcessesQueues2;
 
-		for (int i = 0; i < NumberOfThreads+1; i++)
-			this->ThreadsLists[i]->Delete();
-		delete [] this->ThreadsLists;
-		
 	}
 }
 
