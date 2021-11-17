@@ -273,10 +273,8 @@ void vtkSurfaceBase::SQueeze()
 	// Resize vertices Atributes
 
 	vtkIdType numVertices=this->GetNumberOfPoints();
-	vtkIdType numAllocatedVertices=this->NumberOfAllocatedVerticesAttributes;
-
 	this->VerticesAttributes.resize(numVertices);
-	this->NumberOfAllocatedVerticesAttributes=numVertices;
+	this->ActiveVertices->Resize(numVertices);
 
 	// Resize polygons Atributes
 	this->VisitedPolygons->Resize(this->GetNumberOfCells());
@@ -997,10 +995,7 @@ vtkIdType vtkSurfaceBase::IsEdgeBetweenFaces(vtkIdType f1, vtkIdType f2)
 void vtkSurfaceBase::InsertEdgeInRing(vtkIdType e1,vtkIdType v1)
 {
 
-	// test wether the vertices were allocated
-	if (v1>=this->NumberOfAllocatedVerticesAttributes)
-		this->AllocateVerticesAttributes(v1+1);
-
+	this->AllocateVerticesAttributes(v1+1);
 	VertexRing &r=this->VerticesAttributes[v1];
 
 	// First test if the edge is not already in ring
@@ -1023,17 +1018,6 @@ void vtkSurfaceBase::DeleteEdgeInRing(vtkIdType e1,vtkIdType v1)
 			return;
 		}
 
-}
-
-void vtkSurfaceBase::AllocateMoreVerticesAttributes()
-{
-	int NumberOfAttributes=this->NumberOfAllocatedVerticesAttributes;
-	double number;
-	int NewNumberOfAttributes;
-	number=NumberOfAttributes;
-	number=1.0+number*1.1;
-	NewNumberOfAttributes=(int) number;
-	this->AllocateVerticesAttributes(NewNumberOfAttributes);
 }
 
 void vtkSurfaceBase::AllocateMoreEdgesAttributes()
@@ -1125,10 +1109,7 @@ vtkIdType vtkSurfaceBase::AddVertex(double x, double y, double z)
 	if (this->VerticesGarbage.empty())
 	{
 		v1=this->GetPoints()->InsertNextPoint(x,y,z);
-		if (v1>=this->NumberOfAllocatedVerticesAttributes)
-		{
-			this->AllocateMoreVerticesAttributes();
-		}
+		this->AllocateVerticesAttributes(v1 + 1);
 		this->ActiveVertices->SetValue(v1,1);
 		return (v1);
 	}
@@ -1153,10 +1134,8 @@ vtkIdType vtkSurfaceBase::AddEdge(vtkIdType v1,vtkIdType v2,vtkIdType f1)
 		return (-1);
 	}
 
-	while (v1>=this->NumberOfAllocatedVerticesAttributes)
-		this->AllocateMoreVerticesAttributes();
-	while (v2>=this->NumberOfAllocatedVerticesAttributes)
-		this->AllocateMoreVerticesAttributes();
+	this->AllocateVerticesAttributes( v1 + 1 );
+	this->AllocateVerticesAttributes( v2 + 1 );
 	vtkIdType edge=this->IsEdge(v1,v2);
 
 	if (edge>=0)
@@ -1317,11 +1296,8 @@ vtkIdType vtkSurfaceBase::AddPolygon(int NumberOfVertices,vtkIdType *Vertices)
 
 void vtkSurfaceBase::AllocateVerticesAttributes(int NumberOfVertices)
 {
-	if (this->NumberOfAllocatedVerticesAttributes>=NumberOfVertices)
-		return;
-
+	if ( NumberOfVertices <= this->VerticesAttributes.size() ) return;
 	this->VerticesAttributes.resize(NumberOfVertices) ;
-	this->NumberOfAllocatedVerticesAttributes=NumberOfVertices;
 
 	if (!this->ActiveVertices)
 		this->ActiveVertices=vtkBitArray::New();
@@ -1483,7 +1459,6 @@ vtkSurfaceBase::vtkSurfaceBase()
 	this->SetOrientationOn();
 
 	this->NumberOfEdges=0;
-	this->NumberOfAllocatedVerticesAttributes=0;
 	this->NumberOfAllocatedPolygonsAttributes=0;
 
 	// vertices attributes
