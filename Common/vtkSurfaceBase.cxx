@@ -1020,16 +1020,6 @@ void vtkSurfaceBase::DeleteEdgeInRing(vtkIdType e1,vtkIdType v1)
 
 }
 
-void vtkSurfaceBase::AllocateMoreEdgesAttributes()
-{
-	int NumberOfAttributes=this->Edges.size();
-	double number;
-	int NewNumberOfAttributes;
-	number=NumberOfAttributes;
-	number=1.0+number*1.1;
-	NewNumberOfAttributes=(int) number;
-	this->AllocateEdgesAttributes(NewNumberOfAttributes);
-}
 void vtkSurfaceBase::AllocateMorePolygonsAttributes()
 {
 	int NumberOfAttributes=this->NumberOfAllocatedPolygonsAttributes;
@@ -1165,18 +1155,14 @@ vtkIdType vtkSurfaceBase::AddEdge(vtkIdType v1,vtkIdType v2,vtkIdType f1)
 		}
 	}
 
-	if (this->EdgesGarbage.empty())
-	{
-		if (this->NumberOfEdges>=this->Edges.size())
-			this->AllocateMoreEdgesAttributes();
-
+	if (this->EdgesGarbage.empty()) {
+		this->AllocateEdgesAttributes(this->NumberOfEdges+1);
 		edge=this->NumberOfEdges++;
-	}
-	else
-	{
+	} else {
 		edge=this->EdgesGarbage.front();
 		this->EdgesGarbage.pop();
 	}
+
 	Edge &e = this->Edges[edge];
 	e.Vertex1=v1;
 	e.Vertex2=v2;
@@ -1321,8 +1307,7 @@ void vtkSurfaceBase::AllocatePolygonsAttributes(int NumberOfPolygons)
 
 void vtkSurfaceBase::AllocateEdgesAttributes(int NumberOfEdges)
 {
-	if (this->Edges.size()>=NumberOfEdges)
-		return;
+	if (this->Edges.size()>=NumberOfEdges) return;
 	this->Edges.resize( NumberOfEdges );
 }
 // ****************************************************************

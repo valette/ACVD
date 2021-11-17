@@ -332,7 +332,6 @@ private:
 	///=true if we keep orientation of the surface
 	bool OrientedSurface;
 	
-	void AllocateMoreEdgesAttributes();
 	void AllocateMorePolygonsAttributes();
 
 	void AllocateVerticesAttributes(int NumberOfPoints);
@@ -340,7 +339,6 @@ private:
 	void AllocatePolygonsAttributes(int NumberOfPolygons);
 	
 	int NumberOfEdges;
-
 	int NumberOfAllocatedPolygonsAttributes;
 
 	// VertexRing contains all adjacent edges to a given vertex
