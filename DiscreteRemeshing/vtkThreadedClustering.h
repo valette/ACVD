@@ -163,7 +163,7 @@ protected:
 
 	// Context for Clustering
 	// *******************************************
-	int *EdgesProcess;
+	std::vector<int> EdgesProcess;
 
 	class ThreadData {
 		public:
@@ -885,7 +885,7 @@ template <class Metric> void vtkThreadedClustering<Metric>::ComputeEdgesLayout (
 		cout << "Partitionning for multithreading: " << NumberOfProblems <<
 			" Items with no good association..." << endl;
 	VList->Delete ();
-	this->EdgesProcess = EdgesLayout;
+	this->EdgesProcess = std::vector<int>( EdgesLayout, EdgesLayout+this->GetNumberOfEdges());
 	Timer->StopTimer();
 	cout<<"Multithreading layout computed in :"<<Timer->GetElapsedTime()<<" seconds"<<endl;
 	Timer->Delete();
@@ -999,7 +999,6 @@ template < class Metric >
 	this->DisplayThreadsTimingsFlag = 0;
 
 	this->Timer = vtkTimerLog::New ();
-	this->EdgesProcess = 0;
 
 	// autoset the number of threads depending on the number of processors
 	vtkMultiThreader *Threader=vtkMultiThreader::New();
@@ -1023,9 +1022,6 @@ template < class Metric >
 	this->Timer->Delete ();
 	this->PoolQueue1->Delete();
 	this->PoolQueue2->Delete();
-
-	if (this->EdgesProcess)
-		delete[]this->EdgesProcess;
 
 	if (this->ProcessesQueues1)
 	{
