@@ -30,6 +30,43 @@
 
 #include "vtkSurfaceBase.h"
 
+void vtkSurfaceBase::DisplayInternals( bool exitOnError ) {
+
+	cout << "********************************************" << endl;
+	cout << "*******    Internals:                  *****" << endl;
+	cout << this->GetNumberOfPoints() << " Vertices " << endl;
+	cout << this->GetNumberOfCells() << " Polygons " << endl;
+	cout << this->GetNumberOfEdges() << " Edges " << endl;
+	cout << "********************************************" << endl;
+	cout << "*******    Polygons:                  ******" << endl;
+	for ( int i = 0; i < this->GetNumberOfCells(); i++ ) {
+		vtkIdType nVertices, *vertices;
+		cout << "Face " << i << " vertices :";
+		this->GetFaceVertices( i, nVertices, vertices );
+		for ( int j = 0; j < nVertices; j++ ) cout << " " << vertices[ j ];
+		cout << endl;
+	}
+	vtkIdList *list = vtkIdList::New();
+	cout << "********************************************" << endl;
+	cout << "*******    Edges:                     ******" << endl;
+	for ( int i = 0; i < this->GetNumberOfEdges(); i++ ) {
+		Edge &e = this->Edges[ i ];
+		cout << "Edge " << i << " vertices :";
+		cout << e.Vertex1 << " " << e.Vertex2;
+		this->GetEdgeFaces( i, list );
+		if ( list->GetNumberOfIds() ) {
+			cout << ", faces :";
+			for ( int j = 0; j < list->GetNumberOfIds(); j++)
+				cout << " " << list->GetId( j );
+		} else cout << ", no adjacent face";
+		cout << endl;
+	}
+
+	list->Delete();
+	bool error = this->CheckStructure();
+	if ( error && exitOnError ) exit( 1 );
+}
+
 int vtkSurfaceBase::GetEdgeNumberOfAdjacentFaces(const vtkIdType &e)
 {
 	vtkIdList *NonManifoldFaces=this->Edges[e].NonManifoldFaces;
@@ -50,7 +87,6 @@ vtkIdType vtkSurfaceBase::BisectEdge(vtkIdType e)
 {
 	vtkIdType v1,v2,v3;
 	vtkIdList *FList=vtkIdList::New();
-	
 	this->GetEdgeVertices(e,v1,v2);
 	this->GetEdgeFaces(e,FList);
 	
@@ -148,6 +184,7 @@ void vtkSurfaceBase::ChangeFaceVertex(vtkIdType Face, vtkIdType OldVertex, vtkId
 
 	VisitedPolygons->SetValue(Face,0);
 	this->ConquerOrientationFromFace(Face);
+	this->Polys->Modified();
 }
 
 void vtkSurfaceBase::SetOrientationOn()
@@ -181,6 +218,37 @@ bool vtkSurfaceBase::CheckStructure()
 			}
 		}
 	}
+
+	vtkIdList *fList = vtkIdList::New();
+	for ( int e = 0; e < this->Edges.size(); e++) {
+
+		this->GetEdgeFaces( e, fList );
+		vtkIdType v1, v2;
+		this->GetEdgeVertices( e, v1, v2 );
+		vtkIdType v[] = { v1, v2 };
+
+		for ( int i = 0; i < fList->GetNumberOfIds(); i++ ) {
+
+			vtkIdType Face = fList->GetId( i );
+			vtkIdType nVertices, *vertices;
+			this->GetFaceVertices( Face, nVertices, vertices );
+			for ( int j = 0; j < 2; j++ ) {
+				bool found = false;
+				for ( int k = 0; k < nVertices; k++ )
+					if ( v[ j ] == vertices[ k ] ) found = true;
+
+				if ( !found ) {
+					cout << "Problem ! In edge " << e <<": Vertex "
+						<< v[ j ] << " should be in face " << Face
+						<< " but it is not." << endl;
+					Problem=true;
+				}
+			}
+		}
+
+	}
+
+	fList->Delete();
 	return Problem;
 }
 
@@ -263,15 +331,8 @@ void vtkSurfaceBase::SwitchOrientation()
 
 void vtkSurfaceBase::SQueeze()
 {
-	// Resize edges attributes
-	int numEdges=this->GetNumberOfEdges();
-	for ( int i = numEdges; i < this->Edges.size(); i++ )
-		if ( this->Edges[ i ].NonManifoldFaces )
-			this->Edges[ i ].NonManifoldFaces->Delete();
-	this->Edges.resize( numEdges );
 
 	// Resize vertices Atributes
-
 	vtkIdType numVertices=this->GetNumberOfPoints();
 	this->VerticesAttributes.resize(numVertices);
 	this->ActiveVertices->Resize(numVertices);
@@ -281,6 +342,7 @@ void vtkSurfaceBase::SQueeze()
 
 	// Squeeze the PolyData
 	this->vtkPolyData::Squeeze();
+	this->Polys->Modified();
 }
 
 void vtkSurfaceBase::ConquerOrientationFromFace(vtkIdType Face)
@@ -621,6 +683,7 @@ void vtkSurfaceBase::MergeVertices(vtkIdType v1, vtkIdType v2)
 	this->DeleteVertex(v2);
 	List->Delete();
 	List2->Delete();
+	this->Polys->Modified();
 }
 
 vtkSurfaceBase* vtkSurfaceBase::New()
@@ -796,7 +859,6 @@ vtkIdType vtkSurfaceBase::FlipEdgeSure(vtkIdType edge)
 //		cout<<"*** Problem: flip edge "<<edge<<" but the resulting edge already exists!***"<<endl;
 		return (edge1);
 	}
-
 	this->DeleteEdgeInRing(edge,v1);
 	this->DeleteEdgeInRing(edge,v2);
 
@@ -990,7 +1052,6 @@ vtkIdType vtkSurfaceBase::IsEdgeBetweenFaces(const vtkIdType &f1, const vtkIdTyp
 void vtkSurfaceBase::InsertEdgeInRing(const vtkIdType &e1,const vtkIdType &v1)
 {
 
-	this->AllocateVerticesAttributes(v1+1);
 	VertexRing &r=this->VerticesAttributes[v1];
 
 	// First test if the edge is not already in ring
@@ -1080,22 +1141,19 @@ void vtkSurfaceBase::DeleteFaceInRing(const vtkIdType &Face, const vtkIdType &e)
 vtkIdType vtkSurfaceBase::AddVertex(double x, double y, double z)
 {
 	vtkIdType v1;
-	if (this->VerticesGarbage.empty())
-	{
+	if (this->VerticesGarbage.empty()) {
 		v1=this->GetPoints()->InsertNextPoint(x,y,z);
 		this->AllocateVerticesAttributes(v1 + 1);
-		this->ActiveVertices->SetValue(v1,1);
-		return (v1);
-	}
-	else
-	{
+	} else {
 		v1=this->VerticesGarbage.front();
 		this->VerticesGarbage.pop();
 		this->VerticesAttributes[v1].resize(0);
 		this->GetPoints()->SetPoint(v1,x,y,z);
-		this->ActiveVertices->SetValue(v1,1);
-		return (v1);
 	}
+	this->GetPoints()->Modified();
+	this->ActiveVertices->SetValue(v1,1);
+	return v1;
+
 }
 
 // ****************************************************************
@@ -1108,8 +1166,6 @@ vtkIdType vtkSurfaceBase::AddEdge(const vtkIdType &v1, const vtkIdType &v2,const
 		return (-1);
 	}
 
-	this->AllocateVerticesAttributes( v1 + 1 );
-	this->AllocateVerticesAttributes( v2 + 1 );
 	vtkIdType edge=this->IsEdge(v1,v2);
 
 	if (edge>=0)
@@ -1330,7 +1386,7 @@ void vtkSurfaceBase::Init(int numPoints, int numFaces, int numEdges)
 	Points1->Delete();
 
 	// create and allocate memory for all the vtkSurfaceBase specific tables
-	this->AllocateVerticesAttributes(numPoints);
+//	this->AllocateVerticesAttributes(numPoints);
 	this->AllocatePolygonsAttributes(numFaces);
 
 }

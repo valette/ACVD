@@ -270,6 +270,9 @@ vtkIdType* &Edges);
 	/// Checks the integrity of the structure. Returns true if the structure is OK
 	bool CheckStructure();
 
+	/// Outputs the underlying data in readable format (not suited or large meshes)
+	void DisplayInternals( bool exitOnError = false );
+
 protected:
 
 	/// the constructor
@@ -370,11 +373,12 @@ private:
 inline void vtkSurfaceBase::SetFace(const vtkIdType& f1,
 									const vtkIdType& v1,const vtkIdType& v2,const vtkIdType& v3)
 {
-	vtkIdType vertices[3];
+	vtkIdType n, *vertices;
+	this->GetFaceVertices( f1, n, vertices );
 	vertices[0]=v1;
 	vertices[1]=v2;
 	vertices[2]=v3;
-	this->ReplaceCell(f1,3,vertices);
+	this->Polys->Modified();
 };
 // ** METHODE GetThirdPoint
 inline vtkIdType vtkSurfaceBase::GetThirdPoint(const vtkIdType& f1,const vtkIdType& v1,const vtkIdType& v2)
@@ -520,6 +524,7 @@ inline bool vtkSurfaceBase::IsEdgeManifold(const vtkIdType& e)
 inline void vtkSurfaceBase::SetPointCoordinates(const vtkIdType &Point, double *x)
 {
 	this->Points->SetPoint(Point,x);
+	this->Points->Modified();
 }
 
 inline vtkIdType vtkSurfaceBase::GetFirstEdge(const vtkIdType&  v1)
