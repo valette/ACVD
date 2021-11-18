@@ -78,10 +78,8 @@ public:
 		this->vtkUniformClustering<Metric>::ProcessClustering();
 		int NumberOfLockingCollisions=0;
 		for (int i=0;i<this->NumberOfThreads+1;i++)
-		{
-			NumberOfModifications+=this->NumberOfModifications[i];
-			NumberOfLockingCollisions+=this->NumberOfLockingCollisions[i];
-		}
+			NumberOfLockingCollisions+=this->threadInfos[ i ].NumberOfLockingCollisions;
+
 		if (NumberOfLockingCollisions!=0)
 		cout<<NumberOfLockingCollisions<<" locking collisions detected"<<endl;
 			else
@@ -107,10 +105,9 @@ protected:
 	// virtual function. Might be implemented in derived classes for speed issues
 	virtual void AddItemRingToProcess (vtkIdType Item, int ProcessId, int Thread)
 	{
-		vtkIdList *EList=this->ThreadsLists[Thread];
+		vtkIdList *EList=this->threadInfos[Thread].itemList;
 		this->GetItemEdges(Item,EList);
-		int i;
-		for (i=0;i<EList->GetNumberOfIds();i++)
+		for (int i=0;i<EList->GetNumberOfIds();i++)
 			this->AddEdgeToProcess(EList->GetId(i),ProcessId);
 	};
 	
@@ -166,18 +163,22 @@ protected:
 
 	// Context for Clustering
 	// *******************************************
-	int *EdgesProcess;
+	std::vector<int> EdgesProcess;
 
-	// Statistics on the different processes
-	int *PreviousNumberOfIterations;
-	int *NumberOfIterations;
-	int *NumberOfModifications;
-	int *NumberOfLockingCollisions;
+	class ThreadData {
+		public:
+		int PreviousNumberOfIterations;
+		int NumberOfIterations;
+		int NumberOfModifications;
+		int NumberOfLockingCollisions;
+		double StartTime;
+		double StopTime;
+		vtkIdList *itemList;
+		ThreadData() { itemList = vtkIdList::New(); };
+		~ThreadData() { itemList->Delete(); };
+	};
 
-	// Context for time measures
-	// ************************************
-	double *StartTimes;
-	double *StopTimes;
+	std::vector< ThreadData > threadInfos;
 
 #ifdef THREADSAFECLUSTERING
 	// one mutex for each cluster to ensure thread-safety
@@ -196,8 +197,6 @@ protected:
 	std::queue <int>**ProcessesPushQueues;
 	std::queue <int>**ProcessesPopQueues;
 	
-	vtkIdList **ThreadsLists;
-
 	// this method swaps the pop queues with the push queues.
 	void SwapQueues ();
 };
@@ -253,8 +252,9 @@ template < class Metric >	VTK_THREAD_RETURN_TYPE vtkThreadedClustering
 		(vtkThreadedClustering < Metric > *)Info->UserData;
 
 	int MyId = Info->ThreadID;
+	ThreadData &data = Clustering->threadInfos[ MyId ];
 
-	Clustering->StartTimes[MyId] = Clustering->Timer->GetUniversalTime ();
+	data.StartTime = Clustering->Timer->GetUniversalTime ();
 
 	while (1)
 	{
@@ -278,7 +278,7 @@ template < class Metric >	VTK_THREAD_RETURN_TYPE vtkThreadedClustering
 		Clustering->PoolAllocationLock2.unlock();
 	}
 
-	Clustering->StopTimes[MyId] = Clustering->Timer->GetUniversalTime ();
+	data.StopTime = Clustering->Timer->GetUniversalTime ();
 	return VTK_THREAD_RETURN_VALUE;
 }
 
@@ -300,6 +300,7 @@ template < class Metric > void
 	Cluster22 = new typename Metric::Cluster;
 	Cluster31 = new typename Metric::Cluster;
 	Cluster32 = new typename Metric::Cluster;
+	ThreadData &data = this->threadInfos[ Thread ];
 
 	std::queue < int > *Queue;
 	for (int CurrentQueue=0;CurrentQueue<this->PoolSize;CurrentQueue++)
@@ -325,12 +326,12 @@ template < class Metric > void
 					{
 						if (!this->ClustersLocks[Val1].try_lock())
 						{
-							this->NumberOfLockingCollisions[Thread]++;
+							data.NumberOfLockingCollisions++;
 							this->ClustersLocks[Val1].lock();
 						}
 						if (!this->ClustersLocks[Val2].try_lock())
 						{
-							this->NumberOfLockingCollisions[Thread]++;
+							data.NumberOfLockingCollisions++;
 							this->ClustersLocks[Val2].lock();
 						}
 					}
@@ -338,19 +339,19 @@ template < class Metric > void
 					{
 						if (!this->ClustersLocks[Val2].try_lock())
 						{
-							this->NumberOfLockingCollisions[Thread]++;
+							data.NumberOfLockingCollisions++;
 							this->ClustersLocks[Val2].lock();
 						}
 						if (!this->ClustersLocks[Val1].try_lock())
 						{
-							this->NumberOfLockingCollisions[Thread]++;
+							data.NumberOfLockingCollisions++;
 							this->ClustersLocks[Val1].lock();
 						}
 					}
 
 #endif
 
-					this->NumberOfIterations[Thread]++;
+					data.NumberOfIterations++;
 					if (Val1 == this->NumberOfClusters)
 					{
 						// I1 is not associated. Give it to the same cluster as I2
@@ -361,7 +362,7 @@ template < class Metric > void
 						(*this->ClustersSizes->GetPointer (Val2))++;
 						this->AddItemRingToProcess (I1,Process, Thread);
 						this->Clustering->SetValue (I1,Val2);
-						this->NumberOfModifications[Thread]++;
+						data.NumberOfModifications++;
 					}
 					else if (Val2 ==this->NumberOfClusters)
 					{
@@ -372,7 +373,7 @@ template < class Metric > void
 						(*this->ClustersSizes->GetPointer (Val1))++;
 						this->AddItemRingToProcess (I2,Process,Thread);
 						this->Clustering->SetValue (I2,Val1);
-						this->NumberOfModifications[Thread]++;
+						data.NumberOfModifications++;
 					}
 					else
 					{
@@ -463,7 +464,7 @@ template < class Metric > void
 							this->MetricContext.DeepCopy (Cluster21, Cluster1);
 							this->MetricContext.DeepCopy (Cluster22, Cluster2);
 							this->AddItemRingToProcess (I1, Process, Thread);
-							this->NumberOfModifications[Thread]++;
+							data.NumberOfModifications++;
 							this->ClustersLastModification[Val1] = this->NumberOfLoops;
 							this->ClustersLastModification[Val2] = this->NumberOfLoops;
 							break;
@@ -476,7 +477,7 @@ template < class Metric > void
 							this->MetricContext.DeepCopy (Cluster31, Cluster1);
 							this->MetricContext.DeepCopy (Cluster32, Cluster2);
 							this->AddItemRingToProcess (I2, Process, Thread);
-							this->NumberOfModifications[Thread]++;
+							data.NumberOfModifications++;
 							this->ClustersLastModification[Val1] = this->NumberOfLoops;
 							this->ClustersLastModification[Val2] = this->NumberOfLoops;
 						}
@@ -501,6 +502,7 @@ template < class Metric > void
 {
 	vtkIdType Edge, I1, I2;
 	int Val1, Val2, *Size1, *Size2;
+	ThreadData &data = this->threadInfos[ Thread ];
 
 	typename Metric::Cluster *Cluster1, *Cluster2;
 	std::queue < int > *Queue;
@@ -527,12 +529,12 @@ template < class Metric > void
 					{
 						if (!this->ClustersLocks[Val1].try_lock())
 						{
-							this->NumberOfLockingCollisions[Thread]++;
+							data.NumberOfLockingCollisions++;
 							this->ClustersLocks[Val1].lock();
 						}
 						if (!this->ClustersLocks[Val2].try_lock())
 						{
-							this->NumberOfLockingCollisions[Thread]++;
+							data.NumberOfLockingCollisions++;
 							this->ClustersLocks[Val2].lock();
 						}
 					}
@@ -540,19 +542,19 @@ template < class Metric > void
 					{
 						if (!this->ClustersLocks[Val2].try_lock())
 						{
-							this->NumberOfLockingCollisions[Thread]++;
+							data.NumberOfLockingCollisions++;
 							this->ClustersLocks[Val2].lock();
 						}
 						if (!this->ClustersLocks[Val1].try_lock())
 						{
-							this->NumberOfLockingCollisions[Thread]++;
+							data.NumberOfLockingCollisions++;
 							this->ClustersLocks[Val1].lock();
 						}
 					}
 
 #endif
 
-					this->NumberOfIterations[Thread]++;
+					data.NumberOfIterations++;
 					if (Val1 == this->NumberOfClusters)
 					{
 						// I1 is not associated. Give it to the same cluster as I2
@@ -563,7 +565,7 @@ template < class Metric > void
 						(*this->ClustersSizes->GetPointer (Val2))++;
 						this->AddItemRingToProcess (I1,Process, Thread);
 						this->Clustering->SetValue (I1,Val2);
-						this->NumberOfModifications[Thread]++;
+						data.NumberOfModifications++;
 					}
 					else if (Val2 ==this->NumberOfClusters)
 					{
@@ -574,7 +576,7 @@ template < class Metric > void
 						(*this->ClustersSizes->GetPointer (Val1))++;
 						this->AddItemRingToProcess (I2,Process,Thread);
 						this->Clustering->SetValue (I2,Val1);
-						this->NumberOfModifications[Thread]++;
+						data.NumberOfModifications++;
 					}
 					else
 					{
@@ -615,7 +617,7 @@ template < class Metric > void
 									this->MetricContext.AddItemToCluster(I1,Cluster2);
 									this->MetricContext.SubstractItemFromCluster(I1,Cluster1);
 									this->AddItemRingToProcess (I1, Process, Thread);
-									this->NumberOfModifications[Thread]++;
+									data.NumberOfModifications++;
 									this->ClustersLastModification[Val1]=this->NumberOfLoops;
 									this->ClustersLastModification[Val2]=this->NumberOfLoops;
 								}
@@ -636,7 +638,7 @@ template < class Metric > void
 									this->MetricContext.AddItemToCluster(I2,Cluster1);
 									this->MetricContext.SubstractItemFromCluster(I2,Cluster2);
 									this->AddItemRingToProcess (I2, Process, Thread);
-									this->NumberOfModifications[Thread]++;
+									data.NumberOfModifications++;
 									this->ClustersLastModification[Val1]=this->NumberOfLoops;
 									this->ClustersLastModification[Val2]=this->NumberOfLoops;
 								}
@@ -665,19 +667,22 @@ template < class Metric > void
 template < class Metric >
 int	vtkThreadedClustering < Metric >::ProcessOneLoop ()
 {
-	int i;
+
+#ifdef THREADSAFECLUSTERING
+	if ( this->ClustersLocks.size() != ( this->NumberOfClusters+1 ) )
+		this->ClustersLocks=std::vector< std::mutex >(this->NumberOfClusters+1);
+#endif
+
 	vtkMultiThreader *Threader=vtkMultiThreader::New();
 	Threader->SetSingleMethod (MyMainForClustering, (void *) this);
 	Threader->SetNumberOfThreads (this->NumberOfThreads);
 		
-	for (i=0;i<this->NumberOfThreads+1;i++)
-		this->NumberOfModifications[i]=0;
-
+	for ( auto &info : this->threadInfos ) info.NumberOfModifications=0;
 	Threader->SingleMethodExecute ();
 
-	this->StartTimes[this->NumberOfThreads] = this->Timer->GetUniversalTime ();
+	this->threadInfos[this->NumberOfThreads].StartTime = this->Timer->GetUniversalTime ();
 	this->ExecuteProcess (this->PoolSize - 1,this->NumberOfThreads);
-	this->StopTimes[this->NumberOfThreads] = this->Timer->GetUniversalTime ();
+	this->threadInfos[this->NumberOfThreads].StopTime = this->Timer->GetUniversalTime ();
 
 	vtkPriorityQueue *Queue=this->PoolQueue1;
 	this->PoolQueue1=this->PoolQueue2;
@@ -685,8 +690,8 @@ int	vtkThreadedClustering < Metric >::ProcessOneLoop ()
 	Threader->Delete();
 
 	int NumberOfModifications=0;
-	for (i=0;i<this->NumberOfThreads+1;i++)
-		NumberOfModifications+=this->NumberOfModifications[i];
+	for ( auto &info : this->threadInfos )
+		NumberOfModifications+=info.NumberOfModifications;
 
 	this->DisplayThreadsTimings();
 	return (NumberOfModifications);
@@ -694,19 +699,18 @@ int	vtkThreadedClustering < Metric >::ProcessOneLoop ()
 
 template < class Metric > void vtkThreadedClustering < Metric >::DisplayThreadsTimings()
 {
-	int i;
 	if (this->DisplayThreadsTimingsFlag)
 	{
-		double EarliestStart = this->StartTimes[0];
-		double LatestStop = this->StopTimes[0];
+		ThreadData &firstData = this->threadInfos[0];
+		double EarliestStart = firstData.StartTime;
+		double LatestStop = firstData.StopTime;
 		double MeasuredTime;
 		double GlobalDuration;
-		for (i = 0; i < NumberOfThreads+1; i++)
-		{
-			MeasuredTime = this->StartTimes[i];
+		for (auto &info : this->threadInfos) {
+			MeasuredTime = info.StartTime;
 			if (MeasuredTime < EarliestStart)
 				EarliestStart = MeasuredTime;
-			MeasuredTime = this->StopTimes[i];
+			MeasuredTime = info.StopTime;
 			if (MeasuredTime > LatestStop)
 				LatestStop = MeasuredTime;
 		}
@@ -714,53 +718,51 @@ template < class Metric > void vtkThreadedClustering < Metric >::DisplayThreadsT
 		cout << "Threads duration:" << GlobalDuration <<" seconds"<<endl;
 
 		cout << "Starts    (relative):";
-		for (i = 0; i < NumberOfThreads+1; i++)
-			cout << (int) (100.0 *(this->StartTimes[i] -EarliestStart) /GlobalDuration) << " ";
+		for (auto &info : this->threadInfos)
+			cout << (int) (100.0 *(info.StartTime -EarliestStart) /GlobalDuration) << " ";
 
 		cout << endl;
 		cout << "Duration  (relative):";
-		for (i = 0; i < NumberOfThreads+1; i++)
-			cout << (int) (100.0 *(this->StopTimes[i] - this->StartTimes[i])/GlobalDuration) << " ";
+		for (auto &info : this->threadInfos)
+			cout << (int) (100.0 *(info.StopTime - info.StartTime)/GlobalDuration) << " ";
 
 		cout << endl;
 		cout << "Stops     (relative):";
-		for (i = 0; i < NumberOfThreads+1; i++)
-			cout << (int) (100.0 * (this->StopTimes[i] -	EarliestStart) / GlobalDuration) << " ";
+		for (auto &info : this->threadInfos)
+			cout << (int) (100.0 * (info.StopTime -	EarliestStart) / GlobalDuration) << " ";
 		cout << endl;
 
 
 		// Compute the clustering properties
 
 		int MaxInstantNumberofIterations =
-			this->NumberOfIterations[0] -
-			this->PreviousNumberOfIterations[0];
+			firstData.NumberOfIterations - firstData.PreviousNumberOfIterations;
 		int InstantNumber;
 		int InstantNumberOfIeration = 0;
-		for (i = 0; i < NumberOfThreads+1; i++)
-		{
-			InstantNumber =this->NumberOfIterations[i]-this->PreviousNumberOfIterations[i];
+		for (auto &info : this->threadInfos) {
+			InstantNumber =info.NumberOfIterations-info.PreviousNumberOfIterations;
 			if (InstantNumber >MaxInstantNumberofIterations)
 				MaxInstantNumberofIterations =InstantNumber;
-			InstantNumberOfIeration +=this->NumberOfIterations[i]-this->PreviousNumberOfIterations[i];
+			InstantNumberOfIeration +=info.NumberOfIterations-info.PreviousNumberOfIterations;
 		}
 		if (1)
 		{
 			cout << "Iterations(relative):";
-			for (i = 0; i < NumberOfThreads+1; i++)
-				cout << (int) (100.0 * ((double) (this->NumberOfIterations[i]-this->PreviousNumberOfIterations[i])/((double)InstantNumberOfIeration)))<< " ";
+			for (auto &info : this->threadInfos)
+				cout << (int) (100.0 * ((double) (info.NumberOfIterations-info.PreviousNumberOfIterations)/((double)InstantNumberOfIeration)))<< " ";
 			cout << endl;
 			cout << "Iterations          :";
-			for (i = 0; i < NumberOfThreads+1; i++)
-				cout << this->NumberOfIterations[i]<<" ";
+			for (auto &info : this->threadInfos)
+				cout << info.NumberOfIterations<<" ";
 			cout << endl;			
 			cout << "Modifications       :";
-			for (i = 0; i < NumberOfThreads+1; i++)
-				cout << this->NumberOfModifications[i]<<" ";
+			for (auto &info : this->threadInfos)
+				cout << info.NumberOfModifications<<" ";
 			cout << endl;			
 		}
 
-		for (i = 0; i < NumberOfThreads+1; i++)
-			this->PreviousNumberOfIterations[i] =this->NumberOfIterations[i];
+		for (auto &info : this->threadInfos)
+			info.PreviousNumberOfIterations = info.NumberOfIterations;
 
 	}
 }
@@ -782,22 +784,13 @@ template < class Metric > void vtkThreadedClustering < Metric >::Init ()
 	this->ComputeEdgesLayout ();
 
 	// allocate statistics arrays
-	this->PreviousNumberOfIterations=new int[this->NumberOfThreads+1];
-	this->NumberOfIterations=new int[this->NumberOfThreads+1];
-	this->NumberOfModifications=new int[this->NumberOfThreads+1];
-	this->NumberOfLockingCollisions=new int[this->NumberOfThreads+1];
-	this->StartTimes=new double[this->NumberOfThreads+1];
-	this->StopTimes=new double[this->NumberOfThreads+1];
+	this->threadInfos.resize(this->NumberOfThreads+1);
 
-	this->ThreadsLists=new vtkIdList *[this->NumberOfThreads+1];
-
-	for (i = 0; i < NumberOfThreads+1; i++)
-	{
-		this->NumberOfIterations[i] = 0;
-		this->PreviousNumberOfIterations[i] = 0;
-		this->NumberOfModifications[i] = 0;
-		this->NumberOfLockingCollisions[i] = 0;
-		this->ThreadsLists[i]=vtkIdList::New();
+	for ( auto &info : this->threadInfos ) {
+		info.NumberOfIterations = 0;
+		info.PreviousNumberOfIterations = 0;
+		info.NumberOfModifications = 0;
+		info.NumberOfLockingCollisions = 0;
 	}
 
 	// allocate queues
@@ -812,10 +805,6 @@ template < class Metric > void vtkThreadedClustering < Metric >::Init ()
 	// set initial queues state
 	this->ProcessesPushQueues=this->ProcessesQueues1;
 	this->ProcessesPopQueues=this->ProcessesQueues2;
-	
-#ifdef THREADSAFECLUSTERING
-	this->ClustersLocks=std::vector< std::mutex >(this->NumberOfClusters+1);
-#endif
 
 }
 
@@ -896,7 +885,7 @@ template <class Metric> void vtkThreadedClustering<Metric>::ComputeEdgesLayout (
 		cout << "Partitionning for multithreading: " << NumberOfProblems <<
 			" Items with no good association..." << endl;
 	VList->Delete ();
-	this->EdgesProcess = EdgesLayout;
+	this->EdgesProcess = std::vector<int>( EdgesLayout, EdgesLayout+this->GetNumberOfEdges());
 	Timer->StopTimer();
 	cout<<"Multithreading layout computed in :"<<Timer->GetElapsedTime()<<" seconds"<<endl;
 	Timer->Delete();
@@ -1010,7 +999,6 @@ template < class Metric >
 	this->DisplayThreadsTimingsFlag = 0;
 
 	this->Timer = vtkTimerLog::New ();
-	this->EdgesProcess = 0;
 
 	// autoset the number of threads depending on the number of processors
 	vtkMultiThreader *Threader=vtkMultiThreader::New();
@@ -1035,9 +1023,6 @@ template < class Metric >
 	this->PoolQueue1->Delete();
 	this->PoolQueue2->Delete();
 
-	if (this->EdgesProcess)
-		delete[]this->EdgesProcess;
-
 	if (this->ProcessesQueues1)
 	{
 		for (int i=0;i<PoolSize;i++)
@@ -1048,18 +1033,6 @@ template < class Metric >
 		delete [] this->ProcessesQueues1;
 		delete [] this->ProcessesQueues2;
 
-		// delete statistics arrays
-		delete [] this->PreviousNumberOfIterations;
-		delete [] this->NumberOfIterations;
-		delete [] this->NumberOfModifications;
-		delete [] this->NumberOfLockingCollisions;
-		delete [] this->StartTimes;
-		delete [] this->StopTimes;
-
-		for (int i = 0; i < NumberOfThreads+1; i++)
-			this->ThreadsLists[i]->Delete();
-		delete [] this->ThreadsLists;
-		
 	}
 }
 
