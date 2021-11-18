@@ -854,9 +854,9 @@ vtkIdType vtkSurfaceBase::FlipEdgeSure(vtkIdType edge)
 	edge1=this->IsEdge(v1,v4);
 	Edge &e1 = this->Edges[ edge1 ];
 	if (e1.Poly1==f2)
-		e.Poly1 = f1;
+		e1.Poly1 = f1;
 	else
-		e.Poly2 = f1;
+		e1.Poly2 = f1;
 
 	edge1=this->IsEdge(v2,v3);
 	Edge &e2 = this->Edges[ edge1 ];
