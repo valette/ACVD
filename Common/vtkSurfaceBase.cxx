@@ -1325,6 +1325,7 @@ void vtkSurfaceBase::AllocateVerticesAttributes(int NumberOfVertices)
 	if ( NumberOfVertices <= this->VerticesAttributes.size() ) return;
 	this->VerticesAttributes.resize(NumberOfVertices) ;
 	this->ActiveVertices->Resize(NumberOfVertices);
+	this->VerticesAttributes.reserve( NumberOfVertices );
 }
 
 void vtkSurfaceBase::AllocatePolygonsAttributes(int NumberOfPolygons)
@@ -1387,8 +1388,9 @@ void vtkSurfaceBase::Init(int numPoints, int numFaces, int numEdges)
 	Points1->Delete();
 
 	// create and allocate memory for all the vtkSurfaceBase specific tables
-//	this->AllocateVerticesAttributes(numPoints);
+	this->AllocateVerticesAttributes(numPoints);
 	this->AllocatePolygonsAttributes(numFaces);
+	this->Edges.reserve(numEdges);
 
 }
 
