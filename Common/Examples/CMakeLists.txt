@@ -11,11 +11,13 @@ set(COMMON_EXAMPLES
   mesh2vtk
   meshComponents
   meshDifference
+  subdivideMesh
   vtk2ply
   stl2ply
   CheckOrientation
   ManifoldSimplification
 )
+
 
 foreach(loop_var ${COMMON_EXAMPLES})
   add_executable(${loop_var} ${loop_var}.cxx)
