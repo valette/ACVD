@@ -97,6 +97,9 @@ int main( int argc, char *argv[] )
 		cout << "-cmax value : set maximum custom indicator value" << endl;
 		cout << "-cf value : set custom indicator multiplication factor" << endl;
 		cout << "-m 0/1 : enforce a manifold output ON/OFF (default : 0)" << endl;
+#ifdef DOmultithread
+		cout<<"-np number : set the number of threads (default : number of cores)"<<endl;
+#endif
 		return (0);
 	}
 

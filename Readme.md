@@ -49,7 +49,7 @@ note that to enforce a manifold output mesh, such as explained in [3], you need 
 comments, suggestions : https://github.com/valette/ACVD/issues
 
 ### Multithread versions ###
-For each program ACVD, ACVDQ and AnisotropicRemeshingQ, there is a parallel implementation, called ACVDP, ACVDQP and AnisotropicRemeshingQP. In the examples bellow, just add a trailing "P" to the executable to use all your processor cores. Note that the parallel versions are not deterministic, so running the programm twice with the same parameters will yield different remeshings. The parallel versions run much faster when quadrics are used (i.e. with ACVDQ or AnisotropcRemeshigQ), but the speedup is small with linear ACVD.
+For each program ACVD, ACVDQ and AnisotropicRemeshingQ, there is a parallel implementation, called ACVDP, ACVDQP and AnisotropicRemeshingQP. In the examples bellow, just add a trailing "P" to the executable to use all your processor cores. Note that the parallel versions are not deterministic, so running the programm twice with the same parameters will yield different remeshings. The parallel versions run much faster when quadrics are used (i.e. with ACVDQ or AnisotropcRemeshigQ), but the speedup is small with linear ACVD. For all programs, the number of threads can be set using the "-p numberOfThreads" option.
 
 ### Examples
 
@@ -68,6 +68,17 @@ taking into account curvature:
 #### Remeshing the horse to 1000 vertices with anisotropic metric: ####
 	wget https://github.com/alecjacobson/common-3d-test-models/raw/master/data/horse.obj
 	bin/AnisotropicRemeshingQ horse.obj 1000 1.5
+
+#### Remeshing the Thai Statue to 100000 vertices with curvature computation ####
+	wget http://graphics.stanford.edu/data/3Dscanrep/xyzrgb/xyzrgb_statuette.ply.gz
+	gunzip xyzrgb_statuette.ply.gz
+	bin/ACVDQ xyzrgb_statuette.ply 100000 1.5
+
+	parallel version:
+	bin/ACVDQP xyzrgb_statuette.ply 100000 1.5
+
+	parallel version restricted to 3 threads:
+	bin/ACVDQP xyzrgb_statuette.ply 100000 1.5 -np 3
 
 for all the examples above, interactive visualization of the processing can be triggered by adding "-d 2" to the command lines
 
