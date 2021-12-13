@@ -44,7 +44,7 @@ int main( int argc, char *argv[] )
 
 	vtkMinimalStandardRandomSequence *rng = vtkMinimalStandardRandomSequence::New();
 
-	ofstream fileOutput;
+	std::ofstream fileOutput;
 	fileOutput.open ("output.xyz");
 
 	for (int i = 0; i < numTris; i++) {
