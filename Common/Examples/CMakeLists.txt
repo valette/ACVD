@@ -16,6 +16,7 @@ set(COMMON_EXAMPLES
   stl2ply
   CheckOrientation
   ManifoldSimplification
+  sampleMesh
 )
 
 

@@ -377,6 +377,21 @@
 			],
 			"executable": "bin/img2raw",
 			"noCache": true
+		},
+		"sampleMesh" : {
+			"parameters" : [
+				{
+					"name" : "inputMesh",
+					"type" : "file",
+					"required" : true
+				},
+				{
+					"name" : "numberOfSamples",
+					"type" : "int",
+					"required" : true
+				}
+			],
+			"executable" : "sampleMesh"
 		}
 	}
 }
