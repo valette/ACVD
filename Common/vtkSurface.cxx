@@ -255,18 +255,16 @@ double vtkSurface::GetEdgeLength(vtkIdType Edge)
 	return (sqrt(vtkMath::Distance2BetweenPoints(P1,P2)));
 }
 
-double TriangleMinAngle( vtkCell* cell )
+double TriangleMinAngle( vtkSurface *mesh, vtkIdType v1, vtkIdType v2, vtkIdType v3 )
 {
   double p0[3],p1[3],p2[3];
   double a[3],b[3],c[3];
   double a2,b2,c2,alpha,beta,gamma;
   const double normal_coeff = .3183098861837906715377675267450287;
 
-  vtkPoints *p = cell->GetPoints();
-  p->GetPoint(0, p0);
-  p->GetPoint(1, p1);
-  p->GetPoint(2, p2);
-
+  mesh->GetPointCoordinates( v1, p0 );
+  mesh->GetPointCoordinates( v2, p1 );
+  mesh->GetPointCoordinates( v3, p2 );
   a[0] = p1[0]-p0[0];
   a[1] = p1[1]-p0[1];
   a[2] = p1[2]-p0[2];
@@ -288,7 +286,6 @@ double TriangleMinAngle( vtkCell* cell )
   gamma = acos(-vtkMath::Dot(a,b) / sqrt(a2 * b2));
 
   alpha = alpha < beta ? alpha : beta;
-
   return  (alpha < gamma ? alpha : gamma) * 180. * normal_coeff;
 }
 
@@ -335,8 +332,7 @@ void vtkSurface::WriteMeshStatisticsFile( const char* AreaFileName, const char* 
 
         Q_file <<coeff*area/(perimeter*lmax) <<std::endl;
 
-        vtkCell *Cell=this->GetCell(i);
-        AngleMin_file <<TriangleMinAngle(Cell) <<std::endl;
+        AngleMin_file <<TriangleMinAngle(this, v1,v2,v3) <<std::endl;
     }
 
     for( vtkIdType i = 0; i < this->GetNumberOfPoints( ); i++ )
@@ -1441,9 +1437,7 @@ void vtkSurface::ComputeTrianglesStatistics(double &Amin, double & Aav,double &Q
 			this->GetPoints()->GetPoint(v1,FP1);
 			this->GetPoints()->GetPoint(v2,FP2);
 			this->GetPoints()->GetPoint(v3,FP3);
-
-			vtkCell *Cell=this->GetCell(i);
-			MinimumAngle=TriangleMinAngle(Cell);
+			MinimumAngle=TriangleMinAngle(this, v1, v2, v3);
 
 			if (!((MinimumAngle>=-180)&&(MinimumAngle<=180)))
 				MinimumAngle=0;
