@@ -1960,6 +1960,7 @@ void vtkSurface::WriteToFile (const char *FileName)
 	if (strstr(filename,".vtk") != NULL) {
 		vtkPolyDataWriter *Writer = vtkPolyDataWriter::New();
 		Writer->SetInputData(this);
+		Writer->SetFileVersion(42);
 		Writer->SetFileName(FileName);
 		Writer->Write();
 	}
