@@ -8,6 +8,7 @@ set(COMMON_EXAMPLES
   ExamplevtkSurface
   CleanMesh
   icp
+  mesh2off
   mesh2vtk
   meshComponents
   meshDifference

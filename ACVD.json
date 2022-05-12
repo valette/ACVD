@@ -392,6 +392,17 @@
 				}
 			],
 			"executable" : "sampleMesh"
+		},
+		"mesh2off": {
+		  "description": "Converts a mesh to off format",
+		  "parameters": [
+			{
+			  "name": "inputMesh",
+			  "type": "file",
+			  "required": true
+			}
+		  ],
+		  "executable": "bin/mesh2off"
 		}
 	}
 }
