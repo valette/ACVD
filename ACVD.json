@@ -391,7 +391,7 @@
 					"required" : true
 				}
 			],
-			"executable" : "sampleMesh"
+			"executable" : "bin/sampleMesh"
 		},
 		"mesh2off": {
 		  "description": "Converts a mesh to off format",

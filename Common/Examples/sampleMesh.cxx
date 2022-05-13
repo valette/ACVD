@@ -75,7 +75,8 @@ int main( int argc, char *argv[] )
 			}
 			fileOutput << sample[0] << '\t' << sample[1] << '\t'
 				<< sample[2] << '\t' << N[0] << '\t' << N[1]
-				<< '\t' << N[2] << std::endl;
+				<< '\t' << N[2];
+			if ( ( i < numTris - 1 ) || ( j < n - 1 ) ) fileOutput << std::endl;
 		}
 	}
 	cout << n2 << " samples thrown" << endl;
