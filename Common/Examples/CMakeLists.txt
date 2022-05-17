@@ -9,6 +9,7 @@ set(COMMON_EXAMPLES
   CleanMesh
   icp
   mesh2off
+  mesh2ply
   mesh2vtk
   meshComponents
   meshDifference

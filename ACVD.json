@@ -403,6 +403,17 @@
 			}
 		  ],
 		  "executable": "bin/mesh2off"
+		},
+		"mesh2ply": {
+		  "description": "Converts a mesh to ply format",
+		  "parameters": [
+			{
+			  "name": "inputMesh",
+			  "type": "file",
+			  "required": true
+			}
+		  ],
+		  "executable": "bin/mesh2ply"
 		}
 	}
 }
