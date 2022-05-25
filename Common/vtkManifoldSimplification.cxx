@@ -89,7 +89,7 @@ void vtkManifoldSimplification::Simplify()
 			Vertex=Iterator.GetNextVertex();
 		}
 		
-		Neighbours1->IntersectWith(*Neighbours2);
+		Neighbours1->IntersectWith(Neighbours2);
 		
 		if (Neighbours1->GetNumberOfIds()==this->Input->GetEdgeNumberOfAdjacentFaces(Edge))
 		{
