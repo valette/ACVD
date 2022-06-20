@@ -297,6 +297,25 @@ private:
 
 };
 
+void RenderWindow::AttachToRenderWindow(RenderWindow *Window)
+{
+	if ( !Window || ( Window == this ) ) return;
+	this->attachedWindows.insert( Window );
+	std::set< RenderWindow* > allWindows;
+	auto cam = Window->GetMeshRenderer()->GetActiveCamera();
+
+	for ( auto win : this->attachedWindows )
+		for ( auto attached : win->attachedWindows )
+			allWindows.insert( attached );
+
+	for ( auto win : this->attachedWindows ) {
+		win->attachedWindows = allWindows;
+		win->GetMeshRenderer()->SetActiveCamera( cam );
+	}
+
+}
+
+
 void RenderWindow::Interact() 
 {
 	if (this->NumberOfInteractionsToSkip>0)
@@ -1157,6 +1176,11 @@ RenderWindow::RenderWindow () : HighlightedVerticesActor( 0 ),HighlightedEdgesAc
 	this->renWin->SetInteractor(vtkRenderWindowInteractor::New());
 //	this->renWin->GetInteractor()->Delete();
 	this->SetCustomInteractorStyle();
+	vtkNew<vtkCallbackCommand> getOrientation;
+	getOrientation->SetCallback(InteractionCallback);
+	getOrientation->SetClientData(this);
+	this->renWin->GetInteractor()->AddObserver(vtkCommand::InteractionEvent, getOrientation);
+	this->attachedWindows.insert( this );
 
 	this->lut = 0;
 

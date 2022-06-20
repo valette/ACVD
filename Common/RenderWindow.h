@@ -23,9 +23,12 @@
 #ifndef _RENDERWINDOW_H_
 #define _RENDERWINDOW_H_
 
+#include <set>
+
 #include <vtkDataSetMapper.h>
 #include <vtkRenderWindow.h>
 #include <vtkCommand.h>
+#include <vtkCallbackCommand.h>
 #include <vtkCamera.h>
 #include <vtkRenderWindowInteractor.h>
 #include <vtkActor.h>
@@ -86,14 +89,17 @@ public:
 	/// Sets the magnification factor for the capture (the dimensions of the image will be multiplied by Factor)
 	void SetCaptureMagnificationFactor (int Factor){this->CaptureMagnificationFactor=Factor;};
 
-	/// Links the window viewport to an other RenderWindow
-	void AttachToRenderWindow(RenderWindow *Window)
+	static void InteractionCallback(vtkObject* caller, long unsigned int evId,
+						 void* clientData, void* /*callData*/)
 	{
-		if (Window)
-		{
-			this->GetMeshRenderer()->SetActiveCamera(Window->GetMeshRenderer()->GetActiveCamera());
+		RenderWindow *self = reinterpret_cast<RenderWindow*>(clientData);
+		for ( auto win : self->attachedWindows ) {
+			if ( win != self ) win->Render();
 		}
-	}
+	};
+
+	/// Links the window viewport to an other RenderWindow
+	void AttachToRenderWindow(RenderWindow *Window);
 
 	/// returns the vtkCamera of the Window (usefull to change the view : rotations, zoom etc)
 	vtkCamera *GetCamera() {return this->GetMeshRenderer()->GetActiveCamera();}
@@ -241,6 +247,8 @@ protected:
 	vtkActor2D *cellLabels;
 
 	vtkTextActor *TextActor;
+
+	std::set< RenderWindow* > attachedWindows;
 
 	RenderWindow(); 
 	virtual ~RenderWindow();
