@@ -1,3 +1,5 @@
+[![CI](https://github.com/valette/ACVD/actions/workflows/ci.yml/badge.svg)](https://github.com/valette/ACVD/actions/workflows/ci.yml)
+
 ACVD 
 ====
 <!---[![Build Status](https://travis-ci.org/valette/ACVD.png)](https://travis-ci.org/valette/ACVD) --> 
