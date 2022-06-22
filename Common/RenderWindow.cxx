@@ -327,7 +327,7 @@ void RenderWindow::Interact()
 void RenderWindow :: SaveCamera(const char *filename)
 {
 	
-        vtkCamera *camera=this->GetMeshRenderer()->GetActiveCamera();
+	vtkCamera *camera=this->GetMeshRenderer()->GetActiveCamera();
 
 	std::ofstream camera_file;
 	camera_file.open (filename, std::ofstream::out | std::ofstream::trunc);
@@ -353,27 +353,19 @@ int RenderWindow :: LoadCamera(const char *filename)
 	double ViewUp[3];
 	double ViewAngle;
 
-        vtkCamera *camera=this->GetMeshRenderer()->GetActiveCamera();
-
+	vtkCamera *camera=this->GetMeshRenderer()->GetActiveCamera();
 	std::ifstream file(filename);
 
-   	if (file)
-    	{
-        	std::string line; // variable contenant chaque ligne lue
-			std::string res;
-      		 while ( std::getline( file, line) )
-        	{
-           	//	std::cout<< line.c_str() << std::endl;
-			sscanf(line.c_str(),"ClippingRange : %lf %lf",ClippingRange,ClippingRange+1);
-			sscanf(line.c_str(),"FocalPoint : %lf %lf %lf",FocalPoint,FocalPoint+1,FocalPoint+2);
-			sscanf(line.c_str(),"Position : %lf %lf %lf",Position,Position+1,Position+2);
-			sscanf(line.c_str(),"ViewUp : %lf %lf %lf",ViewUp,ViewUp+1,ViewUp+2);
-			sscanf(line.c_str(),"ViewAngle : %lf",&ViewAngle);
-        	}
-    	}
-	else
-	{
-		return(0);
+   	if ( !file ) return 0;
+	std::string line; // variable contenant chaque ligne lue
+	std::string res;
+	while ( std::getline( file, line) ) {
+		//	std::cout<< line.c_str() << std::endl;
+		sscanf(line.c_str(),"ClippingRange : %lf %lf",ClippingRange,ClippingRange+1);
+		sscanf(line.c_str(),"FocalPoint : %lf %lf %lf",FocalPoint,FocalPoint+1,FocalPoint+2);
+		sscanf(line.c_str(),"Position : %lf %lf %lf",Position,Position+1,Position+2);
+		sscanf(line.c_str(),"ViewUp : %lf %lf %lf",ViewUp,ViewUp+1,ViewUp+2);
+		sscanf(line.c_str(),"ViewAngle : %lf",&ViewAngle);
 	}
 
 	camera->SetClippingRange(ClippingRange);
@@ -392,6 +384,7 @@ void RenderWindow::EnableNormalMap()
 	vtkPolyDataNormals *Normals = vtkPolyDataNormals::New ();
 	Normals->SetInputData (this->Input);
 	Normals->SetFeatureAngle (60);
+	Normals->Update();
 	this->SetInputData (Normals->GetOutput ());
 	Normals->Delete();
 	this->Render();
@@ -480,18 +473,16 @@ vtkActor* RenderWindow::SetInputData (vtkPolyData * Input)
 {
 	vtkPolyDataMapper *Mapper=(vtkPolyDataMapper *) this->MeshActor->GetMapper();
 	
-	if (Mapper==0)
-	{
+	if ( Mapper==0 ) {
 		Mapper=vtkPolyDataMapper::New();		
 		Mapper->SetResolveCoincidentTopologyToPolygonOffset ();
+		Mapper->SetRelativeCoincidentTopologyPolygonOffsetParameters(0,2);
 		this->MeshActor->SetMapper(Mapper);
 		Mapper->Delete();
 	}
+
 	Mapper->SetInputData(Input);
-	
-	if (this->lut)
-		Mapper->SetLookupTable (this->lut);
-	
+	if (this->lut) Mapper->SetLookupTable (this->lut);
 	this->Input = Input;
 
 //	this->MeshActor->GetProperty()->SetDiffuse(0.5);
@@ -500,7 +491,7 @@ vtkActor* RenderWindow::SetInputData (vtkPolyData * Input)
 
 //	this->MeshActor->GetProperty()->SetAmbient(0.5);
 //	this->MeshActor->GetProperty()->SetAmbientColor(0,0,0.9);
-	return (MeshActor);
+	return MeshActor;
 }
 
 vtkActor* RenderWindow::SetInputData (vtkSurface * Input)
@@ -830,6 +821,7 @@ vtkActor *RenderWindow::AddPolyData (vtkPolyData * Input)
 
 	vtkPolyDataMapper *mapper = vtkPolyDataMapper::New ();
 	mapper->SetResolveCoincidentTopologyToPolygonOffset ();
+	mapper->SetRelativeCoincidentTopologyPolygonOffsetParameters(0,2);
 //	mapper->SetResolveCoincidentTopologyToShiftZBuffer();
 
 	mapper->SetInputData (Input);
@@ -918,6 +910,7 @@ RenderWindow::SetInputEdges (vtkPolyData * Edges)
 	
 		vtkPolyDataMapper *EdgesMapper = vtkPolyDataMapper::New ();
 		EdgesMapper->SetResolveCoincidentTopologyToPolygonOffset ();
+		EdgesMapper->SetRelativeCoincidentTopologyPolygonOffsetParameters(0,2);
 
 		this->EdgesActor = vtkActor::New ();
 		vtkIntArray *EdgesColor = vtkIntArray::New ();
