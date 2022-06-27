@@ -41,4 +41,4 @@ jobs:
 
     - name: Test
       working-directory: ${{github.workspace}}/build
-      run: bash ../test.sh
+      run: bash ../source/test.sh
