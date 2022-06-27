@@ -13,7 +13,6 @@ Auteur:   Sebastien Valette
 #include <vtkMetaImageReader.h>
 #include <vtkMetaImageWriter.h>
 #include "vtkImageDataCleanLabels.h"
-#include <vtkSimpleImageFilterExample.h>
 
 int main( int argc, char *argv[] )
 {
