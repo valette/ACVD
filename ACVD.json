@@ -280,6 +280,17 @@
 			],
 			"executable": "bin/mesh2vtk"
 		},
+		"mesh2obj": {
+			"description": "Converts a mesh into obj format",
+			"parameters": [
+				{
+					"name": "inputMesh",
+					"type": "file",
+					"required": "true"
+				}
+			],
+			"executable": "bin/mesh2obj"
+		},
 		"slice_volume": {
 			"description": "Computes slices from volume data",
 			"parameters": [

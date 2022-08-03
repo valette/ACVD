@@ -8,6 +8,7 @@ set(COMMON_EXAMPLES
   ExamplevtkSurface
   CleanMesh
   icp
+  mesh2obj
   mesh2off
   mesh2ply
   mesh2vtk
