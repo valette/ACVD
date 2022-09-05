@@ -115,7 +115,7 @@ protected:
 
 	void AddItemRingToProcess(vtkIdType Item,int ProcessId)
 	{
-		int NumberOfEdges,*Edges,i;
+		vtkIdType NumberOfEdges,*Edges,i;
 		this->GetInput()->GetVertexNeighbourEdges(Item,NumberOfEdges,Edges);
 		for (i=0;i<NumberOfEdges;i++)
 			this->AddEdgeToProcess(Edges[i],ProcessId);
