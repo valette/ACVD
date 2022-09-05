@@ -162,6 +162,8 @@ protected:
 template < class Metric >
 int vtkDiscreteRemeshing < Metric >::DetectNonManifoldOutputVertices() {
 
+	cout << "Starting detection of non-manifold vertices" << endl;
+
 	// initialize items contained in clusters
 	std::vector< vtkIdList *> ClusterItems;
 	ClusterItems.resize( this->NumberOfClusters );
@@ -204,12 +206,12 @@ int vtkDiscreteRemeshing < Metric >::DetectNonManifoldOutputVertices() {
 	for ( int cluster = 0; cluster != this->NumberOfClusters; cluster++ ) {
 
 		if ( this->Output->IsVertexManifold( cluster ) ) continue;
-//		cout<<"Cluster "<<Cluster<<" is non manifold"<<endl;
+		cout<<"Cluster "<<cluster<<" is non manifold"<<endl;
 		vtkIdList *Items = ClusterItems[ cluster ];
 		bool problem = true;
 
 		if ( Items != 0) {
-
+			cout << Items->GetNumberOfIds() << " items inside" << endl;
 			if ( Items->GetNumberOfIds() == 1 )	{
 
 				if ( this->Input->IsVertexManifold( Items->GetId( 0 ) ) != 1 ) {
@@ -221,6 +223,9 @@ int vtkDiscreteRemeshing < Metric >::DetectNonManifoldOutputVertices() {
 
 			}
 
+		} else {
+			cout << ".... but empty. Skipping" << endl;
+			continue;
 		}
 
 		if ( problem ) {
@@ -252,7 +257,10 @@ int vtkDiscreteRemeshing < Metric >::DetectNonManifoldOutputVertices() {
 
 		vtkIdType cluster = ClustersWithIssues->GetId( i );
 		vtkIdList *Items = ClusterItems[ cluster ];
-		if ( Items == 0 ) cout << "Warning : cluster " << cluster << " seems empty!" << endl;
+		if ( Items == 0 ) {
+			cout << "Warning : cluster " << cluster << " seems empty!" << endl;
+			//continue;
+		}
 		int newSize = this->NumberOfClusters + 1;
 		this->Clusters.resize( newSize );
 		vtkIdType newCluster = this->NumberOfClusters;
@@ -317,8 +325,8 @@ int vtkDiscreteRemeshing < Metric >::DetectNonManifoldOutputVertices() {
 
 		if (!found) {
 
-//				cout<<"Could not find a place to add cluster "<<newCluster
-//				<<" near cluster "<<Cluster<<endl;
+				cout<<"Could not find a place to add cluster "<<newCluster
+				<<" near cluster "<<cluster<<endl;
 			for ( int j = 0; j < IList->GetNumberOfIds(); j++ ) {
 
 				vtkIdType Neighbour = IList->GetId( j );
