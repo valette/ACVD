@@ -68,6 +68,7 @@ int main( int argc, char *argv[] )
 
 	vtkDoubleArray *maxErrors = vtkDoubleArray::New();
 	vtkDoubleArray *averageErrors = vtkDoubleArray::New();
+	vtkDoubleArray *averageDisplacements = vtkDoubleArray::New();
 	int numberOfPoints;
 	double globalMaxDistance = 0;
 	int globalMaxId = -1;
@@ -84,9 +85,14 @@ int main( int argc, char *argv[] )
 			numberOfPoints = mesh1->GetNumberOfPoints();
 			maxErrors->SetNumberOfValues( numberOfPoints );
 			averageErrors->SetNumberOfValues( numberOfPoints );
+			averageDisplacements->SetNumberOfComponents( 3 );
+			averageDisplacements->SetNumberOfTuples( numberOfPoints );
+			double d[ 3 ] = { 0, 0, 0};
+			
 			for ( int j = 0; j < numberOfPoints; j++ ) {
 				maxErrors->SetValue( j, 0 );
 				averageErrors->SetValue( j, 0 );
+				averageDisplacements->SetTuple( j, d );
 			}
 
 		}
@@ -98,7 +104,7 @@ int main( int argc, char *argv[] )
 			cout << "error : " << files[ i + 1 ] << " should contain " << numberOfPoints << " vertices" << endl;
 
 
-		double pt1[ 3 ], pt2[ 3 ];
+		double pt1[ 3 ], pt2[ 3 ], d[ 3 ];
 		for ( int j = 0; j < numberOfPoints; j++ ) {
 
 			mesh1->GetPointCoordinates( j, pt1 );
@@ -106,6 +112,11 @@ int main( int argc, char *argv[] )
 			double distance = sqrt( vtkMath::Distance2BetweenPoints( pt1, pt2 ) );
 			if ( distance > maxErrors->GetValue( j ) ) maxErrors->SetValue( j, distance );
 			averageErrors->SetValue( j, averageErrors->GetValue( j ) + distance / ( files.size() / 2 ) );
+			averageDisplacements->GetTuple( j, d );
+			for ( int k = 0; k < 3; k++ )
+				d[ k ] += ( pt2[ k ] - pt1[ k ] )  / ( files.size() / 2 );
+			averageDisplacements->SetTuple( j, d );
+
 			if ( distance > globalMaxDistance ) {
 				globalMaxDistance = distance;
 				globalMaxId = i;
@@ -128,6 +139,12 @@ int main( int argc, char *argv[] )
 	mesh->CreateFromFile( files[ 0 ].c_str() );
 	mesh->GetPointData()->SetScalars( maxErrors );
 	mesh->WriteToFile( "maxErrors.vtk" );
+	mesh->Delete();
+
+	mesh = vtkSurface::New();
+	mesh->CreateFromFile( files[ 0 ].c_str() );
+	mesh->GetPointData()->SetScalars( averageDisplacements );
+	mesh->WriteToFile( "averageDisplacements.vtk" );
 	mesh->Delete();
 
 	cout << "Global Max distance = " << globalMaxDistance << " for id= " << globalMaxId << endl;
