@@ -375,6 +375,49 @@
 			],
 			"executable": "bin/VolumeAnisotropicDiffusion"
 		},
+		"volumeCrop": {
+			"parameters": [
+				{
+					"name": "inputVolume",
+					"type": "file",
+					"required": "true"
+				},
+				{
+					"text" : "output.nii.gz"
+				},
+				{
+					"name": "xMin",
+					"type": "int",
+					"required": "true"
+				},
+				{
+					"name": "xMax",
+					"type": "int",
+					"required": "true"
+				},
+				{
+					"name": "yMin",
+					"type": "int",
+					"required": "true"
+				},
+				{
+					"name": "yMax",
+					"type": "int",
+					"required": "true"
+				},
+				{
+					"name": "zMin",
+					"type": "int",
+					"required": "true"
+				},
+				{
+					"name": "zMax",
+					"type": "int",
+					"required": "true"
+				}
+			],
+			"executable": "bin/VolumeCrop"
+		},
 		"img2raw": {
 			"parameters": [
 				{
