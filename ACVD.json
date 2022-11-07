@@ -1,5 +1,29 @@
 {
 	"actions": {
+		"flipToRAS" : {
+			"parameters" : [
+				{
+					"name" : "inputDirectory",
+					"type" : "directory",
+					"prefix" : "-d "
+				},
+				{
+					"name" : "inputVolume",
+					"type" : "file",
+					"prefix" : "-f "
+				},
+				{
+					"text" : "-o ./"
+				},
+				{
+					"name" : "outputFileName",
+					"type" : "string",
+					"prefix" : "-of "
+				}
+			],
+			"executable" : "python/flipToRAS.py",
+			"engine" : "python3"
+		},
 		"icp": {
 			"parameters": [
 				{
