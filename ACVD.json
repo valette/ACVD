@@ -1,5 +1,14 @@
 {
-	"actions": {
+  "dataDirs" : {
+	  "ACVD" : {
+		  "path" : "./js",
+		  "hidden" : true
+	  }
+  },
+  "init" : [
+	"ACVD/ACVD.js"
+  ],
+  "actions": {
 		"flipToRAS" : {
 			"parameters" : [
 				{
@@ -194,6 +203,7 @@
 			"executable": "bin/ACVDQ"
 		},
 		"extract_meshes": {
+			"statify" : true,
 			"description": "Generates meshes from labeled volume data : marching cubes + simplification + smoothing",
 			"parameters": [
 				{
@@ -316,6 +326,7 @@
 			"executable": "bin/mesh2obj"
 		},
 		"slice_volume": {
+			"statify" : true,
 			"description": "Computes slices from volume data",
 			"parameters": [
 				{
