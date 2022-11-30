@@ -203,7 +203,6 @@
 			"executable": "bin/ACVDQ"
 		},
 		"extract_meshes": {
-			"statify" : true,
 			"description": "Generates meshes from labeled volume data : marching cubes + simplification + smoothing",
 			"parameters": [
 				{
