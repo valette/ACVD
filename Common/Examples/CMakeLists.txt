@@ -11,6 +11,7 @@ set(COMMON_EXAMPLES
   mesh2obj
   mesh2off
   mesh2ply
+  mesh2stl
   mesh2vtk
   meshComponents
   meshDifference

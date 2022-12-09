@@ -313,6 +313,17 @@
 			],
 			"executable": "bin/mesh2vtk"
 		},
+		"mesh2stl": {
+			"description": "Converts a mesh into a vtk format",
+			"parameters": [
+				{
+					"name": "inputMesh",
+					"type": "file",
+					"required": "true"
+				}
+			],
+			"executable": "bin/mesh2stl"
+		},
 		"mesh2obj": {
 			"description": "Converts a mesh into obj format",
 			"parameters": [
