@@ -16,6 +16,7 @@ set(COMMON_EXAMPLES
   meshComponents
   meshDifference
   subdivideMesh
+  subdivideMesh2
   vtk2ply
   stl2ply
   CheckOrientation
