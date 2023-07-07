@@ -9,10 +9,10 @@ def flipAndSaveToRAS(filename, args):
     """
     
     #Recover the image object
-    imageObj = nib.load(filename)
+    img = nib.load(filename)
     
     #Get the current orientation
-    CurrentOrientation = nib.aff2axcodes(imageObj.affine)
+    CurrentOrientation = nib.aff2axcodes(img.affine)
     print("The current orientation is : ", CurrentOrientation)
     
     #Check if the current orientation is already RAS+
@@ -20,12 +20,12 @@ def flipAndSaveToRAS(filename, args):
         
         print("Image already recorded into the RAS+ orientation, nothing to do")
         
-##    else :
+    else :
         #Flip the image to RAS
-    flippedImage = nib.as_closest_canonical(imageObj)
+        img = nib.as_closest_canonical(img)
                 
     ##Check the new orientation
-    NewOrientation = nib.aff2axcodes(flippedImage.affine)
+    NewOrientation = nib.aff2axcodes(img.affine)
         
     ##Save the image into the folder RASData with the same name
     index = filename.rfind('/')
@@ -35,13 +35,15 @@ def flipAndSaveToRAS(filename, args):
     if not os.path.exists( outputDirectory ): os.mkdir( outputDirectory )
         
     #Set Qcode to 1 that the Qform matrix can be used into the further processing
-    flippedImage.header['qform_code'] = 1
+    img.header['qform_code'] = 1
         
     #Save the flipped image
     outputFileName = filename[index+1:]
     if args.outputFileName : outputFileName = args.outputFileName
     fullFileName = os.path.join(outputDirectory, outputFileName )
-    nib.save(flippedImage, fullFileName)
+    img_data = img.get_fdata()
+    img_conv = nib.Nifti1Image(img_data.astype(img.header.get_data_dtype()), img.affine, img.header)
+    nib.save(img_conv, fullFileName)
         
     print("The new orientation is now : ", NewOrientation)
         
