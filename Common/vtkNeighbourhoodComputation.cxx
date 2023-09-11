@@ -34,7 +34,8 @@ email				 :
 
 void vtkNeighbourhoodComputation::ComputeNRingCells(vtkIdType Cell,int RingSize, vtkIdList *FList)
 {
-	this->IncreaseTime();
+	this->VisitedCells->Reset();
+	this->VisitedVertices->Reset();
 	vtkIdType	j,k,l;
 	vtkIdType v1,v2,v3,Edge1,f1,f2;
 	vtkIdList *TempList;
@@ -49,7 +50,7 @@ void vtkNeighbourhoodComputation::ComputeNRingCells(vtkIdType Cell,int RingSize,
 
 		FList->Reset();
 		FList->InsertNextId(Cell);
-		VisitedCells->SetValue(Cell,this->Time);
+		VisitedCells->Tag(Cell);
 	}
 	else
 	{
@@ -57,7 +58,7 @@ void vtkNeighbourhoodComputation::ComputeNRingCells(vtkIdType Cell,int RingSize,
 		VList->InsertNextId(Cell);
 		this->Input->GetVertexNeighbourFaces(Cell,FList);
 		for (j=0;j<FList->GetNumberOfIds();j++)
-			VisitedCells->SetValue(FList->GetId(j),this->Time);
+			VisitedCells->Tag(FList->GetId(j));
 	}
 
 	vtkIdType NumberOfEdges,*Edges=0;
@@ -67,9 +68,9 @@ void vtkNeighbourhoodComputation::ComputeNRingCells(vtkIdType Cell,int RingSize,
 		for	(k=0;k<VList->GetNumberOfIds();k++)
 		{	
 			v1=VList->GetId(k);			
-			if (VisitedVertices->GetValue(v1)!=this->Time)
+			if (!VisitedVertices->IsTagged(v1))
 			{
-				VisitedVertices->SetValue(v1,this->Time);
+				VisitedVertices->Tag(v1);
 				this->Input->GetVertexNeighbourEdges(v1,NumberOfEdges,Edges);
 				for	(l=0;l<NumberOfEdges;l++)
 				{
@@ -82,17 +83,17 @@ void vtkNeighbourhoodComputation::ComputeNRingCells(vtkIdType Cell,int RingSize,
 					this->Input->GetEdgeFaces(Edge1,f1,f2);
 					if (f1>=0)
 					{
-						if (VisitedCells->GetValue(f1)!=this->Time)
+						if (!VisitedCells->IsTagged(f1))
 						{
 							FList->InsertNextId(f1);
-							VisitedCells->SetValue(f1,this->Time);
+							VisitedCells->Tag(f1);
 						}
 						if (f2>=0)
 						{
-							if (VisitedCells->GetValue(f2)!=this->Time)
+							if (!VisitedCells->IsTagged(f2))
 							{
 								FList->InsertNextId(f2);
-								VisitedCells->SetValue(f2,this->Time);
+								VisitedCells->Tag(f2);
 							}
 						}
 					}
@@ -106,7 +107,7 @@ void vtkNeighbourhoodComputation::ComputeNRingCells(vtkIdType Cell,int RingSize,
 }
 void vtkNeighbourhoodComputation::ComputeDistanceRingCells(vtkIdType Cell,double Distance, vtkIdList *FList)
 {
-	this->IncreaseTime();
+	this->VisitedCells->Reset();
 	vtkIdType v1,v2,v3,Edge1,f1,f2;
 	double Point1[3],Point2[3],Point3[3],Origin[3];
 	std::queue<int>	EdgesQueue;
@@ -121,7 +122,7 @@ void vtkNeighbourhoodComputation::ComputeDistanceRingCells(vtkIdType Cell,double
 
 		FList->Reset();
 		FList->InsertNextId(Cell);
-		VisitedCells->SetValue(Cell,this->Time);
+		VisitedCells->Tag(Cell);
 		EdgesQueue.push(this->GetInput()->IsEdge(v1,v2));
 		EdgesQueue.push(this->GetInput()->IsEdge(v1,v3));
 		EdgesQueue.push(this->GetInput()->IsEdge(v3,v2));
@@ -146,15 +147,15 @@ void vtkNeighbourhoodComputation::ComputeDistanceRingCells(vtkIdType Cell,double
 		EdgesQueue.pop();
 		this->GetInput()->GetEdgeVertices(Edge1,v1,v2);
 		this->GetInput()->GetEdgeFaces(Edge1,f1,f2);
-		if (VisitedCells->GetValue(f1)==this->Time)
+		if (VisitedCells->IsTagged(f1))
 		{
 			f1=f2;
 		}
 		if (f1>=0)
 		{
-			if (VisitedCells->GetValue(f1)!=this->Time)
+			if (!VisitedCells->IsTagged(f1))
 			{
-				VisitedCells->SetValue(f1,this->Time);
+				VisitedCells->Tag(f1);
 				v3=this->GetInput()->GetThirdPoint(f1,v1,v2);
 				this->GetInput()->GetPointCoordinates(v1,Point1);
 				this->GetInput()->GetPointCoordinates(v2,Point2);
@@ -176,16 +177,13 @@ void vtkNeighbourhoodComputation::ComputeDistanceRingCells(vtkIdType Cell,double
 vtkNeighbourhoodComputation::vtkNeighbourhoodComputation()
 {
 	this->VisitedCells=0;
-	this->VisitedEdges=0;
 	this->VisitedVertices=0;
 	this->VList=vtkIdList::New();
 	this->VList2=vtkIdList::New();
 	this->EList=vtkIdList::New();
 	this->CellType=0;
-	this->Time=0;
-	this->VisitedCells=vtkIntArray::New();
-	this->VisitedEdges=vtkIntArray::New();
-	this->VisitedVertices=vtkIntArray::New();	
+	this->VisitedCells=vtkTag::New();
+	this->VisitedVertices=vtkTag::New();
 }
 
 vtkNeighbourhoodComputation::~vtkNeighbourhoodComputation()
@@ -194,7 +192,6 @@ vtkNeighbourhoodComputation::~vtkNeighbourhoodComputation()
 	this->VList2->Delete();
 	this->EList->Delete();
 	this->VisitedCells->Delete();
-	this->VisitedEdges->Delete();
 	this->VisitedVertices->Delete();
 }
 
@@ -210,39 +207,14 @@ vtkNeighbourhoodComputation* vtkNeighbourhoodComputation::New()
 	return (new	vtkNeighbourhoodComputation);
 }
 
-void vtkNeighbourhoodComputation::IncreaseTime()
-{
-	if (this->Time==INT_MAX)
-		this->InitArrays();
-	else
-		this->Time++;
-}
 
 void vtkNeighbourhoodComputation::SetInputData(vtkSurface *Mesh)
 {
 	this->Input=Mesh;
 	
 	// Allocate the arrays with respect to the input mesh
-	this->VisitedCells->SetNumberOfValues(Mesh->GetNumberOfCells());
-	this->VisitedEdges->SetNumberOfValues(Mesh->GetNumberOfEdges());
-	this->VisitedVertices->SetNumberOfValues(Mesh->GetNumberOfPoints());
-	
-	// initialize the arrays and Time
-	this->InitArrays();
+	this->VisitedCells->SetNumberOfItems(Mesh->GetNumberOfCells());
+	this->VisitedVertices->SetNumberOfItems(Mesh->GetNumberOfPoints());
+
 }
 
-
-void vtkNeighbourhoodComputation::InitArrays()
-{
-	this->Time=0;
-	int	i;
-
-	for	(i=0;i<this->Input->GetNumberOfCells();i++)
-		this->VisitedCells->SetValue(i,-1);
-
-	for	(i=0;i<this->Input->GetNumberOfEdges();i++)
-		this->VisitedEdges->SetValue(i,-1);
-
-	for	(i=0;i<this->Input->GetNumberOfPoints();i++)
-		this->VisitedVertices->SetValue(i,-1);
-}

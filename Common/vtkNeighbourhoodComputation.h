@@ -33,6 +33,7 @@ email                :
 #include "vtkCommand.h"
 #include "vtkObjectFactory.h"
 #include "vtkSurface.h"
+#include "vtkTag.h"
 
 /// A Class to compute Neighbourhoods on meshes
 /// The class is designed for efficient and possibly multithreaded computation
@@ -68,26 +69,12 @@ private:
 	// Type of the origin cells (0=faces 1=Vertices)
 	int CellType;
 	
-	// this parameter stores the number of times the methods 
-	// ComputeNRingCells() or ComputeDistanceRingCells() were called.
-	int Time;
-	
-	// this method increases the "Time" class member, and check wether there is an overflow.
-	// In case of overflow, Time is reset to 0 and the visited fields are also reset.
-	// Note : overflow will very unlikely happen , unless you call for Neighborhood computation 
-	// a lot of times (more INT_MAX)
-	void IncreaseTime();
-	
-	// Reset the arrays defining whether an item was already visited
-	void InitArrays();
-
 	// The input mesh
 	vtkSurface *Input;
 
 	// those arrays define which elements have already been visited
-	vtkIntArray *VisitedCells;
-	vtkIntArray *VisitedEdges;
-	vtkIntArray *VisitedVertices;
+	vtkTag *VisitedCells;
+	vtkTag *VisitedVertices;
 
 	// IdLists statically created to speed up the neighborhood computation
 	vtkIdList *VList;
