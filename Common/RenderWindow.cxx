@@ -858,6 +858,7 @@ RenderWindow::DisplayInputEdges ()
 		vtkEdgeTable *Table=vtkEdgeTable::New();
 		Table->InitEdgeInsertion(NPoints);
 		vtkIdList *VList=vtkIdList::New();
+		this->Input->BuildCells();
 		for (i=0;i<this->Input->GetNumberOfCells();i++)
 		{
 			this->Input->GetCellPoints(i,VList);

@@ -589,6 +589,7 @@ void vtkSurface::SplitLongEdges(double Ratio)
 	this->DeleteTrianglesNormals();
 	this->DeleteConnectedComponents();
 	this->DeleteVerticesAreas();
+	this->Polys->Modified();
 	this->Modified();
 	FList->Delete();
 
