@@ -85,7 +85,7 @@ int main( int argc, char *argv[] )
 		cout << "gradation defines the influence of local curvature (0=uniform meshing)" << endl;
 		cout << endl << "Optionnal arguments : " << endl;
 		cout << "-b 0/1 : sets mesh boundary fixing off/on (default : 0)" << endl;
-		cout << "-s threshold : defines the subsampling threshold i.e. the input mesh will be subdivided until its number " << endl;
+		cout << "-s threshold : defines the subsampling threshold i.e. the input mesh will be subdivided until inputVertices > outputVertices * ratio" << endl;
 		cout << "-o directory : sets the output directory " << endl;
 		cout << "-of file : sets the output file name " << endl;
 		cout << " of vertices is above nvertices*threshold (default=10)" << endl;
