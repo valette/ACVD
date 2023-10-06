@@ -187,9 +187,9 @@ int main( int argc, char *argv[] ) {
 
 		} else if ( strcmp( key, "-l" ) == 0 ) {
 
-			mesh->SplitLongEdges( atof( value ) );
 			cout << "Splitting edges longer than "
 				<< atof( value ) << " times the average edge length" << endl;
+			mesh->SplitLongEdges( atof( value ) );
 
 		} else if ( strcmp( key,"-w" ) == 0 ) {
 
