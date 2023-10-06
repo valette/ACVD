@@ -852,7 +852,7 @@ void vtkSurface::GetMeshProperties(std::stringstream &stream)
 	{
 		double Amin,Aav,Qmin,Qav,P30;
 		this->ComputeTrianglesStatistics(Amin,Aav,Qmin,Qav,P30);
-		stream<<"Mesh geometry qualitity:" <<
+		stream<<"Mesh geometry quality:" <<
 			endl<<"  AngleMin="<<Amin<<endl
 			<<"  AverageMinAngle="<<Aav<<endl
 			<<"  Qmin="<<Qmin<<endl
