@@ -60,8 +60,6 @@ int main( int argc, char *argv[] )
 		sub = vtkButterflySubdivisionFilter::New();
 
 	sub->SetInputData( Mesh );
-	RenderWindow *win = RenderWindow::New();
-
 	sub->SetNumberOfSubdivisions( atoi( argv[ 3 ] ) );
 	cout << "*********************************" << endl;
 	cout << "Subdividing..." << endl;
@@ -69,8 +67,16 @@ int main( int argc, char *argv[] )
 	vtkPolyData *output = sub->GetOutput();
 	cout << output->GetNumberOfPoints() << " Points" << endl;
 	cout << output->GetNumberOfCells() << " Faces" << endl;
-	win->SetInputData( output );
-	win->Render();
-	win->Interact();
+	vtkPLYWriter *writer = vtkPLYWriter::New();
+	writer->SetFileName( "output.ply" );
+	writer->SetInputData( output );
+	writer->Write();
+
+	if ( atoi( argv[ 4 ] ) == 1 ){
+		RenderWindow *win = RenderWindow::New();
+		win->SetInputData( output );
+		win->Render();
+		win->Interact();
+	}
 	return (0);
 }

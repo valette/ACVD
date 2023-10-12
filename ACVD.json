@@ -647,6 +647,30 @@
 			}
 		  ],
 		  "executable": "bin/mesh2ply"
+		},
+		"subdivideMesh": {
+		  "description": "Subdivides a mesh using Loop or butterfly subdivision",
+		  "parameters": [
+			{
+			  "name": "inputMesh",
+			  "type": "file",
+			  "required": true
+			},
+			{
+			  "name": "subdivisionType",
+			  "type": "int",
+			  "info" : "defines the subdivision type : 0=loop, 1=butterfly",
+			  "defaultValue" : "1"
+			},
+			{
+			  "name": "numberOfSubdivisions",
+			  "type": "int",
+			  "info" : "defines the number of subdivision levels",
+			  "defaultValue" : "1"
+			},
+			{ "text" : " 0" }
+		  ],
+		  "executable": "bin/subdivideMesh2"
 		}
 	}
 }
