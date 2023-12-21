@@ -8,6 +8,7 @@
   "init" : [
 	"ACVD/ACVD.js"
   ],
+  "include" : [ "./ACVD.js" ],
   "actions": {
 		"flipToRAS" : {
 			"parameters" : [
@@ -116,262 +117,45 @@
 			],
 			"executable": "bin/VolumeOOCSlice"
 		},
-		"acvd": {
-			"description": "Performs simplification/remeshing of 3D triangular meshes",
-			"parameters": [
-				{
-					"name": "input_mesh",
-					"type": "file",
-					"required": "true"
-				},
-				{
-					"name": "number_of_desired_vertices",
-					"info": "number of desired vertices for the output mesh",
-					"type": "int",
-					"min": "0",
-					"required": "true"
-				},
-				{
-					"name": "gradation",
-					"type": "float",
-					"info": "set to 0 for uniform meshing, increase (example : 2.5) to add curvature-adapted meshing",
-					"required": "true",
-					"min": "0",
-					"max": "30",
-					"defaultValue": "0"
-				},
-				{
-					"prefix": "-m ",
-					"info": "force the output mesh to be manifold",
-					"name": "force_manifold",
-					"type": "int",
-					"required": "false",
-					"min": "0",
-					"max": "1"
-				},
-				{
-					"prefix" : "-s ",
-					"info" : "subsampling threshold : subdivide the mesh until its number of points is large enough i.e. numberOfInputVertices / number_of_desired_vertices > subsamplingThreshold",
-					"name" : "subsamplingThreshold",
-					"type" : "int"
-				},
-				{
-					"prefix" : "-l ",
-					"info" : "split input edges longer than ( averageLength * lengthRatio )",
-					"name" : "lengthRatio",
-					"type" : "float"
-				},
-				{
-					"text": "-d 0"
-				}
-			],
-			"executable": "bin/ACVD"
-		},
-		"acvdp": {
-			"description": "Performs simplification/remeshing of 3D triangular meshes (parallel version)",
-			"parameters": [
-				{
-					"name": "input_mesh",
-					"type": "file",
-					"required": "true"
-				},
-				{
-					"name": "number_of_desired_vertices",
-					"info": "number of desired vertices for the output mesh",
-					"type": "int",
-					"min": "0",
-					"required": "true"
-				},
-				{
-					"name": "gradation",
-					"type": "float",
-					"info": "set to 0 for uniform meshing, increase (example : 2.5) to add curvature-adapted meshing",
-					"required": "true",
-					"min": "0",
-					"max": "30",
-					"defaultValue": "0"
-				},
-				{
-					"prefix": "-m ",
-					"info": "force the output mesh to be manifold",
-					"name": "force_manifold",
-					"type": "int",
-					"required": "false",
-					"min": "0",
-					"max": "1"
-				},
-				{
-					"prefix" : "-s ",
-					"info" : "subsampling threshold : subdivide the mesh until its number of points is large enough i.e. numberOfInputVertices / number_of_desired_vertices > subsamplingThreshold",
-					"name" : "subsamplingThreshold",
-					"type" : "int"
-				},
-				{
-					"prefix" : "-l ",
-					"info" : "split input edges longer than ( averageLength * lengthRatio )",
-					"name" : "lengthRatio",
-					"type" : "float"
-				},
-				{
-					"text": "-d 0"
-				}
-			],
-			"executable": "bin/ACVDP"
-		},
-		"acvdq": {
-			"description": "Performs simplification/remeshing of 3D triangular meshes (usin QEM, more accurate but slower)",
-			"parameters": [
-				{
-					"name": "input_mesh",
-					"type": "file",
-					"required": true
-				},
-				{
-					"name": "number_of_desired_vertices",
-					"info": "number of desired vertices for the output mesh",
-					"type": "int",
-					"min": "0",
-					"required": true
-				},
-				{
-					"name": "gradation",
-					"info": "set to 0 for uniform meshing, increase (example : 2.5) to add curvature-adapted meshing",
-					"type": "float",
-					"required": true,
-					"min": "0",
-					"max": "30",
-					"defaultValue": "0"
-				},
-				{
-					"prefix": "-m ",
-					"info": "force the output mesh to be manifold",
-					"name": "force_manifold",
-					"type": "int",
-					"min": "0",
-					"max": "1"
-				},
-				{
-					"prefix": "-q ",
-					"info": "quadrics level (0 : no quadrics, 3 : full quadrics)",
-					"name": "quadricsLevel",
-					"type": "int",
-					"min": "0",
-					"max": "3",
-					"defaultValue": "3"
-				},
-				{
-					"prefix" : "-s ",
-					"info" : "subsampling threshold : subdivide the mesh until its number of points is large enough i.e. numberOfInputVertices / number_of_desired_vertices > subsamplingThreshold",
-					"name" : "subsamplingThreshold",
-					"type" : "int"
-				},
-				{
-					"prefix" : "-l ",
-					"info" : "split input edges longer than ( averageLength * lengthRatio )",
-					"name" : "lengthRatio",
-					"type" : "float"
-				},
-				{
-					"text": "-d 0"
-				}
-			],
-			"executable": "bin/ACVDQ"
-		},
-		"acvdqp": {
-			"description": "Performs simplification/remeshing of 3D triangular meshes (usin QEM, more accurate but slower, parallel version)",
-			"parameters": [
-				{
-					"name": "input_mesh",
-					"type": "file",
-					"required": true
-				},
-				{
-					"name": "number_of_desired_vertices",
-					"info": "number of desired vertices for the output mesh",
-					"type": "int",
-					"min": "0",
-					"required": true
-				},
-				{
-					"name": "gradation",
-					"info": "set to 0 for uniform meshing, increase (example : 2.5) to add curvature-adapted meshing",
-					"type": "float",
-					"required": true,
-					"min": "0",
-					"max": "30",
-					"defaultValue": "0"
-				},
-				{
-					"prefix": "-m ",
-					"info": "force the output mesh to be manifold",
-					"name": "force_manifold",
-					"type": "int",
-					"min": "0",
-					"max": "1"
-				},
-				{
-					"prefix": "-q ",
-					"info": "quadrics level (0 : no quadrics, 3 : full quadrics)",
-					"name": "quadricsLevel",
-					"type": "int",
-					"min": "0",
-					"max": "3",
-					"defaultValue": "3"
-				},
-				{
-					"prefix" : "-s ",
-					"info" : "subsampling threshold : subdivide the mesh until its number of points is large enough i.e. numberOfInputVertices / number_of_desired_vertices > subsamplingThreshold",
-					"name" : "subsamplingThreshold",
-					"type" : "int"
-				},
-				{
-					"prefix" : "-l ",
-					"info" : "split input edges longer than ( averageLength * lengthRatio )",
-					"name" : "lengthRatio",
-					"type" : "float"
-				},
-				{
-					"text": "-d 0"
-				}
-			],
-			"executable": "bin/ACVDQP"
-		},
-		"extract_meshes": {
+		"extractMeshes": {
+			"alias" : "extract_meshes",
 			"description": "Generates meshes from labeled volume data : marching cubes + simplification + smoothing",
 			"parameters": [
 				{
-					"name": "input_volume",
+					"name": "inputVolume",
+					"alias": "input_volume",
 					"type": "file",
 					"required": true
 				},
 				{
-					"name": "max_number_of_vertices",
+					"name": "numberOfVertices",
+					"alias": "max_number_of_vertices",
 					"type": "int",
 					"min": "-1",
-					"defaultValue": "10000",
+					"defaultValue": 10000,
 					"prefix": "-n "
 				},
 				{
 					"name": "simplification_method",
 					"type": "int",
-					"min": "0",
-					"max": "1",
-					"defaultValue": "0",
+					"min": 0,
+					"max": 1,
+					"defaultValue": 0,
 					"prefix": "-s "
 				},
 				{
 					"name": "number_of_smoothing_steps",
 					"type": "int",
-					"min": "0",
-					"defaultValue": "0",
+					"min": 0,
+					"defaultValue": 0,
 					"prefix": "-sm "
 				},
 				{
 					"name": "gradation",
 					"type": "float",
-					"min": "0",
-					"max": "3",
-					"defaultValue": "0",
+					"min": 0,
+					"max": 3,
+					"defaultValue": 0,
 					"prefix": "-g "
 				},
 				{
@@ -381,41 +165,42 @@
 					"prefix": "-f "
 				},
 				{
-					"name": "manifold_output",
+					"name": "forceManifold",
+					"alias": "manifold_output",
 					"type": "int",
-					"min": "0",
-					"max": "1",
+					"min": 0,
+					"max": 1,
 					"prefix": "-fill 1 -m "
 				},
 				{
 					"name": "anisotropy",
 					"type": "int",
-					"defaultValue": "0",
-					"min": "0",
-					"max": "1",
+					"defaultValue": 0,
+					"min": 0,
+					"max": 1,
 					"prefix": "-a "
 				},
 				{
 					"name": "num_voxel_max",
 					"info": "defines the maximum number of input voxels. If the input volume has more, it will be resampled to this number",
 					"type": "int",
-					"min": "0",
+					"min": 0,
 					"prefix": "-v "
 				},
 				{
 					"name": "cleaning",
 					"type": "int",
-					"defaultValue": "0",
-					"min": "0",
-					"max": "1",
+					"defaultValue": 0,
+					"min": 0,
+					"max": 1,
 					"prefix": "-c "
 				},
 				{
 					"name": "fill_holes",
 					"type": "int",
-					"defaultValue": "0",
-					"min": "0",
-					"max": "1",
+					"defaultValue": 0,
+					"min": 0,
+					"max": 1,
 					"prefix": "-fill "
 				},
 				{
@@ -440,7 +225,8 @@
 			"description": "Converts a mesh into a vtk format",
 			"parameters": [
 				{
-					"name": "input_mesh",
+					"name": "inputMesh",
+					"alias": "input_mesh",
 					"type": "file",
 					"required": "true"
 				}
@@ -474,7 +260,8 @@
 			"description": "Computes slices from volume data",
 			"parameters": [
 				{
-					"name": "input_volume",
+					"name": "inputVolume",
+					"alias": "input_volume",
 					"type": "file",
 					"required": true
 				},
@@ -482,23 +269,23 @@
 					"prefix": "-f ",
 					"name": "format",
 					"type": "int",
-					"min": "0",
-					"max": "1"
+					"min": 0,
+					"max": 1
 				},
 				{
 					"prefix": "-orientation ",
 					"name": "slice_orientation",
 					"type": "int",
 					"required": true,
-					"min": "0",
-					"max": "2"
+					"min": 0,
+					"max": 2
 				},
 				{
 					"prefix": "-uc ",
 					"name": "convert_to_uchar",
 					"type": "int",
-					"min": "0",
-					"max": "1"
+					"min": 0,
+					"max": 1
 				},
 				{
 					"prefix": "-s ",
@@ -509,11 +296,13 @@
 			"executable": "bin/VolumeSlice",
 			"permissions": 0
 		},
-		"volume_median_filtering": {
+		"volumeMedianFiltering": {
+			"alias" : "volume_median_filtering",
 			"description": "Computes median filtering for volume data",
 			"parameters": [
 				{
-					"name": "input_volume",
+					"name": "inputVolume",
+					"alias": "input_volume",
 					"type": "file",
 					"required": "true"
 				},
@@ -521,17 +310,19 @@
 					"name": "kernel_size",
 					"type": "int",
 					"required": "true",
-					"defaultValue": "5",
-					"min": "1",
-					"max": "10"
+					"defaultValue": 5,
+					"min": 1,
+					"max": 10
 				}
 			],
 			"executable": "bin/VolumeMedian"
 		},
-		"volume_anisotropic_diffusion": {
+		"volumeAnisotropicDiffusion": {
+			"alias" : "volume_anisotropic_diffusion",
 			"parameters": [
 				{
-					"name": "input_volume",
+					"name": "inputVolume",
+					"alias": "input_volume",
 					"type": "file",
 					"required": "true"
 				},
@@ -539,7 +330,7 @@
 					"name": "number_of_iterations",
 					"type": "int",
 					"required": "true",
-					"min": "1"
+					"min": 1
 				},
 				{
 					"prefix": "-t ",
@@ -666,7 +457,7 @@
 			  "name": "numberOfSubdivisions",
 			  "type": "int",
 			  "info" : "defines the number of subdivision levels",
-			  "defaultValue" : "1"
+			  "defaultValue" : 1
 			},
 			{ "text" : " 0" }
 		  ],
