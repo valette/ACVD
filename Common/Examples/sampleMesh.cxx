@@ -11,22 +11,30 @@ Auteur:   Sebastien Valette
 
 #include <random>
 #include <vtkTimerLog.h>
-#include <vtkMinimalStandardRandomSequence.h>
+#include <vtkButterflySubdivisionFilter.h>
 #include "vtkSurface.h"
 
 int main( int argc, char *argv[] )
 {
 	if (argc < 3) {
-		cout << "Usage : sampleMesh mesh numSamples" << endl;
+		cout << "Usage : sampleMesh mesh numSamples [numberOfButterflySubdivisions]" << endl;
 		exit(1);
 	}
 
-	vtkTimerLog *Timer = vtkTimerLog::New();
+	vtkNew<vtkTimerLog> Timer;
 	Timer->StartTimer();
 
-	cout << "load : " << argv[1] << endl;
-	vtkSurface *mesh = vtkSurface::New();
-	mesh->CreateFromFile(argv[1]);
+	cout << "load : " << argv[ 1 ] << endl;
+	vtkNew<vtkSurface> mesh;
+	mesh->CreateFromFile( argv[ 1 ] );
+
+	if ( argc > 3 ) {
+		vtkNew<vtkButterflySubdivisionFilter> subdivision;
+		subdivision->SetInputData( mesh );
+		subdivision->SetNumberOfSubdivisions( atoi( argv[ 3 ] ) );
+		subdivision->Update();
+		mesh->CreateFromPolyData( subdivision->GetOutput() );
+	}
 
 	mesh->DisplayMeshProperties();
 	int numTris = mesh->GetNumberOfCells();

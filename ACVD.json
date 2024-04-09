@@ -414,6 +414,10 @@
 					"type" : "int",
 					"required" : true
 				}
+				{
+					"name" : "numberOfButterflySubdivisions",
+					"type" : "int"
+				}
 			],
 			"executable" : "bin/sampleMesh"
 		},
