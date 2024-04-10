@@ -413,7 +413,7 @@
 					"name" : "numberOfSamples",
 					"type" : "int",
 					"required" : true
-				}
+				},
 				{
 					"name" : "numberOfButterflySubdivisions",
 					"type" : "int"
