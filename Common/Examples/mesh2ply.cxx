@@ -34,6 +34,7 @@ Author:   Sebastien Valette
 // .SECTION Description
 
 #include "vtkSurface.h"
+#include <vtkCleanPolyData.h>
 #include <vtkPLYWriter.h>
 
 /// a simple mesh consersion tool
@@ -43,22 +44,32 @@ Author:   Sebastien Valette
 
 int main( int argc, char *argv[] )
 {
-	vtkSurface *Mesh;
 
 	if (argc<2)
 	{
-		cout<<"Usage : mesh2ply inputmesh"<<endl;
+		cout<<"Usage : mesh2ply inputmesh clean"<<endl;
 		exit(1);
 	}
 
 	// Load the mesh and create the vtkSurface data structure
-	Mesh=vtkSurface::New();
+	vtkSurface *mesh = vtkSurface::New();
 	cout <<"load : "<<argv[1]<<endl;
-	Mesh->CreateFromFile(argv[1]);
-	vtkPLYWriter *Writer=vtkPLYWriter::New();
-	Writer->SetInputData(Mesh);
-	Writer->SetFileName("mesh.ply");
-	Writer->Write();
+	mesh->CreateFromFile(argv[1]);
+	mesh->DisplayMeshProperties();
+	vtkPolyData *m = mesh;
+
+	if ( argc > 2 ) {
+		if ( atoi( argv[ 2 ] ) == 1 ) {
+			vtkCleanPolyData *cleaner = vtkCleanPolyData::New();
+			cleaner->SetInputData( mesh );
+			cleaner->Update();
+			m = cleaner->GetOutput();
+		}
+	}
+
+	vtkNew<vtkPLYWriter> writer;
+	writer->SetInputData( m );
+	writer->SetFileName("mesh.ply");
+	writer->Write();
 	cout<<"conversion to mesh.ply finished!"<<endl;
-	return (0);
 }

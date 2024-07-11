@@ -1,7 +1,7 @@
 "use strict";
 
 {
-    const { async, desk } = window;
+    const { require, async, desk } = window;
 
     const ACVD = {};
 
@@ -38,5 +38,34 @@
 
     } ;
 
+    ACVD.cleanMeshes = async function ( inputDir, outputDir ) {
+
+        const path = require( "path" );
+        await desk.FileSystem.traverseAsync( inputDir, async function ( inputMesh, cb ) {
+
+            const clean = await desk.Actions.executeAsync( {
+                action : "mesh2ply",
+                inputMesh,
+                clean : true
+            } );
+
+            const relative = path.relative( inputDir, inputMesh );
+            const destination = path.join( outputDir, relative );
+            const destDir = path.dirname( destination );
+            await desk.FileSystem.mkdirpAsync( destDir );
+
+            await desk.Actions.executeAsync( {
+                action : "copy",
+                source : path.join( clean.outputDirectory, "mesh.ply" ),
+                destination
+            } );
+
+            cb();
+
+        }, true );
+
+    };
+
     window.ACVD = ACVD;
 }
+console.clear();

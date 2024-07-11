@@ -439,6 +439,11 @@
 			  "name": "inputMesh",
 			  "type": "file",
 			  "required": true
+			},
+			{
+			  "name": "clean",
+			  "type": "flag",
+			  "prefix" : "1"
 			}
 		  ],
 		  "executable": "bin/mesh2ply"
