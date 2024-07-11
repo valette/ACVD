@@ -66,6 +66,33 @@
 
     };
 
+    ACVD.batchMeshConvert = async function ( inputDir, outputDir, format = "stl" ) {
+
+        const path = require( "path" );
+        await desk.FileSystem.traverseAsync( inputDir, async function ( inputMesh, cb ) {
+
+            const clean = await desk.Actions.executeAsync( {
+                action : "mesh2" + format,
+                inputMesh
+            } );
+
+            const relative = path.relative( inputDir, inputMesh );
+            let destination = path.join( outputDir, relative );
+            destination = destination.substring( 0, destination.length - 4 ) + "." + format;
+            const destDir = path.dirname( destination );
+            await desk.FileSystem.mkdirpAsync( destDir );
+
+            await desk.Actions.executeAsync( {
+                action : "copy",
+                source : path.join( clean.outputDirectory, "mesh." + format ),
+                destination
+            } );
+
+            cb();
+
+        }, true );
+
+    };
+
     window.ACVD = ACVD;
 }
-console.clear();
