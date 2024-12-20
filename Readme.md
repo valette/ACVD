@@ -50,6 +50,14 @@ note that to enforce a manifold output mesh, such as explained in [3], you need 
 
 comments, suggestions : https://github.com/valette/ACVD/issues
 
+### Output mesh quality vs complexity ###
+ACVD works by clustering input vertices. The accuracy and output mesh quality is therefore directly dependent on two important factors:
+
+- the ratio between the number of input vertices and the number of output vertices. If this ratio is bellow a predefined value, the input mesh will be subdivided until the ratio is satisfactory. By default, the ratio is 10. Increasing this value (using the -s _ratio_) parameter greatly improves the output mesh quality. Example : "-s 100"
+
+- the input mesh quality. If the input mesh has elongated triangles, artifacts in the output mesh can appear. The parameter "-l _ratio_" is here to solve this problem. If this parameter is set, ACVD will split all input mesh edges that are longer than _ratio_*average_edge_length. Example : "-l 3"
+
+
 ### Multithread versions ###
 For each program ACVD, ACVDQ and AnisotropicRemeshingQ, there is a parallel implementation, called ACVDP, ACVDQP and AnisotropicRemeshingQP. In the examples bellow, just add a trailing "P" to the executable to use all your processor cores. Note that the parallel versions are not deterministic, so running the programm twice with the same parameters will yield different remeshings. The parallel versions run much faster when quadrics are used (i.e. with ACVDQ or AnisotropcRemeshigQ), but the speedup is small with linear ACVD. For all programs, the number of threads can be set using the "-p numberOfThreads" option.
 
@@ -62,6 +70,10 @@ For each program ACVD, ACVDQ and AnisotropicRemeshingQ, there is a parallel impl
 taking into account curvature:
 
 	bin/ACVD stanford-bunny.obj 3000 1.5
+
+#### Remeshing the Stanford bunny to 3000 vertices with high output mesh quality: ####
+
+	bin/ACVD stanford-bunny.obj 3000 0 -s 100 -l 3
 
 #### Remeshing the fandisk to 3000 vertices, taking into account sharp features with ACVDQ: ####
 	wget https://github.com/alecjacobson/common-3d-test-models/raw/master/data/fandisk.obj

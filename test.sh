@@ -1,6 +1,7 @@
 wget https://github.com/alecjacobson/common-3d-test-models/raw/master/data/stanford-bunny.obj
 bin/ACVD stanford-bunny.obj 3000 0
 bin/ACVD stanford-bunny.obj 3000 1.5
+bin/ACVD stanford-bunny.obj 3000 1.5 -s 100 -l 3
 wget https://github.com/alecjacobson/common-3d-test-models/raw/master/data/fandisk.obj
 bin/ACVDQ fandisk.obj 3000 0
 wget https://github.com/alecjacobson/common-3d-test-models/raw/master/data/horse.obj
