@@ -825,7 +825,7 @@ void vtkSurface::GetMeshProperties(std::stringstream &stream)
     this->DeleteConnectedComponents();
 
 
-	stream<<" Valences entropy: "<<this->GetValenceEntropy()<<endl;
+	stream<<"Vertex valence entropy: "<<this->GetValenceEntropy()<<endl;
 	double a,b,c,number;
 	a=0;
 	b=0;
@@ -858,7 +858,7 @@ void vtkSurface::GetMeshProperties(std::stringstream &stream)
 			<<"  AverageMinAngle="<<Aav<<endl
 			<<"  Qmin="<<Qmin<<endl
 			<<"  Qav="<<Qav<<endl
-			<<"  P30="<<P30<<endl;
+			<<"  Angles bellow 30 (%)="<<P30<<endl;
 	}
 
 	stream<<"*****************************************************************************"<<endl;
