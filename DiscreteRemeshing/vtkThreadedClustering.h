@@ -13,22 +13,22 @@ Auteur:    Sebastien VALETTE
 * Copyright (c) CREATIS-LRMN (Centre de Recherche en Imagerie Medicale)
 * Author : Sebastien Valette
 *
-*  This software is governed by the CeCILL-B license under French law and 
-*  abiding by the rules of distribution of free software. You can  use, 
-*  modify and/ or redistribute the software under the terms of the CeCILL-B 
-*  license as circulated by CEA, CNRS and INRIA at the following URL 
-*  http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.html 
+*  This software is governed by the CeCILL-B license under French law and
+*  abiding by the rules of distribution of free software. You can  use,
+*  modify and/ or redistribute the software under the terms of the CeCILL-B
+*  license as circulated by CEA, CNRS and INRIA at the following URL
+*  http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.html
 *  or in the file LICENSE.txt.
 *
 *  As a counterpart to the access to the source code and  rights to copy,
 *  modify and redistribute granted by the license, users are provided only
 *  with a limited warranty  and the software's author,  the holder of the
 *  economic rights,  and the successive licensors  have only  limited
-*  liability. 
+*  liability.
 *
 *  The fact that you are presently reading this means that you have had
 *  knowledge of the CeCILL-B license and that you accept its terms.
-* ------------------------------------------------------------------------ */  
+* ------------------------------------------------------------------------ */
 
 #ifndef _VTKTHREADEDCLUSTERING_H_
 #define _VTKTHREADEDCLUSTERING_H_
@@ -65,14 +65,14 @@ public:
 	{
 		return (this->NumberOfThreads);
 	};
-	
+
 	/// sets the pooling ratio (the number of pool jobs will be equal to NumberOfThreads*PoolingRatio+1
 	/// default value : 5
 	void SetPoolingRatio (int Ratio)
 	{
 		this->PoolingRatio=Ratio;
 	};
-	
+
 	virtual vtkIntArray *ProcessClustering(vtkIdList *List=0)
 	{
 		this->vtkUniformClustering<Metric>::ProcessClustering();
@@ -91,7 +91,7 @@ protected:
 
 	// the constructor
 	vtkThreadedClustering ();
-	
+
 	// the destructor
 	~vtkThreadedClustering ();
 
@@ -110,11 +110,11 @@ protected:
 		for (int i=0;i<EList->GetNumberOfIds();i++)
 			this->AddEdgeToProcess(EList->GetId(i),ProcessId);
 	};
-	
+
 	// virtual function. Might be implemented in derived classes for speed issues
 	virtual int ThreadedConnexityConstraintProblem(vtkIdType Item,vtkIdType Edge,vtkIdType Cluster2, vtkIdType Cluster1 ,int Thread)
 		{return this->ConnexityConstraintProblem(Item,Edge,Cluster2,Cluster1);};
-	
+
 	// allocates and initializes memory for the threaded clustering
 	// (queues, timings)
 	virtual void Init ();
@@ -142,7 +142,7 @@ protected:
 
 	/// The size of the pool
 	int PoolSize;
-	
+
 	// Parameter defining the number of thread jobs : NThreadJobs=NumberOfThreads*PoolingRatio+1
 	int PoolingRatio;
 
@@ -154,7 +154,7 @@ protected:
 
 	// parameter to set On/Off the threads timings (0:Off 1: On)
 	int DisplayThreadsTimingsFlag;
-	
+
 	/// Method which displays on screen the execution times for each thread
 	void DisplayThreadsTimings();
 
@@ -196,7 +196,7 @@ protected:
 
 	std::queue <int>**ProcessesPushQueues;
 	std::queue <int>**ProcessesPopQueues;
-	
+
 	// this method swaps the pop queues with the push queues.
 	void SwapQueues ();
 };
@@ -235,14 +235,14 @@ template < class Metric > void vtkThreadedClustering < Metric >::FillQueuesFromC
 			}
 		}
 	}
-	
+
 	// fill the thread pool queue
 	for (i=0;i<this->PoolSize-1;i++)
-		this->PoolQueue1->Insert(i,i);	
+		this->PoolQueue1->Insert(i,i);
 }
 
 
-template < class Metric >	VTK_THREAD_RETURN_TYPE vtkThreadedClustering 
+template < class Metric >	VTK_THREAD_RETURN_TYPE vtkThreadedClustering
 <Metric >::MyMainForClustering (void *arg)
 {
 	vtkMultiThreader::ThreadInfo * Info =
@@ -261,7 +261,7 @@ template < class Metric >	VTK_THREAD_RETURN_TYPE vtkThreadedClustering
 		Clustering->PoolAllocationLock.lock();
 		int Process=Clustering->PoolQueue1->Pop();
 		Clustering->PoolAllocationLock.unlock();
-				
+
 		if ((Process<0))
 			break;
 
@@ -287,7 +287,7 @@ template < class Metric > void
 {
 	vtkIdType Edge, I1, I2;
 	int Val1, Val2, *Size1, *Size2;
-	
+
 	// Those variables will contain the energy values for the three possible cases.
 	// The "volatile" statement is here to fix some numerical issues
 	// (see : http://gcc.gnu.org/bugzilla/show_bug.cgi?id=323)
@@ -483,13 +483,13 @@ template < class Metric > void
 		// release the lock on the clusters
 		this->ClustersLocks[Val1].unlock();
 		this->ClustersLocks[Val2].unlock();
-#endif	
+#endif
 		}
 	}
 	delete Cluster21;
 	delete Cluster22;
 	delete Cluster31;
-	delete Cluster32;	
+	delete Cluster32;
 }
 
 template < class Metric > void
@@ -671,7 +671,7 @@ int	vtkThreadedClustering < Metric >::ProcessOneLoop ()
 	vtkMultiThreader *Threader=vtkMultiThreader::New();
 	Threader->SetSingleMethod (MyMainForClustering, (void *) this);
 	Threader->SetNumberOfThreads (this->NumberOfThreads);
-		
+
 	for ( auto &info : this->threadInfos ) info.NumberOfModifications=0;
 	Threader->SingleMethodExecute ();
 
@@ -749,11 +749,11 @@ template < class Metric > void vtkThreadedClustering < Metric >::DisplayThreadsT
 			cout << "Iterations          :";
 			for (auto &info : this->threadInfos)
 				cout << info.NumberOfIterations<<" ";
-			cout << endl;			
+			cout << endl;
 			cout << "Modifications       :";
 			for (auto &info : this->threadInfos)
 				cout << info.NumberOfModifications<<" ";
-			cout << endl;			
+			cout << endl;
 		}
 
 		for (auto &info : this->threadInfos)
@@ -774,7 +774,7 @@ template < class Metric > void vtkThreadedClustering < Metric >::Init ()
 {
 	vtkUniformClustering < Metric >::Init ();
 	int i;
-	
+
 	this->PoolSize=this->PoolingRatio*NumberOfThreads+1;
 	this->ComputeEdgesLayout ();
 
@@ -794,9 +794,9 @@ template < class Metric > void vtkThreadedClustering < Metric >::Init ()
 	for (i = 0; i < this->PoolSize; i++)
 	{
 		this->ProcessesQueues1[i]=new std::queue<int>[this->PoolSize];
-		this->ProcessesQueues2[i]=new std::queue<int>[this->PoolSize];		
+		this->ProcessesQueues2[i]=new std::queue<int>[this->PoolSize];
 	}
-	
+
 	// set initial queues state
 	this->ProcessesPushQueues=this->ProcessesQueues1;
 	this->ProcessesPopQueues=this->ProcessesQueues2;
@@ -887,8 +887,8 @@ template <class Metric> void vtkThreadedClustering<Metric>::ComputeEdgesLayout (
 	TempClustering->Delete();
 }
 
-	
-template <class Metric> 
+
+template <class Metric>
 void vtkThreadedClustering<Metric>::ComputeMeshSlices (int NumberOfSlices,vtkIntArray * Clustering)
 {
 	int i,j;
@@ -901,7 +901,7 @@ void vtkThreadedClustering<Metric>::ComputeMeshSlices (int NumberOfSlices,vtkInt
 
 	int *Slices = new int[Granularity];
 
-	// compute the bouding box to choose the best direction
+	// compute the bounding box to choose the best direction
 	double Bounds[6];
 	this->GetItemCoordinates (0, P);
 	Bounds[0]=P[0];
@@ -999,15 +999,15 @@ template < class Metric >
 	vtkMultiThreader *Threader=vtkMultiThreader::New();
 	this->SetNumberOfThreads(Threader->GetNumberOfThreads());
 	Threader->Delete();
-	
+
 	this->PoolingRatio=5;
-	
+
 	this->PoolQueue1=vtkPriorityQueue::New();
 	this->PoolQueue2=vtkPriorityQueue::New();
-	
+
 	this->ProcessesQueues1=0;
 	this->ProcessesQueues2=0;
-	
+
 	this->NumberOfClusters=0;
 }
 

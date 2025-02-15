@@ -3,31 +3,31 @@
                              -------------------
     begin                : jeu sep 25 2003
     copyright            : (C) 2003 by Sebastien Valette
-    email                : 
+    email                :
  ***************************************************************************/
- 
+
  /* ---------------------------------------------------------------------
 
 * Copyright (c) CREATIS-LRMN (Centre de Recherche en Imagerie Medicale)
 * Author : Sebastien Valette
 *
-*  This software is governed by the CeCILL-B license under French law and 
-*  abiding by the rules of distribution of free software. You can  use, 
-*  modify and/ or redistribute the software under the terms of the CeCILL-B 
-*  license as circulated by CEA, CNRS and INRIA at the following URL 
-*  http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.html 
+*  This software is governed by the CeCILL-B license under French law and
+*  abiding by the rules of distribution of free software. You can  use,
+*  modify and/ or redistribute the software under the terms of the CeCILL-B
+*  license as circulated by CEA, CNRS and INRIA at the following URL
+*  http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.html
 *  or in the file LICENSE.txt.
 *
 *  As a counterpart to the access to the source code and  rights to copy,
 *  modify and redistribute granted by the license, users are provided only
 *  with a limited warranty  and the software's author,  the holder of the
 *  economic rights,  and the successive licensors  have only  limited
-*  liability. 
+*  liability.
 *
 *  The fact that you are presently reading this means that you have had
 *  knowledge of the CeCILL-B license and that you accept its terms.
-* ------------------------------------------------------------------------ */  
- 
+* ------------------------------------------------------------------------ */
+
 #ifndef _VTKDISCRETEREMESHING_H_
 #define _VTKDISCRETEREMESHING_H_
 
@@ -46,7 +46,7 @@
 #include "vtkTag.h"
 
 // A Class to process coarsening of vtkSurface PolyData. It derives from vtkSurfaceClustering
-// This class adds meshing features to the clustering class, as proposed in : 
+// This class adds meshing features to the clustering class, as proposed in :
 // " Approximated Centroidal Voronoi Diagrams for Uniform Polygonal Mesh Coarsening", Valette & Chassery, Eurographics 2004
 
 template < class Metric > class vtkDiscreteRemeshing:public vtkSurfaceClustering <Metric >
@@ -69,7 +69,7 @@ template < class Metric > class vtkDiscreteRemeshing:public vtkSurfaceClustering
 
 	/// Sets On/Off the Edges optimization scheme (still experimental)
 	vtkSetMacro( EdgeOptimization, int )
-	
+
 	/// Sets On/Off the fix for meshes with boundaries. Default value: 1 (On)
 	vtkSetMacro( BoundaryFixing, int )
 
@@ -98,7 +98,7 @@ protected:
 
 	/// The window used to render the coarsened model
 	RenderWindow *OutputMeshWindow;
-	
+
 	/// The window used to render the curvature indicator
 	RenderWindow *IndicatorWindow;
 
@@ -116,7 +116,7 @@ protected:
 	/// on the original surface, to make the approximation better
 	void AdjustRemeshedGeometry ();
 
-	/// Checks wether the input vtkSurface has to be subdivided or not before clustering 
+	/// Checks wether the input vtkSurface has to be subdivided or not before clustering
 	void CheckSubsamplingRatio ();
 
 	/// Checks whether every output vertex is manifold
@@ -135,7 +135,7 @@ protected:
 	int NumberOfSubdivisionsBeforeClustering;
 
 	/// this array stores the parent-child informations (2 ints for each vertex: its two parents)
-	/// it is used only when the mesh is bubdivided before simplification, to interpolate the 
+	/// it is used only when the mesh is bubdivided before simplification, to interpolate the
 	// curvature indicator;
 	vtkIntArray *VerticesParent1;
 	vtkIntArray *VerticesParent2;
@@ -366,7 +366,7 @@ int vtkDiscreteRemeshing < Metric >::DetectNonManifoldOutputVertices() {
 
 	}
 
-	if ( this->Window ) 
+	if ( this->Window )
 		this->Window->DisplayRandomColors( this->NumberOfClusters + 1 );
 
 	// free memory
@@ -477,11 +477,11 @@ template < class Metric >
 	{
 		if (EdgesNewPoint[i] < 0)
 		{
-			// the edge was not visited previously 
+			// the edge was not visited previously
 			this->Input->GetEdgeFaces (i, f1, f2);
 			if ((f2 < 0) && (f1 >= 0))
 			{
-				// the edge is a boundary edge 
+				// the edge is a boundary edge
 				// with two vertices belonging to the same cluster
 
 				this->Input->GetEdgeVertices (i, v1, v2);
@@ -648,14 +648,14 @@ void vtkDiscreteRemeshing < Metric >::SamplingPreProcessing () {
 					Curvature->SetInputData (this->OriginalInput);
 				else
 					Curvature->SetInputData (this->Input);
-			
+
 				Curvature->SetComputationMethod (1);
 				Curvature->SetElementsType (this->ClusteringType);
 				Curvature->SetComputePrincipalDirections (this->MetricContext.IsPrincipalDirectionsNeeded());
 
 				CurvatureCollection=Curvature->GetCurvatureIndicator();
 				CurvatureCollection->Register(this);
-			
+
 				CellsIndicators =(vtkDoubleArray *) CurvatureCollection->GetItem (0);
 
 				if (this->FileLoadSaveOption != 0)
@@ -668,7 +668,7 @@ void vtkDiscreteRemeshing < Metric >::SamplingPreProcessing () {
 						InputSurface=this->OriginalInput;
 					else
 						InputSurface=this->Input;
-				
+
 					if (this->ClusteringType == 0)
 						NumberOfItems =InputSurface->GetNumberOfCells ();
 					else
@@ -743,8 +743,8 @@ void vtkDiscreteRemeshing < Metric >::SamplingPreProcessing () {
 				}
 				for (i = OriginalInput->GetNumberOfPoints ();i < this->Input->GetNumberOfPoints ();i++)
 				{
-					CellsIndicators2->SetValue (i, 
-						(						
+					CellsIndicators2->SetValue (i,
+						(
 						CellsIndicators2->GetValue(this->VerticesParent1->GetValue(i)) +
 						CellsIndicators2->GetValue(this->VerticesParent2->GetValue(i))
 						) *0.5);
@@ -814,7 +814,7 @@ void vtkDiscreteRemeshing < Metric >::SamplingPreProcessing () {
 			{
 				Window->SetInputEdges (PrincipalDirectionsPolyData);
 				PrincipalDirectionsPolyData->Delete();
-			}	
+			}
 
 			vtkLookupTable *bwLut = vtkLookupTable::New ();
 			bwLut->SetTableRange (0, 1);
@@ -1219,19 +1219,19 @@ template < class Metric >
 {
 	if (this->OriginalInput)
 		this->OriginalInput->Delete();
-		
+
 	if (this->Output)
 		this->Output->Delete();
-	
+
 	if (this->VerticesParent1)
 		this->VerticesParent1->Delete();
-		
+
 	if (this->VerticesParent2)
 		this->VerticesParent2->Delete();
-	
+
 	if (this->OutputMeshWindow)
 		this->OutputMeshWindow->Delete();
-	
+
 	if (this->IndicatorWindow)
 		this->IndicatorWindow->Delete();
 }
