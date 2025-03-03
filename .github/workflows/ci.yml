@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        version: [ v9.0.3, v9.1.0, v9.2.6 ]
+        version: [ v9.0.3, v9.1.0, v9.2.6, v9.3.1, v9.4.1 ]
     container: kitware/vtk-for-ci:${{ matrix.version }}
 
     steps:
