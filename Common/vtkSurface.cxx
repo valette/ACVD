@@ -3,22 +3,22 @@
 * Copyright (c) CREATIS-LRMN (Centre de Recherche en Imagerie Medicale)
 * Author : Sebastien Valette
 *
-*  This software is governed by the CeCILL-B license under French law and 
-*  abiding by the rules of distribution of free software. You can  use, 
-*  modify and/ or redistribute the software under the terms of the CeCILL-B 
-*  license as circulated by CEA, CNRS and INRIA at the following URL 
-*  http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.html 
+*  This software is governed by the CeCILL-B license under French law and
+*  abiding by the rules of distribution of free software. You can  use,
+*  modify and/ or redistribute the software under the terms of the CeCILL-B
+*  license as circulated by CEA, CNRS and INRIA at the following URL
+*  http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.html
 *  or in the file LICENSE.txt.
 *
 *  As a counterpart to the access to the source code and  rights to copy,
 *  modify and redistribute granted by the license, users are provided only
 *  with a limited warranty  and the software's author,  the holder of the
 *  economic rights,  and the successive licensors  have only  limited
-*  liability. 
+*  liability.
 *
 *  The fact that you are presently reading this means that you have had
 *  knowledge of the CeCILL-B license and that you accept its terms.
-* ------------------------------------------------------------------------ */  
+* ------------------------------------------------------------------------ */
 
 #include <math.h>
 #include <sstream>
@@ -42,6 +42,7 @@
 #include <vtkOBJReader.h>
 #include <vtkSTLReader.h>
 #include <vtkMeshQuality.h>
+#include <vtkXMLPolyDataReader.h>
 
 #include "vtkSurface.h"
 #include "vtkOFFReader.h"
@@ -70,7 +71,7 @@ vtkSurface *vtkSurface::GetBiggestConnectedComponents( int numberOfComponents )
 		components.push_back(
 			std::make_pair( i, Collection->GetItem(i)->GetNumberOfIds() ) );
 
-    sort(components.begin(), components.end(), sortByDecreasingSecond); 
+    sort(components.begin(), components.end(), sortByDecreasingSecond);
 
 
 	for ( int i = 0; i < components.size(); i++) {
@@ -237,7 +238,7 @@ vtkSurface* vtkSurface::CleanMemory()
 void vtkSurface::EnsureOutwardsNormals()
 {
 	vtkVolumeProperties *Volume=vtkVolumeProperties::New();
-	
+
 	Volume->SetInputData(this);
 	if (Volume->GetSignedVolume()<0)
 		this->SwitchOrientation();
@@ -268,15 +269,15 @@ double TriangleMinAngle( vtkSurface *mesh, vtkIdType v1, vtkIdType v2, vtkIdType
   a[0] = p1[0]-p0[0];
   a[1] = p1[1]-p0[1];
   a[2] = p1[2]-p0[2];
- 
+
   b[0] = p2[0]-p1[0];
   b[1] = p2[1]-p1[1];
   b[2] = p2[2]-p1[2];
- 
+
   c[0] = p2[0]-p0[0];
   c[1] = p2[1]-p0[1];
   c[2] = p2[2]-p0[2];
- 
+
   a2 = vtkMath::Dot(a,a);
   b2 = vtkMath::Dot(b,b);
   c2 = vtkMath::Dot(c,c);
@@ -763,7 +764,7 @@ void vtkSurface::GetMeshProperties(std::stringstream &stream)
 	this->GetBounds( bounds );
 	stream<<"Bounding Box: [" <<bounds[0] <<", " <<bounds[2] <<", " <<bounds[4] <<"]"<<endl;
 	stream<<"              [" <<bounds[1] <<", " <<bounds[3] <<", " <<bounds[5] <<"] " <<endl;
-	
+
 	vtkIdType nPoly=0,nTri=0,nQuad=0;
 	vtkIdType *Vertices;
 	vtkIdType NV, NumberOfEmptySlots=0;
@@ -2015,7 +2016,7 @@ void vtkSurface::CreateFromFile(const char *FileName)
 	terminaison = strstr(filename,fin);
 	if (terminaison!=NULL)
 	{
-		vtkPolyDataReader *Reader = vtkPolyDataReader::New();
+		vtkXMLPolyDataReader *Reader = vtkXMLPolyDataReader::New();
 		Reader->SetFileName(FileName);
 		Reader->Update();
 		this->CreateFromPolyData(Reader->GetOutput());
