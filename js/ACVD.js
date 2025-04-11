@@ -156,11 +156,11 @@
 
     };
 
-    ACVD.downloadOBJ = function( mesh, fileName, convertToQuads = false ) {
+    ACVD.geometry2TextOBJ = function( geometry, convertToQuads = false ) {
 
         const lines = [];
-        const pos = mesh.geometry.attributes.position;
-        const indices = mesh.geometry.index.array;
+        const pos = geometry.attributes.position;
+        const indices = geometry.index.array;
 
         for (let i = 0; i < pos.count; i++ ) {
 
@@ -196,8 +196,13 @@
 
         }
 
-        const text = lines.map( l => l.join( " " ) ).join( "\n" );
-        ACVD.downloadText( text, fileName );
+        return lines.map( l => l.join( " " ) ).join( "\n" );
+
+    };
+
+    ACVD.downloadOBJ = function( mesh, fileName, convertToQuads = false ) {
+
+        ACVD.downloadText( ACVD.geometry2TextOBJ( mesh.geometry, convertToQuads ), fileName );
 
     };
 
