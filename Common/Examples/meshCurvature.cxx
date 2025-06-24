@@ -74,12 +74,10 @@ int main( int argc, char *argv[] )
 	curvatureMeasure->SetComputationMethod( 1 ); // 1 for polynomial fitting
 	auto curvatureIndicator = curvatureMeasure->GetCurvatureIndicator()->GetItem( 0 );
 	if ( elementsType == 0 ) {
-		Mesh->GetCellData()->AddArray( curvatureIndicator );
-		Mesh->GetCellData()->SetActiveScalars( curvatureIndicator->GetName() );
+		Mesh->GetCellData()->SetScalars( curvatureIndicator );
 		cout << "Curvature computed for cells." << endl;
 	} else if ( elementsType == 1 ) {
-		Mesh->GetPointData()->AddArray( curvatureIndicator );
-		Mesh->GetPointData()->SetActiveScalars( curvatureIndicator->GetName() );
+		Mesh->GetPointData()->SetScalars( curvatureIndicator );
 		cout << "Curvature computed for points." << endl;
 	}
 
