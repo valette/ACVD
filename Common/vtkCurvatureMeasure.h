@@ -33,7 +33,7 @@
 #include <vtkObjectFactory.h>
 #include <vtkDataArrayCollection.h>
 #include <vtkFloatArray.h>
-#include <vtkThreads.h>
+#include <vtkMultiThreader.h>
 #include <mutex>
 #include "vtkSurface.h"
 #include "RenderWindow.h"
