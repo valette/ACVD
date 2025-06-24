@@ -40,12 +40,16 @@
 #include <vtkPriorityQueue.h>
 #include <vtkEdgeTable.h>
 #include <vtkOBJReader.h>
+#include <vtkOBJWriter.h>
 #include <vtkSTLReader.h>
+#include <vtkSTLWriter.h>
 #include <vtkMeshQuality.h>
 #include <vtkXMLPolyDataReader.h>
+#include <vtkXMLPolyDataWriter.h>
 
 #include "vtkSurface.h"
 #include "vtkOFFReader.h"
+#include "vtkOFFWriter.h"
 #include "vtkVolumeProperties.h"
 
 // this variable allows the creation of render windows when cleaning a mesh.
@@ -1975,6 +1979,34 @@ void vtkSurface::WriteToFile (const char *FileName)
 		Writer->SetFileName(FileName);
 		Writer->Write();
 	}
+
+	if (strstr(filename,".stl") != NULL) {
+		vtkSTLWriter *Writer = vtkSTLWriter::New();
+		Writer->SetInputData(this);
+		Writer->SetFileName(FileName);
+		Writer->Write();
+	}
+
+	if (strstr(filename,".vtp") != NULL) {
+		vtkXMLPolyDataWriter *Writer = vtkXMLPolyDataWriter::New();
+		Writer->SetInputData(this);
+		Writer->SetFileName(FileName);
+		Writer->Write();
+	}
+
+	if (strstr(filename,".off") != NULL) {
+		vtkOFFWriter *Writer = vtkOFFWriter::New();
+		Writer->SetInputData(this);
+		Writer->SetFileName(FileName);
+		Writer->Write();
+	}
+
+	if (strstr(filename,".obj") != NULL) {
+		vtkOBJWriter *Writer = vtkOBJWriter::New();
+		Writer->SetInputData(this);
+		Writer->SetFileName(FileName);
+		Writer->Write();
+	}
 }
 
 // ****************************************************************
@@ -2050,7 +2082,7 @@ void vtkSurface::CreateFromFile(const char *FileName)
 		vtkVRMLImporter *importer=vtkVRMLImporter::New();
 		importer->SetRenderWindow(vrmlrenWin);
 		importer->SetFileName(FileName);
-		importer->Read();
+		importer->Update();
 		vtkRendererCollection *renCollection=vrmlrenWin->GetRenderers();
 		renCollection->InitTraversal();
 		vtkRenderer *ren=renCollection->GetNextItem();
