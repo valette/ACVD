@@ -3,29 +3,29 @@
                              -------------------
     begin                : July 10 2005
     copyright            : (C) 2003 by Sebastien Valette
-    email                : 
+    email                :
  ***************************************************************************/
 /* ---------------------------------------------------------------------
 
 * Copyright (c) CREATIS-LRMN (Centre de Recherche en Imagerie Medicale)
 * Author : Sebastien Valette
 *
-*  This software is governed by the CeCILL-B license under French law and 
-*  abiding by the rules of distribution of free software. You can  use, 
-*  modify and/ or redistribute the software under the terms of the CeCILL-B 
-*  license as circulated by CEA, CNRS and INRIA at the following URL 
-*  http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.html 
+*  This software is governed by the CeCILL-B license under French law and
+*  abiding by the rules of distribution of free software. You can  use,
+*  modify and/ or redistribute the software under the terms of the CeCILL-B
+*  license as circulated by CEA, CNRS and INRIA at the following URL
+*  http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.html
 *  or in the file LICENSE.txt.
 *
 *  As a counterpart to the access to the source code and  rights to copy,
 *  modify and redistribute granted by the license, users are provided only
 *  with a limited warranty  and the software's author,  the holder of the
 *  economic rights,  and the successive licensors  have only  limited
-*  liability. 
+*  liability.
 *
 *  The fact that you are presently reading this means that you have had
 *  knowledge of the CeCILL-B license and that you accept its terms.
-* ------------------------------------------------------------------------ */  
+* ------------------------------------------------------------------------ */
 
 #ifndef _VTKCURVATUREMEASURE_H_
 #define _VTKCURVATUREMEASURE_H_
@@ -33,6 +33,7 @@
 #include <vtkObjectFactory.h>
 #include <vtkDataArrayCollection.h>
 #include <vtkFloatArray.h>
+#include <vtkThreads.h>
 #include <mutex>
 #include "vtkSurface.h"
 #include "RenderWindow.h"
@@ -49,17 +50,17 @@ public:
 	/// Returns the Input Mesh
 	vtkSurface *GetInput() {return this->Input;};
 
-	/// Computes the curvature measure. 
+	/// Computes the curvature measure.
 	/// The results are embedded in a vtkDataArrayCollection.
 	/// The first vtkDataArray is a double array containing the curvature indicator
 	/// The (possibly) second array is a double array containing principal directions and curvatures
 	vtkDataArrayCollection *GetCurvatureIndicator();
-	
+
 	// Returns a vtkPolyData containing the lines representing the principal directions
 	vtkPolyData *GetPrincipalDirectionsPolyData();
-	
-	
-	// Defines whether the principal directions and curvatures will be 
+
+
+	// Defines whether the principal directions and curvatures will be
 	// stored in the output vtkDataArrayCollection
 	void SetComputePrincipalDirections(int S) {this->ComputeCurvatureInfoFlag=S;};
 
@@ -72,14 +73,14 @@ public:
 
 	vtkSetMacro(NeighbourhoodComputationMethod,int);
 	vtkGetMacro(NeighbourhoodComputationMethod,int);
-	
+
 	// defines the size of the ring used in neighbourhood computation
 	vtkSetMacro(RingSize,int);
 	vtkGetMacro(RingSize,int);
 
 	vtkSetMacro(NeighbourhoodSize,double);
 	vtkGetMacro(NeighbourhoodSize,double);
-	
+
 	void SetDisplay(int D) {this->Display=D;};
 	void SetNumberOfThreads(int N) {this->NumberOfThreads=N;};
 
@@ -107,10 +108,10 @@ private:
 	// Value storing the curvature measure computation method.
 	// 0: Normal analysis. 1:Polynomial fitting
 	int ComputationMethod;
-	
+
 	// Flag defining wether the curvatures info will be stored instead of the simple curvature indicator
 	int ComputeCurvatureInfoFlag;
-	
+
 	// Flag defining whether the principal directions will be displayed or not
 	int DisplayCurvatureInfoFlag;
 
@@ -126,13 +127,13 @@ private:
 
 	// The principal directions
 	vtkFloatArray *CellsCurvatureInfo;
-	
+
 	// The curvature indicator :  sqrt (c1*c1+c2*c2)
 	vtkDoubleArray *CellsCurvatureIndicator;
 
-	// The Collection containing both Curvature indicator and principal directions	
+	// The Collection containing both Curvature indicator and principal directions
 	vtkDataArrayCollection *CurvatureCollection;
-	
+
 	RenderWindow *AnchorRenderWindow;
 
 	/// this method computes a curvature indicator having this formula : sqrt(c1*c1+c2*c2)
@@ -153,7 +154,7 @@ private:
 
 	// parameter defining whether the curvature indicator will be displayed or not
 	int Display;
-	
+
 	// the threaded method to compute the curvature
 	static VTK_THREAD_RETURN_TYPE ThreadedCurvatureComputation (void *arg);
 

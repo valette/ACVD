@@ -14,6 +14,7 @@ set(COMMON_EXAMPLES
   mesh2stl
   mesh2vtk
   meshComponents
+  meshCurvature
   meshDifference
   subdivideMesh
   subdivideMesh2
