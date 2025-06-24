@@ -55,7 +55,7 @@ int main( int argc, char *argv[] )
 		char* value = argv[ArgumentsIndex + 1];
 
 		if (strcmp(key, "-o") == 0) {
-			outputFile = argv[ 2 ];
+			outputFile = value;
 		}
 
 		if (strcmp(key, "-t") == 0) {
