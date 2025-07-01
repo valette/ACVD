@@ -13,28 +13,28 @@ Author:   Sebastien Valette
 * Copyright (c) CREATIS-LRMN (Centre de Recherche en Imagerie Medicale)
 * Author : Sebastien Valette
 *
-*  This software is governed by the CeCILL-B license under French law and 
-*  abiding by the rules of distribution of free software. You can  use, 
-*  modify and/ or redistribute the software under the terms of the CeCILL-B 
-*  license as circulated by CEA, CNRS and INRIA at the following URL 
-*  http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.html 
+*  This software is governed by the CeCILL-B license under French law and
+*  abiding by the rules of distribution of free software. You can  use,
+*  modify and/ or redistribute the software under the terms of the CeCILL-B
+*  license as circulated by CEA, CNRS and INRIA at the following URL
+*  http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.html
 *  or in the file LICENSE.txt.
 *
 *  As a counterpart to the access to the source code and  rights to copy,
 *  modify and redistribute granted by the license, users are provided only
 *  with a limited warranty  and the software's author,  the holder of the
 *  economic rights,  and the successive licensors  have only  limited
-*  liability. 
+*  liability.
 *
 *  The fact that you are presently reading this means that you have had
 *  knowledge of the CeCILL-B license and that you accept its terms.
-* ------------------------------------------------------------------------ */  
+* ------------------------------------------------------------------------ */
 
-// .NAME ACVD 
+// .NAME ACVD
 // .SECTION Description
 
 #include <stdio.h>
-#include <string.h>
+#include <string>
 #include <stdlib.h>
 #include <iostream>
 
@@ -44,13 +44,13 @@ using namespace std;
 
 /////////////////////////////////////////////////////////////////////////////////////////
 // ACVD program:
-// 
+//
 // Adaptive coarsening of triangular meshes
 // References:
-// [1] " Approximated Centroidal Voronoi Diagrams for Uniform 
+// [1] " Approximated Centroidal Voronoi Diagrams for Uniform
 // Polygonal Mesh Coarsening", Valette & Chassery, Eurographics 2004.
 // [2] "Adaptive Polygonal Mesh Simplification With Discrete Centroidal Voronoi Diagrams"
-//  by, S. Valette, I. Kompatsiaris and J.-M. Chassery 
+//  by, S. Valette, I. Kompatsiaris and J.-M. Chassery
 /////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -66,9 +66,7 @@ int main( int argc, char *argv[] )
 	int QuadricsOptimizationLevel = 1;
 
 	char* OutputDirectory = 0;
-	char outputfile[500];
-
-	strcpy (outputfile, "simplification.ply");
+	const char *outputfile = "simplification.ply";
 
 	if(argc > 3) {
 		std::cout << "load : " << argv[1] << endl;
@@ -142,11 +140,11 @@ int main( int argc, char *argv[] )
 		if (strcmp(key, "-o") == 0) {
 			OutputDirectory = value;
 			cout << "OutputDirectory: " << OutputDirectory << endl;
-			Remesh->SetOutputDirectory(value);		
+			Remesh->SetOutputDirectory(value);
 		}
 
 		if (strcmp(key, "-of") == 0) {
-			strcpy(outputfile, value);
+			outputfile = value;
 			cout << "Output file name: " << outputfile << endl;
 		}
 
