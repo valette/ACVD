@@ -19,6 +19,17 @@
 *  The fact that you are presently reading this means that you have had
 *  knowledge of the CeCILL-B license and that you accept its terms.
 * ------------------------------------------------------------------------ */
+#include <vtkVersion.h>
+
+#if VTK_MAJOR_VERSION > 9 || ( VTK_MAJOR_VERSION == 9  && VTK_MINOR_VERSION > 3 )
+#define VTK_ABOVE_9_3
+#endif
+
+#ifdef VTK_ABOVE_9_3
+#include <vtkGenerateIds.h>
+#else
+#include <vtkIdFilter.h>
+#endif
 
 #include <vtkObjectFactory.h>
 #include <vtkPolyDataMapper.h>
@@ -34,7 +45,6 @@
 #include <vtkLabeledDataMapper.h>
 #include <vtkActor2D.h>
 #include <vtkCellArray.h>
-#include <vtkGenerateIds.h>
 #include <vtkCellCenters.h>
 #include <vtkTextProperty.h>
 #include <vtkCellData.h>
@@ -1071,7 +1081,11 @@ RenderWindow::SetDisplayIdsOn ()
 		vtkDataSet *DataSet = this->GetMeshActor()->GetMapper()->GetInput();
 
 		//Generate ids for labeling
-		vtkGenerateIds *ids = vtkGenerateIds::New ();
+		#ifdef VTK_ABOVE_9_3
+			vtkGenerateIds *ids = vtkGenerateIds::New ();
+		#else
+			vtkIdFilter *ids = vtkIdFilter::New ();
+		#endif
 		ids->SetInputData (DataSet);
 		ids->PointIdsOn ();
 		ids->CellIdsOn ();
