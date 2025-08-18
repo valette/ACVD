@@ -34,7 +34,7 @@
 #include <vtkLabeledDataMapper.h>
 #include <vtkActor2D.h>
 #include <vtkCellArray.h>
-#include <vtkIdFilter.h>
+#include <vtkGenerateIds.h>
 #include <vtkCellCenters.h>
 #include <vtkTextProperty.h>
 #include <vtkCellData.h>
@@ -1071,7 +1071,7 @@ RenderWindow::SetDisplayIdsOn ()
 		vtkDataSet *DataSet = this->GetMeshActor()->GetMapper()->GetInput();
 
 		//Generate ids for labeling
-		vtkIdFilter *ids = vtkIdFilter::New ();
+		vtkGenerateIds *ids = vtkGenerateIds::New ();
 		ids->SetInputData (DataSet);
 		ids->PointIdsOn ();
 		ids->CellIdsOn ();
