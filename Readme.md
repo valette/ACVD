@@ -26,7 +26,7 @@ This code is distributed under the CeCILL-B license (BSD-compatible)
 
 
 ###  Dependencies ###
-* VTK www.vtk.org
+* VTK www.vtk.org, tested on versions above 9.0
 * CMAKE www.cmake.org
 
 ###  Simple compilation HowTo under Linux ###
