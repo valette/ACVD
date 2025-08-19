@@ -42,6 +42,7 @@ find_package(VTK
     IOPLY
     RenderingLabel
     RenderingOpenGL2
+    RenderingGL2PSOpenGL2
 )
 
 include_directories(${VTK_INCLUDE_DIRS})
