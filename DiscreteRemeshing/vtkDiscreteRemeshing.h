@@ -91,7 +91,7 @@ protected:
 	void BuildDelaunayTriangulation ();
 
 	/// Adds polygons and vertices to fix boundaries
-	void FixMeshBoundaries ();
+	bool FixMeshBoundaries ();
 
 	/// Experimental...
 	void FixClusteringToVoronoi ();
@@ -212,12 +212,13 @@ int vtkDiscreteRemeshing < Metric >::DetectNonManifoldOutputVertices() {
 
 		if ( Items != 0) {
 			cout << Items->GetNumberOfIds() << " items inside" << endl;
-			if ( Items->GetNumberOfIds() == 1 )	{
+			for ( int i = 0; i < Items->GetNumberOfIds(); i++ )	{
 
-				if ( this->Input->IsVertexManifold( Items->GetId( 0 ) ) != 1 ) {
+				if ( this->Input->IsVertexManifold( Items->GetId( i ) ) != 1 ) {
 
 					problem = false;
-					cout << "discarding this topology issue as the input mesh also has a topology issue" << endl;
+					cout << "discarding this topology issue as the input mesh also has a topology issue here" << endl;
+					break;
 
 				}
 
@@ -419,28 +420,20 @@ template < class Metric >
 
 }
 template < class Metric >
-	void vtkDiscreteRemeshing < Metric >::FixMeshBoundaries ()
+	bool vtkDiscreteRemeshing < Metric >::FixMeshBoundaries ()
 {
 	// until now, this method works only when clustering vertices
-	if (this->ClusteringType == 0)
-		return;
+	if (this->ClusteringType == 0) return false;
+	if (this->BoundaryFixing == 0) return false;
 
-	if (this->BoundaryFixing == 0)
-		return;
-
-	vtkIdType i;
+	bool neededFix = false;
 	vtkIdType *EdgesNewPoint = new vtkIdType[this->Input->GetNumberOfEdges ()];
 
-	for (i = 0; i < this->GetInput ()->GetNumberOfEdges (); i++)
-	{
-		EdgesNewPoint[i] = -2;
-	}
-
-
+	for (vtkIdType i = 0; i < this->GetInput ()->GetNumberOfEdges (); i++) EdgesNewPoint[i] = -2;
 	vtkIdType f1, f2, v1, v2, c1, c2;
 	double P[3], P1[3], P2[3];
 
-	for (i = 0; i < this->GetInput ()->GetNumberOfEdges (); i++)
+	for (vtkIdType i = 0; i < this->GetInput ()->GetNumberOfEdges (); i++)
 	{
 
 		this->Input->GetEdgeVertices (i, v1, v2);
@@ -461,6 +454,7 @@ template < class Metric >
 				P[2] = 0.5 * (P1[2] + P2[2]);
 				// create a new vertex in the coarsened model
 				EdgesNewPoint[i]=this->Output->AddVertex (P);
+				neededFix = true;
 
 				// create a new triangle (NewVertex,Cluster1,Cluster2);
 				this->Output->AddFace (EdgesNewPoint[i],c1,c2);
@@ -468,12 +462,9 @@ template < class Metric >
 		}
 	}
 
-	vtkIdType Cluster;
-	vtkIdType Edge;
-
 	vtkIdList *EList = vtkIdList::New ();
 	vtkIdType NumberOfEdges, *Edges;
-	for (i = 0; i < this->GetInput ()->GetNumberOfEdges (); i++)
+	for (vtkIdType i = 0; i < this->GetInput ()->GetNumberOfEdges (); i++)
 	{
 		if (EdgesNewPoint[i] < 0)
 		{
@@ -485,14 +476,14 @@ template < class Metric >
 				// with two vertices belonging to the same cluster
 
 				this->Input->GetEdgeVertices (i, v1, v2);
-				Cluster = this->Clustering->GetValue (v1);
+				vtkIdType Cluster = this->Clustering->GetValue (v1);
 
 				std::queue < vtkIdType >EQueue;
 				EQueue.push (i);
 				EList->Reset ();
 				while (EQueue.size ())
 				{
-					Edge = EQueue.front ();
+					vtkIdType Edge = EQueue.front ();
 					EQueue.pop ();
 					switch (EdgesNewPoint[Edge])
 					{
@@ -558,16 +549,15 @@ template < class Metric >
 	}
 
 	// fix when two neighbour edges actually have several clusters
-	for (i = 0; i < this->Input->GetNumberOfPoints (); i++)
+	for (vtkIdType i = 0; i < this->Input->GetNumberOfPoints (); i++)
 	{
 		if (this->Input->GetNumberOfBoundaries (i) > 0)
 		{
 			EList->Reset ();
 			this->Input->GetVertexNeighbourEdges (i, NumberOfEdges, Edges);
-			vtkIdType j;
-			for (j = 0; j < NumberOfEdges; j++)
+			for (vtkIdType j = 0; j < NumberOfEdges; j++)
 			{
-				Edge = Edges[j];
+				vtkIdType Edge = Edges[j];
 				if (EdgesNewPoint[Edge] >= 0)
 				{
 					EList->InsertUniqueId (EdgesNewPoint[Edge]);
@@ -582,6 +572,7 @@ template < class Metric >
 
 	EList->Delete ();
 	delete[]EdgesNewPoint;
+	return neededFix;
 }
 
 
@@ -955,6 +946,8 @@ template < class Metric > void vtkDiscreteRemeshing < Metric >::Remesh ()
 
 	}
 
+	if ( this->FixMeshBoundaries() && this->ConsoleOutput ) this->Output->DisplayMeshProperties();
+
 }
 template < class Metric >
 void vtkDiscreteRemeshing <Metric >::GetDualItemNeighbourClusters ( vtkIdType item,vtkIdList * List ) {
@@ -1114,7 +1107,6 @@ void vtkDiscreteRemeshing < Metric >::BuildDelaunayTriangulation () {
 	}
 
 	CList->Delete();
-	this->FixMeshBoundaries();
 
 	if ( this->ForceManifold ) {
 
