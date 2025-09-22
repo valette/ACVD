@@ -7,6 +7,9 @@ on:
   push:
     branches:
       - master
+  schedule:
+  # every two months"
+  - cron: '0 0 1 */2 *'
 
 jobs:
   build_and_test:
