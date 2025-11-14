@@ -30,7 +30,9 @@ find_package(VTK
     REQUIRED
     COMPONENTS
     CommonSystem
+    FiltersHybrid
     FiltersModeling
+    FiltersSources
     ImagingGeneral
     InteractionStyle
     IOXML
@@ -40,6 +42,7 @@ find_package(VTK
     IOLegacy
     IOMINC
     IOPLY
+    metaio
     RenderingLabel
     RenderingOpenGL2
     RenderingGL2PSOpenGL2
