@@ -11,7 +11,7 @@ Auteur:   Sebastien Valette
 // .SECTION Description
 
 #include <vtkPNGReader.h>
-#include <vtkImageViewer2.h>
+//#include <vtkImageViewer2.h>
 #include <vtkImageReader.h>
 #include <vtkImageData.h>
 #include <vtkRenderWindowInteractor.h>

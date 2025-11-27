@@ -43,7 +43,6 @@
 #include <vtkOBJWriter.h>
 #include <vtkSTLReader.h>
 #include <vtkSTLWriter.h>
-#include <vtkMeshQuality.h>
 #include <vtkXMLPolyDataReader.h>
 #include <vtkXMLPolyDataWriter.h>
 
