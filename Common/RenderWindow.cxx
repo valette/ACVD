@@ -31,6 +31,7 @@
 #include <vtkIdFilter.h>
 #endif
 
+#include <iostream>
 #include <vtkObjectFactory.h>
 #include <vtkPolyDataMapper.h>
 #include <vtkProperty.h>
@@ -69,6 +70,10 @@
 
 #include "RenderWindow.h"
 #include "vtkSurfaceIterators.h"
+
+using std::cout;
+using std::cin;
+using std::endl;
 
 #define _RANDOM_SEED 1000
 

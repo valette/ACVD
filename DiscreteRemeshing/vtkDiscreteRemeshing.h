@@ -31,6 +31,7 @@
 #ifndef _VTKDISCRETEREMESHING_H_
 #define _VTKDISCRETEREMESHING_H_
 
+#include <iostream>
 #include <vtkObjectFactory.h>
 #include <vtkDoubleArray.h>
 #include <vtkIntArray.h>
@@ -44,6 +45,8 @@
 #include "vtkSurfaceClustering.h"
 #include "vtkCurvatureMeasure.h"
 #include "vtkTag.h"
+
+using std::cin;
 
 // A Class to process coarsening of vtkSurface PolyData. It derives from vtkSurfaceClustering
 // This class adds meshing features to the clustering class, as proposed in :

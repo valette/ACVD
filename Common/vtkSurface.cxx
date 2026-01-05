@@ -20,6 +20,7 @@
 *  knowledge of the CeCILL-B license and that you accept its terms.
 * ------------------------------------------------------------------------ */
 
+#include <iostream>
 #include <math.h>
 #include <sstream>
 #include <vtkObjectFactory.h>
@@ -57,6 +58,9 @@
 #ifdef DISPLAYMESHCLEANING
 #include "RenderWindow.h"
 #endif
+
+using std::cout;
+using std::endl;
 
 bool sortByDecreasingSecond( const std::pair< int,int > &a, const std::pair< int,int > &b ) {
     return ( a.second > b.second );

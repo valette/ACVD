@@ -10,11 +10,15 @@ Auteur:   Sebastien Valette
 // .NAME VolumeSubsample2Mhd
 // .SECTION Description
 
+#include <iostream>
 #include <sstream>
 #include <vtkImageData.h>
 #include <vtkMetaImageWriter.h>
 #include <vtkMetaImageReader.h>
 #include <vtkImageResample.h>
+
+using std::cout;
+using std::endl;
 
 int main( int argc, char *argv[] )
 {

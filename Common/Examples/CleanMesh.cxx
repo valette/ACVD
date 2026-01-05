@@ -20,9 +20,13 @@
 *  knowledge of the CeCILL-B license and that you accept its terms.
 * ------------------------------------------------------------------------ */
 
+#include <iostream>
 #include <vtkCommand.h>
 #include "vtkSurface.h"
 #include "RenderWindow.h"
+
+using std::cout;
+using std::endl;
 
 int main( int argc, char *argv[] )
 {

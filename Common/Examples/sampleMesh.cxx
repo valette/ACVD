@@ -9,10 +9,14 @@ Auteur:   Sebastien Valette
 // .NAME sampleMesh
 // .SECTION Description
 
+#include <iostream>
 #include <random>
 #include <vtkTimerLog.h>
 #include <vtkButterflySubdivisionFilter.h>
 #include "vtkSurface.h"
+
+using std::cout;
+using std::endl;
 
 int main( int argc, char *argv[] )
 {

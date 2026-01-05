@@ -3,7 +3,7 @@ vtkCurvatureMeasure.h  -  description
 -------------------
 begin                : July 10 2005
 copyright            : (C) 2005 by Sebastien Valette
-email                : 
+email                :
 ***************************************************************************/
 
 /* ---------------------------------------------------------------------
@@ -11,23 +11,24 @@ email                :
 * Copyright (c) CREATIS-LRMN (Centre de Recherche en Imagerie Medicale)
 * Author : Sebastien Valette
 *
-*  This software is governed by the CeCILL-B license under French law and 
-*  abiding by the rules of distribution of free software. You can  use, 
-*  modify and/ or redistribute the software under the terms of the CeCILL-B 
-*  license as circulated by CEA, CNRS and INRIA at the following URL 
-*  http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.html 
+*  This software is governed by the CeCILL-B license under French law and
+*  abiding by the rules of distribution of free software. You can  use,
+*  modify and/ or redistribute the software under the terms of the CeCILL-B
+*  license as circulated by CEA, CNRS and INRIA at the following URL
+*  http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.html
 *  or in the file LICENSE.txt.
 *
 *  As a counterpart to the access to the source code and  rights to copy,
 *  modify and redistribute granted by the license, users are provided only
 *  with a limited warranty  and the software's author,  the holder of the
 *  economic rights,  and the successive licensors  have only  limited
-*  liability. 
+*  liability.
 *
 *  The fact that you are presently reading this means that you have had
 *  knowledge of the CeCILL-B license and that you accept its terms.
-* ------------------------------------------------------------------------ */  
+* ------------------------------------------------------------------------ */
 
+#include <iostream>
 #include <vtkTimerLog.h>
 #include <vtkTriangle.h>
 #include <vtkCellData.h>
@@ -38,6 +39,9 @@ email                :
 #include "vtkNeighbourhoodComputation.h"
 
 #define DISPLAYINTERVAL 10000
+
+using std::cout;
+using std::endl;
 
 /// this class is made to compute curvature measure of a vtkIdList with polynomial fitting
 /// It was created to ease mumtithreading
@@ -50,8 +54,8 @@ public:
 		this->Input = Input;
 	};
 
-	// Computes the curvature for a given group of triangles. Returns sqrt(c1^2+c2^2) where c1 and c2 are 
-	// principal curvatures. Can also write the two principal directions and Curvatures if the second               parameter is provided. 
+	// Computes the curvature for a given group of triangles. Returns sqrt(c1^2+c2^2) where c1 and c2 are
+	// principal curvatures. Can also write the two principal directions and Curvatures if the second               parameter is provided.
 	// Principal directions and curvatures are stored this way : c1,x1,y1,z1,c2,x2,y2,z2;
 	double ComputeFitting (vtkIdList * FList, double *CurvatureInfo = 0);
 
@@ -948,15 +952,15 @@ vtkCurvatureMeasure::ComputeCurvatureIndicatorWithPolynomialFitting ()
 	this->StartTime = this->Timer->GetCurrentTime ();
 #endif
 	vtkMultiThreader *Threader=vtkMultiThreader::New();
-		
+
 	Threader->SetSingleMethod (ThreadedCurvatureComputation, (void *) this);
 	if (this->NumberOfThreads)
 		Threader->SetNumberOfThreads (this->NumberOfThreads);
 	Threader->SingleMethodExecute ();
 	cout << (char) 13;
-	
+
 	Threader->Delete();
-			
+
 	if (NumberOfBadMatrices > 0)
 	{
 		cout << endl << NumberOfBadMatrices <<
@@ -1184,18 +1188,18 @@ vtkCurvatureMeasure::vtkCurvatureMeasure ()
 	this->DisplayCurvatureInfoFlag = 0;
 	this->ComputeCurvatureInfoFlag = 1;
 	this->CellsCurvatureInfo = 0;
-	
+
 	this->StatisticsLock = new std::mutex();
 	this->Timer = vtkTimerLog::New ();
 	this->NumberOfBadMatrices = 0;
-	this->NumberOfCellsWithSmallNeighbourhood = 0;	
+	this->NumberOfCellsWithSmallNeighbourhood = 0;
 }
 
 vtkCurvatureMeasure::~vtkCurvatureMeasure ()
 {
 	delete this->StatisticsLock;
 	this->Timer->Delete ();
-	
+
 	if (this->CurvatureCollection)
 		this->CurvatureCollection->Delete();
 	if (this->CellsCurvatureIndicator)

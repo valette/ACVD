@@ -10,9 +10,13 @@ Auteur:   Sebastien Valette
 // .NAME VolumeCleanLabels
 // .SECTION Description
 
+#include <iostream>
 #include <vtkMetaImageReader.h>
 #include <vtkMetaImageWriter.h>
 #include "vtkImageDataCleanLabels.h"
+
+using std::cout;
+using std::endl;
 
 int main( int argc, char *argv[] )
 {

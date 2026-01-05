@@ -23,29 +23,33 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 * Copyright (c) CREATIS-LRMN (Centre de Recherche en Imagerie Medicale)
 * Author : Sebastien Valette
 *
-*  This software is governed by the CeCILL-B license under French law and 
-*  abiding by the rules of distribution of free software. You can  use, 
-*  modify and/ or redistribute the software under the terms of the CeCILL-B 
-*  license as circulated by CEA, CNRS and INRIA at the following URL 
-*  http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.html 
+*  This software is governed by the CeCILL-B license under French law and
+*  abiding by the rules of distribution of free software. You can  use,
+*  modify and/ or redistribute the software under the terms of the CeCILL-B
+*  license as circulated by CEA, CNRS and INRIA at the following URL
+*  http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.html
 *  or in the file LICENSE.txt.
 *
 *  As a counterpart to the access to the source code and  rights to copy,
 *  modify and redistribute granted by the license, users are provided only
 *  with a limited warranty  and the software's author,  the holder of the
 *  economic rights,  and the successive licensors  have only  limited
-*  liability. 
+*  liability.
 *
 *  The fact that you are presently reading this means that you have had
 *  knowledge of the CeCILL-B license and that you accept its terms.
-* ------------------------------------------------------------------------ */  
+* ------------------------------------------------------------------------ */
 
+#include <iostream>
 #include <vtkByteSwap.h>
 #include <vtkCellArray.h>
 #include <vtkPoints.h>
 #include <vtkObjectFactory.h>
 
 #include "vtkOFFReader.h"
+
+using std::cout;
+using std::cerr;
 
 #ifdef read
 #undef read
@@ -79,7 +83,7 @@ vtkOFFReader::vtkOFFReader()
 
 //----------------------------------------------------------------------------
 vtkOFFReader::~vtkOFFReader()
-{   
+{
   if (this->FileName)
     {
     delete [] this->FileName;
@@ -113,7 +117,7 @@ int vtkOFFReader::RequestData(vtkInformation* vtkNotUsed(request),
 	int NumberOfPoints;
 	int NumberOfCells;
 
-	float tampon; 
+	float tampon;
 
 	// ouverture pas propre
 	stream = fopen(this->FileName, "r" );
@@ -127,7 +131,7 @@ int vtkOFFReader::RequestData(vtkInformation* vtkNotUsed(request),
 		UnusedResult=fscanf( stream, "%d", &buffer);
 		NumberOfPoints = buffer;
 
-#if ALEX_DEBUG 
+#if ALEX_DEBUG
 		cout << "nb de points " << buffer << endl;
 #endif
 
@@ -151,14 +155,14 @@ int vtkOFFReader::RequestData(vtkInformation* vtkNotUsed(request),
 		for (i=0;i<NumberOfPoints;i++)
 		{
 
-#if ALEX_DEBUG			
+#if ALEX_DEBUG
 			cout << "point en cours de chargement :" << i << endl;
 #endif
-			
+
 			// coordonees en X
 			UnusedResult=fscanf( stream, "%f", &fbuffer);
 			temp_point[0]= fbuffer;
-			
+
 #if ALEX_DEBUG
 			cout << "X = " << fbuffer;
 #endif
@@ -187,7 +191,7 @@ int vtkOFFReader::RequestData(vtkInformation* vtkNotUsed(request),
 #endif
 		}
 
-		// boucle sur les cellules : lecture des coordonnees 
+		// boucle sur les cellules : lecture des coordonnees
 		for (i=0;i<NumberOfCells;i++)
 		{
 			// lecture du nombre de points de la cellule
@@ -196,24 +200,24 @@ int vtkOFFReader::RequestData(vtkInformation* vtkNotUsed(request),
 #if ALEX_DEBUG
 			cout << "cellule a " << CellType << " points" << endl;
 #endif
-			
+
 			// lecture des IDs des points de la cellule
-			for (j=0;j<CellType;j++) 
+			for (j=0;j<CellType;j++)
 			{
 				UnusedResult=fscanf( stream, "%Ld", &Temp_Cell[j]);
 
 #if ALEX_DEBUG
-				cout << "point # " << j << " Id " << Temp_Cell[j] << "; "; 
+				cout << "point # " << j << " Id " << Temp_Cell[j] << "; ";
 #endif
-			
+
 			}
 #if ALEX_DEBUG
 			cout << endl;
-#endif			
+#endif
 
 			// creation de la cellule dans notre liste
 			temp_cells->InsertNextCell(CellType,Temp_Cell);
-			
+
 			if (this->InfoOnCells)
 			{
 				// * lecture de ce qui reste, et on jete *
@@ -224,16 +228,16 @@ int vtkOFFReader::RequestData(vtkInformation* vtkNotUsed(request),
 			}
 
 		}
-	
+
 		// fermeture du fichier
 		fclose( stream );
-	
+
 	}
-	
+
 	// copy de la liste de points dans la structure et desallocation de la memoire
 	output_mesh->SetPoints(temp_points);
 	temp_points->Delete();
-	
+
 	// copy de la liste de cellules dans la structure et desallocation de la memoire
 	output_mesh->SetPolys(temp_cells);
 	temp_cells->Delete();

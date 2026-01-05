@@ -33,6 +33,7 @@
 #ifndef _VTKUNIFORMCLUSTERING_H_
 #define _VTKUNIFORMCLUSTERING_H_
 
+#include <iostream>
 #include <random>
 #include <vector>
 #include <vtkCommand.h>
@@ -40,6 +41,9 @@
 #include <vtkCellData.h>
 #include <vtkTimerLog.h>
 #include "RenderWindow.h"
+
+using std::cout;
+using std::endl;
 
 /// A Class to process uniform clustering, Implemented from the paper:
 /// "Approximated Centroidal Voronoi Diagrams for Uniform Polygonal Mesh Coarsening"

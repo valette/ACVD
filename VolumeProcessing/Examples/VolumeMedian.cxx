@@ -10,10 +10,14 @@ Auteur:   Sebastien Valette
 // .NAME VolumeMedian
 // .SECTION Description
 
+#include <iostream>
 #include <vtkImageData.h>
 #include <vtkMetaImageReader.h>
 #include <vtkMetaImageWriter.h>
 #include <vtkImageMedian3D.h>
+
+using std::cout;
+using std::endl;
 
 int main( int argc, char *argv[] )
 {

@@ -1,3 +1,4 @@
+#include <iostream>
 #include <vector>
 #include <map>
 #include <queue>
@@ -7,6 +8,8 @@
 
 vtkStandardNewMacro(vtkImageDataCleanLabels);
 
+using std::cout;
+using std::endl;
 
 struct voxel {
 	int pointer;

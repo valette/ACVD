@@ -10,10 +10,14 @@ Auteur:   Sebastien Valette
 // .NAME Minc2Mhd
 // .SECTION Description
 
+#include <iostream>
 #include <sstream>
 #include <vtkImageData.h>
 #include <vtkMetaImageWriter.h>
 #include <vtkMINCImageReader.h>
+
+using std::cout;
+using std::endl;
 
 int main( int argc, char *argv[] )
 {

@@ -33,10 +33,14 @@ Author:   Sebastien Valette
 // .NAME meshCurvature
 // .SECTION Description
 
+#include <iostream>
 #include <vtkCellData.h>
 #include <vtkPointData.h>
 #include "vtkSurface.h"
 #include "vtkCurvatureMeasure.h"
+
+using std::cout;
+using std::endl;
 
 int main( int argc, char *argv[] )
 {

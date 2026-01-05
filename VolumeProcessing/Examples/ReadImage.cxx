@@ -10,11 +10,15 @@ Auteur:   Sebastien Valette
 // .NAME meshviewer
 // .SECTION Description
 
+#include <iostream>
 #include <vtkPNGReader.h>
 //#include <vtkImageViewer2.h>
 #include <vtkImageReader.h>
 #include <vtkImageData.h>
 #include <vtkRenderWindowInteractor.h>
+
+using std::cout;
+using std::endl;
 
 int main( int argc, char *argv[] )
 {

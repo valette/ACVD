@@ -14,6 +14,7 @@ PURPOSE.  See the above copyright notice for more information.
 =========================================================================*/
 #include "vtkOOCMetaImageReader.h"
 
+#include <iostream>
 #include <cmath>
 
 #include <vtkByteSwap.h>
@@ -33,6 +34,9 @@ PURPOSE.  See the above copyright notice for more information.
 #include <vtkmetaio/metaImageTypes.h>
 #include <vtkmetaio/metaImageUtils.h>
 #include <vtkmetaio/metaImage.h>
+
+using std::cout;
+using std::endl;
 
 vtkStandardNewMacro(vtkOOCMetaImageReader);
 
@@ -94,7 +98,7 @@ vtkOOCMetaImageReader::vtkOOCMetaImageReader()
 
 //----------------------------------------------------------------------------
 vtkOOCMetaImageReader::~vtkOOCMetaImageReader()
-{ 
+{
 	delete this->MetaImagePtr;
 	this->SetTransform(NULL);
 	this->SetScalarArrayName(NULL);
@@ -160,7 +164,7 @@ void vtkOOCMetaImageReader::ReadImageParameters ( ) {
 		return;
 	}
 
-	//The cout qui montre la dimensionalité du fichier
+	//The cout qui montre la dimensionalitï¿½ du fichier
 	vtkDebugMacro(<< "* This image has " << FileDimensionality << " dimensions");
 
 	int i;
@@ -168,7 +172,7 @@ void vtkOOCMetaImageReader::ReadImageParameters ( ) {
 	switch(this->MetaImagePtr->ElementType())
 	{
 	default:
-		vtkErrorMacro(<< "Unknown data type: " 
+		vtkErrorMacro(<< "Unknown data type: "
 			<< this->MetaImagePtr->ElementType());
 		return;
 	case vtkmetaio::MET_CHAR:
@@ -195,7 +199,7 @@ void vtkOOCMetaImageReader::ReadImageParameters ( ) {
 	case vtkmetaio::MET_UINT_ARRAY:
 		this->DataScalarType = VTK_UNSIGNED_INT;
 		break;
-	case vtkmetaio::MET_LONG:	
+	case vtkmetaio::MET_LONG:
 	case vtkmetaio::MET_LONG_ARRAY:
 		this->DataScalarType = VTK_LONG;
 		break;
@@ -376,25 +380,25 @@ int vtkOOCMetaImageReader::OpenAndSeekFile(int dataExtent[6], int idx)
 		return 0;
 	}
 	// convert data extent into constants that can be used to seek.
-	streamStart = 
+	streamStart =
 		(dataExtent[0] - this->DataExtent[0]) * this->DataIncrements[0];
 
 	if (this->FileLowerLeft)
 	{
-		streamStart = streamStart + 
+		streamStart = streamStart +
 			(dataExtent[2] - this->DataExtent[2]) * this->DataIncrements[1];
 	}
 	else
 	{
-		streamStart = streamStart + 
-			(this->DataExtent[3] - this->DataExtent[2] - dataExtent[2]) * 
+		streamStart = streamStart +
+			(this->DataExtent[3] - this->DataExtent[2] - dataExtent[2]) *
 			this->DataIncrements[1];
 	}
 
 	// handle three and four dimensional files
 	if (this->GetFileDimensionality() >= 3)
 	{
-		streamStart = streamStart + 
+		streamStart = streamStart +
 			(dataExtent[4] - this->DataExtent[4]) * this->DataIncrements[2];
 	}
 
@@ -415,7 +419,7 @@ int vtkOOCMetaImageReader::OpenAndSeekFile(int dataExtent[6], int idx)
 			<< this->DataExtent[4] << ", " << this->DataExtent[5]);
 		return 0;
 	}
-	return 1;        
+	return 1;
 }
 
 //----------------------------------------------------------------------------
@@ -441,7 +445,7 @@ void vtkOOCMetaImageReaderUpdate2(vtkOOCMetaImageReader *self, vtkImageData *dat
 
 	// Get the requested extents.
 	data->GetExtent(inExtent);
-	// Convert them into to the extent needed from the file. 
+	// Convert them into to the extent needed from the file.
 	self->ComputeInverseTransformedExtent(inExtent,dataExtent);
 
 	// get and transform the increments
@@ -450,36 +454,36 @@ void vtkOOCMetaImageReaderUpdate2(vtkOOCMetaImageReader *self, vtkImageData *dat
 
 	DataMask = self->GetDataMask();
 
-	// compute outPtr2 
+	// compute outPtr2
 	outPtr2 = outPtr;
-	if (outIncr[0] < 0) 
+	if (outIncr[0] < 0)
 	{
 		outPtr2 = outPtr2 - outIncr[0]*(dataExtent[1] - dataExtent[0]);
 	}
-	if (outIncr[1] < 0) 
+	if (outIncr[1] < 0)
 	{
 		outPtr2 = outPtr2 - outIncr[1]*(dataExtent[3] - dataExtent[2]);
 	}
-	if (outIncr[2] < 0) 
+	if (outIncr[2] < 0)
 	{
 		outPtr2 = outPtr2 - outIncr[2]*(dataExtent[5] - dataExtent[4]);
 	}
 
 	// length of a row, num pixels read at a time
-	pixelRead = dataExtent[1] - dataExtent[0] + 1; 
-	streamRead = static_cast<unsigned long>(pixelRead * 
-		self->GetDataIncrements()[0]);  
+	pixelRead = dataExtent[1] - dataExtent[0] + 1;
+	streamRead = static_cast<unsigned long>(pixelRead *
+		self->GetDataIncrements()[0]);
 	streamSkip0 = (long)(self->GetDataIncrements()[1] - streamRead);
-	streamSkip1 = (long)(self->GetDataIncrements()[2] - 
+	streamSkip1 = (long)(self->GetDataIncrements()[2] -
 		(dataExtent[3] - dataExtent[2] + 1)* self->GetDataIncrements()[1]);
 	pixelSkip = data->GetNumberOfScalarComponents();
 
 	// read from the bottom up
-	if (!self->GetFileLowerLeft()) 
+	if (!self->GetFileLowerLeft())
 	{
-		streamSkip0 = (long)(-static_cast<long>(streamRead) 
+		streamSkip0 = (long)(-static_cast<long>(streamRead)
 			- self->GetDataIncrements()[1]);
-		streamSkip1 = (long)(self->GetDataIncrements()[2] + 
+		streamSkip1 = (long)(self->GetDataIncrements()[2] +
 			(dataExtent[3] - dataExtent[2] + 1)* self->GetDataIncrements()[1]);
 	}
 
@@ -511,7 +515,7 @@ void vtkOOCMetaImageReaderUpdate2(vtkOOCMetaImageReader *self, vtkImageData *dat
 			}
 		}
 		outPtr1 = outPtr2;
-		for (idx1 = dataExtent[2]; 
+		for (idx1 = dataExtent[2];
 			!self->AbortExecute && idx1 <= dataExtent[3]; ++idx1)
 		{
 			if (!(count%target))
@@ -527,7 +531,7 @@ void vtkOOCMetaImageReaderUpdate2(vtkOOCMetaImageReader *self, vtkImageData *dat
 			if (static_cast<unsigned long>(self->GetFile()->gcount()) != streamRead)
 				// Apple's gcc3 returns fail when reading _to_ eof
 #else
-			if ( static_cast<unsigned long>(self->GetFile()->gcount()) != 
+			if ( static_cast<unsigned long>(self->GetFile()->gcount()) !=
 				streamRead || self->GetFile()->fail())
 #endif
 			{
@@ -614,7 +618,7 @@ void vtkOOCMetaImageReaderUpdate2(vtkOOCMetaImageReader *self, vtkImageData *dat
 		// move to the next image in the file and data
 		//JF//VC : Modif
 			//SetFilePointerEx( self->GetFile(),static_cast<_int64>(self->GetFile()->tellg()) + streamSkip1 + correction, 0, FILE_BEGIN);
-		self->GetFile()->seekg(static_cast<long long>(self->GetFile()->tellg()) + streamSkip1 + correction, 
+		self->GetFile()->seekg(static_cast<long long>(self->GetFile()->tellg()) + streamSkip1 + correction,
 			ios::beg);
 		outPtr2 += outIncr[2];
 	}
@@ -636,11 +640,11 @@ void vtkOOCMetaImageReaderUpdate1(vtkOOCMetaImageReader *self, vtkImageData *dat
 	outPtr = data->GetScalarPointer();
 	switch (data->GetScalarType())
 	{
-		vtkTemplateMacro(vtkOOCMetaImageReaderUpdate2(self, data, inPtr, 
+		vtkTemplateMacro(vtkOOCMetaImageReaderUpdate2(self, data, inPtr,
 			(VTK_TT *)(outPtr)));
 	default:
 		vtkGenericWarningMacro("Update1: Unknown data type\n");
-	}  
+	}
 }
 //----------------------------------------------------------------------------
 // This function reads a data from a file.  The datas extent/axes
@@ -666,7 +670,7 @@ void vtkOOCMetaImageReader::ExecuteData(vtkDataObject *output,
 	}
 	data->GetPointData()->GetScalars()->SetName("MetaImage");
 
-	vtkDebugMacro("	ExecuteData, Reading extent: " << ext[0] << ", " << ext[1] << ", " 
+	vtkDebugMacro("	ExecuteData, Reading extent: " << ext[0] << ", " << ext[1] << ", "
 		<< ext[2] << ", " << ext[3] << ", " << ext[4] << ", " << ext[5]);
 
 	this->ComputeDataIncrements();
@@ -677,7 +681,7 @@ void vtkOOCMetaImageReader::ExecuteData(vtkDataObject *output,
 		vtkTemplateMacro(vtkOOCMetaImageReaderUpdate1(this, data, (VTK_TT *)(ptr)));
 	default:
 		vtkErrorMacro(<< "UpdateFromFile: Unknown data type");
-	}   
+	}
 }
 
 
@@ -727,7 +731,7 @@ void vtkOOCMetaImageReader::ComputeTransformedOrigin (double origin[3])
 
 		this->ComputeTransformedExtent(this->DataExtent,transformedExtent);
 
-		for (int i = 0; i < 3; i++) 
+		for (int i = 0; i < 3; i++)
 		{
 			if (transformedSpacing[i] < 0)
 			{
@@ -778,7 +782,7 @@ void vtkOOCMetaImageReader::ComputeTransformedExtent(int inExtent[6],
 
 		for (idx = 0; idx < 6; idx += 2)
 		{
-			if (dataExtent[idx] > dataExtent[idx+1]) 
+			if (dataExtent[idx] > dataExtent[idx+1])
 			{
 				temp = dataExtent[idx];
 				dataExtent[idx] = dataExtent[idx+1];
@@ -806,7 +810,7 @@ void vtkOOCMetaImageReader::ComputeTransformedExtent(int inExtent[6],
 
 	for (idx = 0; idx < 6; idx += 2)
 	{
-		if (outExtent[idx] > outExtent[idx+1]) 
+		if (outExtent[idx] > outExtent[idx+1])
 		{
 			temp = outExtent[idx];
 			outExtent[idx] = outExtent[idx+1];
@@ -817,7 +821,7 @@ void vtkOOCMetaImageReader::ComputeTransformedExtent(int inExtent[6],
 		outExtent[idx+1] -= dataExtent[idx];
 	}
 
-	vtkDebugMacro(<< "Transformed extent are:" 
+	vtkDebugMacro(<< "Transformed extent are:"
 		<< outExtent[0] << ", " << outExtent[1] << ", "
 		<< outExtent[2] << ", " << outExtent[3] << ", "
 		<< outExtent[4] << ", " << outExtent[5]);
@@ -863,7 +867,7 @@ void vtkOOCMetaImageReader::ComputeInverseTransformedExtent(int inExtent[6],
 
 		for (idx = 0; idx < 6; idx += 2)
 		{
-			if (dataExtent[idx] > dataExtent[idx+1]) 
+			if (dataExtent[idx] > dataExtent[idx+1])
 			{
 				temp = dataExtent[idx];
 				dataExtent[idx] = dataExtent[idx+1];
@@ -881,7 +885,7 @@ void vtkOOCMetaImageReader::ComputeInverseTransformedExtent(int inExtent[6],
 		transformedExtent[0] = inExtent[0];
 		transformedExtent[1] = inExtent[2];
 		transformedExtent[2] = inExtent[4];
-		this->Transform->GetLinearInverse()->TransformPoint(transformedExtent, 
+		this->Transform->GetLinearInverse()->TransformPoint(transformedExtent,
 			transformedExtent);
 		outExtent[0] = (int) transformedExtent[0];
 		outExtent[2] = (int) transformedExtent[1];
@@ -898,7 +902,7 @@ void vtkOOCMetaImageReader::ComputeInverseTransformedExtent(int inExtent[6],
 
 		for (idx = 0; idx < 6; idx += 2)
 		{
-			if (outExtent[idx] > outExtent[idx+1]) 
+			if (outExtent[idx] > outExtent[idx+1])
 			{
 				temp = outExtent[idx];
 				outExtent[idx] = outExtent[idx+1];
@@ -907,7 +911,7 @@ void vtkOOCMetaImageReader::ComputeInverseTransformedExtent(int inExtent[6],
 		}
 	}
 
-	vtkDebugMacro(<< "Inverse Transformed extent are:" 
+	vtkDebugMacro(<< "Inverse Transformed extent are:"
 		<< outExtent[0] << ", " << outExtent[1] << ", "
 		<< outExtent[2] << ", " << outExtent[3] << ", "
 		<< outExtent[4] << ", " << outExtent[5]);
@@ -931,7 +935,7 @@ void vtkOOCMetaImageReader::ComputeTransformedIncrements(vtkIdType inIncr[3],
 		outIncr[0] = (vtkIdType) transformedIncr[0];
 		outIncr[1] = (vtkIdType) transformedIncr[1];
 		outIncr[2] = (vtkIdType) transformedIncr[2];
-		vtkDebugMacro(<< "Transformed Incr are:" 
+		vtkDebugMacro(<< "Transformed Incr are:"
 			<< outIncr[0] << ", " << outIncr[1] << ", " << outIncr[2]);
 	}
 }
@@ -956,7 +960,7 @@ void vtkOOCMetaImageReader::ComputeInverseTransformedIncrements(vtkIdType inIncr
 		outIncr[0] = (vtkIdType) transformedIncr[0];
 		outIncr[1] = (vtkIdType) transformedIncr[1];
 		outIncr[2] = (vtkIdType) transformedIncr[2];
-		vtkDebugMacro(<< "Inverse Transformed Incr are:" 
+		vtkDebugMacro(<< "Inverse Transformed Incr are:"
 			<< outIncr[0] << ", " << outIncr[1] << ", " << outIncr[2]);
 	}
 }
@@ -1012,47 +1016,47 @@ int vtkOOCMetaImageReader::CanReadFile(const char* fname)
 		return false;
 	}
 
-	if( strcmp(key,"NDims")==0 ) 
+	if( strcmp(key,"NDims")==0 )
 	{
 		inputStream.close();
 		return 3;
 	}
-	if( strcmp(key,"ObjectType")==0 ) 
+	if( strcmp(key,"ObjectType")==0 )
 	{
 		inputStream.close();
 		return 3;
 	}
-	if( strcmp(key,"TransformType")==0 ) 
+	if( strcmp(key,"TransformType")==0 )
 	{
 		inputStream.close();
 		return 3;
 	}
-	if( strcmp(key,"ID")==0 ) 
+	if( strcmp(key,"ID")==0 )
 	{
 		inputStream.close();
 		return 3;
 	}
-	if( strcmp(key,"ParentID")==0 ) 
+	if( strcmp(key,"ParentID")==0 )
 	{
 		inputStream.close();
 		return 3;
 	}
-	if( strcmp(key,"BinaryData")==0 ) 
+	if( strcmp(key,"BinaryData")==0 )
 	{
 		inputStream.close();
 		return 3;
 	}
-	if( strcmp(key,"Comment")==0 ) 
+	if( strcmp(key,"Comment")==0 )
 	{
 		inputStream.close();
 		return 3;
 	}
-	if( strcmp(key,"AcquisitionDate")==0 ) 
+	if( strcmp(key,"AcquisitionDate")==0 )
 	{
 		inputStream.close();
 		return 3;
 	}
-	if( strcmp(key,"Modality")==0 ) 
+	if( strcmp(key,"Modality")==0 )
 	{
 		inputStream.close();
 		return 3;

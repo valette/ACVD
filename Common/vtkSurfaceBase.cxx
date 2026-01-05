@@ -3,23 +3,24 @@
 * Copyright (c) CREATIS-LRMN (Centre de Recherche en Imagerie Medicale)
 * Author : Sebastien Valette
 *
-*  This software is governed by the CeCILL-B license under French law and 
-*  abiding by the rules of distribution of free software. You can  use, 
-*  modify and/ or redistribute the software under the terms of the CeCILL-B 
-*  license as circulated by CEA, CNRS and INRIA at the following URL 
-*  http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.html 
+*  This software is governed by the CeCILL-B license under French law and
+*  abiding by the rules of distribution of free software. You can  use,
+*  modify and/ or redistribute the software under the terms of the CeCILL-B
+*  license as circulated by CEA, CNRS and INRIA at the following URL
+*  http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.html
 *  or in the file LICENSE.txt.
 *
 *  As a counterpart to the access to the source code and  rights to copy,
 *  modify and redistribute granted by the license, users are provided only
 *  with a limited warranty  and the software's author,  the holder of the
 *  economic rights,  and the successive licensors  have only  limited
-*  liability. 
+*  liability.
 *
 *  The fact that you are presently reading this means that you have had
 *  knowledge of the CeCILL-B license and that you accept its terms.
-* ------------------------------------------------------------------------ */  
+* ------------------------------------------------------------------------ */
 
+#include <iostream>
 #include <stack>
 #include <assert.h>
 #include <vtkObjectFactory.h>
@@ -29,6 +30,9 @@
 #include <vtkIdListCollection.h>
 
 #include "vtkSurfaceBase.h"
+
+using std::cout;
+using std::endl;
 
 void vtkSurfaceBase::DisplayInternals( bool exitOnError ) {
 
@@ -89,7 +93,7 @@ vtkIdType vtkSurfaceBase::BisectEdge(vtkIdType e)
 	vtkIdList *FList=vtkIdList::New();
 	this->GetEdgeVertices(e,v1,v2);
 	this->GetEdgeFaces(e,FList);
-	
+
 	double P1[3];
 	double P2[3];
 
@@ -109,7 +113,7 @@ vtkIdType vtkSurfaceBase::BisectEdge(vtkIdType e)
 		vtkIdType Face=FList->GetId(i);
 		v3=this->GetThirdPoint(Face,v1,v2);
 		this->DeleteFaceInRing(Face,this->IsEdge(v1,v3));
-		
+
 		vtkIdType ve1,ve2,ve3;
 		this->GetFaceVertices(Face,ve1,ve2,ve3);
 		if (((ve1==v1)&&(ve2==v2))
@@ -127,7 +131,7 @@ vtkIdType vtkSurfaceBase::BisectEdge(vtkIdType e)
 
 		this->AddEdge(v3,NewVertex,Face);
 	}
-	
+
 	this->InsertEdgeInRing(e,NewVertex);
 
 	FList->Delete();
@@ -258,13 +262,13 @@ bool vtkSurfaceBase::IsVertexManifold( const vtkIdType& iV )
 	vtkIdType FirstEdge,FirstVertex;
 	vtkIdType f1,f2,f3;
 	vtkIdType *Edges,NumberOfRemainingEdges;
-	
+
 	this->GetVertexNeighbourEdges(iV,NumberOfRemainingEdges,Edges);
 
 	// if there is only one edge, the vertex is non manifold
 	if (NumberOfRemainingEdges<2)
 		return (false);
-		
+
 	// detect non-manifold edges
 	for (vtkIdType i=0;i<NumberOfRemainingEdges;i++)
 	{
@@ -280,7 +284,7 @@ bool vtkSurfaceBase::IsVertexManifold( const vtkIdType& iV )
 
 	NumberOfRemainingEdges--;
 	this->GetEdgeFaces(FirstEdge,f1,f2);
-	
+
 	// turn in the first direction
 	v2=this->GetThirdPoint(f1,iV,FirstVertex);
 	do
@@ -306,7 +310,7 @@ bool vtkSurfaceBase::IsVertexManifold( const vtkIdType& iV )
 		Conquer(f2,iV,v2,f3,v1);
 		f2=f3;
 		v2=v1;
-		
+
 	} while ((f2>=0)&&(v2!=FirstVertex));
 	// all adjacent faces have been visited, but there are edges remaining, so return false
 	return (false);
@@ -325,7 +329,7 @@ void vtkSurfaceBase::SwitchOrientation()
 	for (i=0;i<NumberOfVertices;i++)
 		Vertices[i]=Vertices2[NumberOfVertices-1-i];
 
-	this->CheckNormals();	
+	this->CheckNormals();
 	delete [] Vertices2;
 }
 
@@ -425,7 +429,7 @@ double vtkSurfaceBase::GetValenceEntropy()
 	int v1;	// Valence of given point
 	double inv_number;	// 1.0 / number of points
 	double inv_Log2;	// 1.0 / log(2.0)
-	double s;			// 
+	double s;			//
 	double p;			//
 
 	// Array of valences, indexed by point's ID
@@ -576,7 +580,7 @@ void vtkSurfaceBase::DeleteFace(vtkIdType f1)
 {
 	// test whether the face was already deleted
 	if (this->IsFaceActive(f1)==0) return;
-		
+
 	vtkIdType NumberOfPoints,*Points;
 	this->GetFaceVertices(f1,NumberOfPoints,Points);
 
@@ -615,9 +619,9 @@ void vtkSurfaceBase::MergeVertices(vtkIdType v1, vtkIdType v2)
 {
 	vtkIdList *List=vtkIdList::New();
 	vtkIdList *List2=vtkIdList::New();
-	
+
 	vtkIdType e=this->IsEdge(v1,v2);
-	
+
 	// delete polygons adjacent to the edge [v1 v2] (if there are any)
 	if (e>=0)
 	{
@@ -625,7 +629,7 @@ void vtkSurfaceBase::MergeVertices(vtkIdType v1, vtkIdType v2)
 		for (int i=0;i<List->GetNumberOfIds();i++)
 			this->DeleteFace(List->GetId(i));
 	}
-	
+
 	// for each remaining face adjacent to v2, replace v2 by v1
 	this->GetVertexNeighbourFaces(v2,List);
 	for (vtkIdType i=0;i<List->GetNumberOfIds();i++)
@@ -635,7 +639,7 @@ void vtkSurfaceBase::MergeVertices(vtkIdType v1, vtkIdType v2)
 		GetFaceVertices(List->GetId(i), NumberOfVertices, Vertices);
 		Vertices[FindVertexIndex (Vertices,v2,NumberOfVertices)]=v1;
 	}
-	
+
 	// Modify every edge adjacent to v2
 	this->GetVertexNeighbourEdges(v2,List);
 	for (vtkIdType i=0;i<List->GetNumberOfIds();i++)
@@ -650,7 +654,7 @@ void vtkSurfaceBase::MergeVertices(vtkIdType v1, vtkIdType v2)
 			v3=v4;
 			v4=Vertex;
 		}
-		
+
 		vtkIdType Edge2;
 		Edge2=this->IsEdge(v1,v4);
 		if (Edge2>=0)
@@ -664,7 +668,7 @@ void vtkSurfaceBase::MergeVertices(vtkIdType v1, vtkIdType v2)
 				this->DeleteFaceInRing(Face,e);
 				this->InsertFaceInRing(Face,Edge2);
 			}
-			
+
 			// delete [v2 v4]
 			this->DeleteEdge(e);
 		}
@@ -679,7 +683,7 @@ void vtkSurfaceBase::MergeVertices(vtkIdType v1, vtkIdType v2)
 			this->InsertEdgeInRing(e,v1);
 		}
 	}
-	
+
 	this->DeleteVertex(v2);
 	List->Delete();
 	List2->Delete();
@@ -723,32 +727,32 @@ vtkIdType vtkSurfaceBase::IsFace(const vtkIdType &v1, const vtkIdType &v2, const
 	vtkIdType f2;
 	int F;
 	edge = this->IsEdge(v1,v2);
-	
+
 	// test if the edge [v1v2] exists or not
-	if (edge<0) 
+	if (edge<0)
 		return (-1);
 
 	this->GetEdgeFaces(edge,f1,f2);
-	
+
 	// test whether the edge [v1v2] is isolated or not
-	if (f1<0) 
-		return (-1);
-		
-	if (v3 == this->GetThirdPoint(f1,v1,v2)) 
-		return (f1);
-	
-	// test whether if there is another adjacent face
-	if (f2<0) 
+	if (f1<0)
 		return (-1);
 
-	if (v3==this->GetThirdPoint(f2,v1,v2)) 
+	if (v3 == this->GetThirdPoint(f1,v1,v2))
+		return (f1);
+
+	// test whether if there is another adjacent face
+	if (f2<0)
+		return (-1);
+
+	if (v3==this->GetThirdPoint(f2,v1,v2))
 		return (f2);
 
 	// test whether there are non-manifold adjacent faces
 	vtkIdList *FList2=this->Edges[edge].NonManifoldFaces;
 	if (FList2==0)
 		return (-1);
-	
+
 	int NumberOfFaces=FList2->GetNumberOfIds()-1;
 	for (;NumberOfFaces!=-1;NumberOfFaces--)
 	{
@@ -763,16 +767,16 @@ void vtkSurfaceBase :: GetFaceNeighbours(vtkIdType Face,vtkIdListCollection *FLi
 {
 	vtkIdType v0,v1,v2;
 	vtkIdType e0,e1,e2;
-		
+
 	vtkIdList *e0Face = vtkIdList :: New();
 	vtkIdList *e1Face = vtkIdList :: New();
 	vtkIdList *e2Face = vtkIdList :: New();
-	
+
 	this->GetFaceVertices(Face,v0,v1,v2);
 	e0=this->IsEdge(v0,v1);
 	e1=this->IsEdge(v0,v2);
 	e2=this->IsEdge(v1,v2);
-		
+
 	if(e0!=-1)
 	{
 		this->GetEdgeFaces(e0,e0Face);
@@ -790,7 +794,7 @@ void vtkSurfaceBase :: GetFaceNeighbours(vtkIdType Face,vtkIdListCollection *FLi
 		this->GetEdgeFaces(e2,e2Face);
 		FList->AddItem(e2Face);
 	}
-		
+
 	e0Face->Delete();
 	e1Face->Delete();
 	e2Face->Delete();
@@ -969,7 +973,7 @@ void vtkSurfaceBase::GetVertexNeighbourFaces(const vtkIdType &v1, vtkIdList *Out
 		this->GetEdgeFaces(Edges[i],f1,f2);
 		if (f1>=0) Output->InsertUniqueId(f1);
 		if (f2>=0) Output->InsertUniqueId(f2);
-		
+
 		vtkIdList *OtherFaces=this->Edges[Edges[i]].NonManifoldFaces;
 		if (OtherFaces)
 		{
@@ -1026,9 +1030,9 @@ vtkIdType vtkSurfaceBase::IsEdgeBetweenFaces(const vtkIdType &f1, const vtkIdTyp
 	vtkIdType *Vertices2;
 	vtkIdType NumberOfVertices2;
 	this->GetFaceVertices(f2,NumberOfVertices2,Vertices2);
-	
+
 	vtkIdType Vertices[2];
-	
+
 	int Count=0;
 	for (vtkIdType i=0;i<NumberOfVertices1;i++)
 	{
@@ -1043,7 +1047,7 @@ vtkIdType vtkSurfaceBase::IsEdgeBetweenFaces(const vtkIdType &f1, const vtkIdTyp
 			}
 		}
 		if (Count==2)
-			return (this->IsEdge(Vertices[0],Vertices[1]));		
+			return (this->IsEdge(Vertices[0],Vertices[1]));
 	}
 	return (-1);
 }
@@ -1121,7 +1125,7 @@ void vtkSurfaceBase::DeleteFaceInRing(const vtkIdType &Face, const vtkIdType &e)
 	}
 	vtkIdType Index=FList->IsId(Face);
 	if (Index>=0)
-		FList->DeleteId(Face);        
+		FList->DeleteId(Face);
 	else
 	{
 		int LastPosition=FList->GetNumberOfIds()-1;
@@ -1233,13 +1237,13 @@ vtkIdType vtkSurfaceBase::AddPolygon(int NumberOfVertices,vtkIdType *Vertices)
 {
 	vtkIdType face;
 	int Type=0;
-	
+
 	// Check if the vertices of the polygon have been created
-	
+
 	for (int i=0;i<NumberOfVertices;i++)
 	{
 		if (Vertices[i]>=this->GetNumberOfPoints())
-			Type=99;		
+			Type=99;
 	}
 	if (Type)
 	{
@@ -1251,7 +1255,7 @@ vtkIdType vtkSurfaceBase::AddPolygon(int NumberOfVertices,vtkIdType *Vertices)
 		exit(1);
 	}
 
-	
+
 	switch (NumberOfVertices)
 	{
 	case 3:
@@ -1453,7 +1457,7 @@ void vtkSurfaceBase::CreateFromPolyData(vtkPolyData *input)
 		{
 			// The face is not used. Let's push it in the garbage collector
 			this->ActivePolygons->SetValue(i,0);
-			this->CellsGarbage[NumberOfVertices].push(i);			
+			this->CellsGarbage[NumberOfVertices].push(i);
 		}
 	}
 
@@ -1471,13 +1475,13 @@ vtkSurfaceBase::vtkSurfaceBase()
 	// vertices attributes
 	this->ActiveVertices = vtkBitArray::New();
 
-	// faces attributes 
+	// faces attributes
 	this->VisitedPolygons = vtkBitArray::New();
 	this->ActivePolygons = vtkBitArray::New();
 
 	this->CleanEdges=1;
 	this->CleanVertices=0;
-	
+
 	this->Init(50,100,150);
 }
 

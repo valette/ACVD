@@ -11,6 +11,7 @@ Auteur:   Sebastien Valette / J. Eckert
 // .NAME VolueSection
 // .SECTION Description
 
+#include <iostream>
 #include "vtkOOCMetaImageReader.h"
 #include <vtkImageData.h>
 #include <vtkJPEGWriter.h>
@@ -19,6 +20,9 @@ Auteur:   Sebastien Valette / J. Eckert
 #include <vtkImageShiftScale.h>
 #include <vtkSmartPointer.h>
 #include <vtkImageFlip.h>
+
+using std::cout;
+using std::endl;
 
 int main( int argc, char *argv[] )
 {

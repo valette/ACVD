@@ -10,6 +10,7 @@ Auteur:   Sebastien Valette
 // .NAME png2raw
 // .SECTION Description
 
+#include <iostream>
 #include <vtkPNGReader.h>
 //#include <vtkImageViewer2.h>
 #include <vtkImageReader.h>
@@ -17,6 +18,9 @@ Auteur:   Sebastien Valette
 #include <vtkRenderWindowInteractor.h>
 #include <vtkMetaImageWriter.h>
 #include <sstream>
+
+using std::cout;
+using std::endl;
 
 int main( int argc, char *argv[] )
 {

@@ -3,26 +3,30 @@
 * Copyright (c) CREATIS-LRMN (Centre de Recherche en Imagerie Medicale)
 * Author : Sebastien Valette
 *
-*  This software is governed by the CeCILL-B license under French law and 
-*  abiding by the rules of distribution of free software. You can  use, 
-*  modify and/ or redistribute the software under the terms of the CeCILL-B 
-*  license as circulated by CEA, CNRS and INRIA at the following URL 
-*  http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.html 
+*  This software is governed by the CeCILL-B license under French law and
+*  abiding by the rules of distribution of free software. You can  use,
+*  modify and/ or redistribute the software under the terms of the CeCILL-B
+*  license as circulated by CEA, CNRS and INRIA at the following URL
+*  http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.html
 *  or in the file LICENSE.txt.
 *
 *  As a counterpart to the access to the source code and  rights to copy,
 *  modify and redistribute granted by the license, users are provided only
 *  with a limited warranty  and the software's author,  the holder of the
 *  economic rights,  and the successive licensors  have only  limited
-*  liability. 
+*  liability.
 *
 *  The fact that you are presently reading this means that you have had
 *  knowledge of the CeCILL-B license and that you accept its terms.
-* ------------------------------------------------------------------------ */     
+* ------------------------------------------------------------------------ */
 
+#include <iostream>
 #include <vtkCommand.h>
 #include "vtkSurface.h"
 #include "RenderWindow.h"
+
+using std::cout;
+using std::endl;
 
 void traverse( vtkSurface *test ) {
 
@@ -77,7 +81,7 @@ int main( int argc, char *argv[] )
 
 	// points and cells definitions
 	static double x[7][3]={{0,0,1},{0.707,0.707,0},{0.707,-0.707,0},{-0.707,-0.707,0},{-0.707,0.707,0},{0,0,-1}, {0,0,2}};
-	static int pts[12][3]={{0,1,2},{0,2,3},{0,3,4},{0,4,1},{5,1,2},{5,2,3},{5,3,4},{5,4,1},{6,1,2},{6,2,3},{6,3,4},{6,4,1} }; 
+	static int pts[12][3]={{0,1,2},{0,2,3},{0,3,4},{0,4,1},{5,1,2},{5,2,3},{5,3,4},{5,4,1},{6,1,2},{6,2,3},{6,3,4},{6,4,1} };
 
 	vtkSurface *test=vtkSurface::New();
 
@@ -85,7 +89,7 @@ int main( int argc, char *argv[] )
 	for (int i=0;i<7;i++) test->AddVertex(x[i]);
 
 	// create triangles
-	for (int i=0;i<6;i++) 
+	for (int i=0;i<6;i++)
 		test->AddFace(pts[i][0],pts[i][1],pts[i][2]);
 
 	traverse( test );
@@ -98,7 +102,7 @@ int main( int argc, char *argv[] )
 	Window->Interact();
 
 	// add more triangles
-	for (int i=6;i<8;i++) 
+	for (int i=6;i<8;i++)
 		test->AddFace(pts[i][0],pts[i][1],pts[i][2]);
 
 	traverse( test );
@@ -111,13 +115,13 @@ int main( int argc, char *argv[] )
 	for (int i=0;i<4;i++) test->DeleteFace( i );
 
 	traverse( test );
-	
+
 	//render again
 	Window->Render();
 	Window->Interact();
 
 	// add more triangles
-	for (int i=8;i<12;i++) 
+	for (int i=8;i<12;i++)
 		test->AddFace(pts[i][0],pts[i][1],pts[i][2]);
 
 	traverse( test );
