@@ -100,33 +100,85 @@ public:
 	virtual void OnChar ()
 	{
 		vtkRenderWindowInteractor *rwi = this->Interactor;
-		switch (rwi->GetKeyCode ())
-		{
-		case '1':
+		std::string key = rwi->GetKeySym();
+
+		if ( key == "F1" )
 			this->Window->Capture ("Capture.jpg");
-			return;
-		case '2':
+		else if ( key == "F2" )
 			this->Window->Capture ("Capture.eps");
-			return;
-		case '3':
+		else if ( key == "F3" )
 			this->Window->Capture ("Capture.png");
-			return;
-		case '4' :
+		else if ( key == "F4" ) {
 			int Factor;
 			cout<<"Enter new magnification factor :";
 			cin>>Factor;
 			this->Window->SetCaptureMagnificationFactor(Factor);
-			return;
+		} else if ( key == "F5" ) {
+			char name[100];
+			cout<<"Save Camera (.view)"<<endl;
+			cout<<"Enter name  : ";
+			cin>>name;
+
+			this->Window->SaveCamera(name);
+
+		} else if ( key == "F6" ) {
+			char name[100];
+			int flag;
+			cout<<"Load Camera"<<endl;
+			cout<<"Enter name  : ";
+			cin>>name;
+
+			flag = this->Window->LoadCamera(name);
+			this->Window->Render();
+
+			if(flag==1)
+			cout<<"Load "<<name<<"	->	[OK]"<<endl;
+			else
+			cout<<"Load"<<name<<"	->	[BUG]"<<endl;
+		} else if ( key == "F7" ) {
+			vtkPolyDataWriter * SWriter = vtkPolyDataWriter::New ();
+			SWriter->SetInputData (this->Window->GetInput ());
+			SWriter->SetFileName ("mesh.vtk");
+			SWriter->Write ();
+			SWriter->Delete ();
+		} else if ( key == "F8" ) {
+			vtkOBJExporter * SWriter = vtkOBJExporter::New ();
+			SWriter->SetInput (this->Window->GetvtkRenderWindow());
+			SWriter->SetFilePrefix ("mesh");
+			SWriter->Write ();
+			SWriter->Delete ();
+		} else if ( key == "F9" ) {
+			vtkSTLWriter * SWriter = vtkSTLWriter::New ();
+			SWriter->SetInputData (this->Window->GetInput ());
+			SWriter->SetFileName ("mesh.stl");
+			SWriter->Write ();
+			SWriter->Delete ();
+		} else if ( key == "F10" ) {
+			vtkPLYWriter * Writer = vtkPLYWriter::New ();
+			Writer->SetInputData (this->Window->GetInput ());
+			Writer->SetFileName ("mesh.ply");
+			Writer->Write ();
+			Writer->Delete ();
+		} else if ( key == "F11" ) {
+			vtkVRMLExporter * Writer = vtkVRMLExporter::New ();
+			Writer->SetInput (this->Window->GetvtkRenderWindow());
+			Writer->SetFileName ("mesh.wrl");
+			Writer->Write ();
+			Writer->Delete ();
+		}
+
+		switch (rwi->GetKeyCode ())
+		{
 		case 'E' :
 			int Number;
 			cout<<"Enter number of interactions to skip :";
 			cin>>Number;
 			this->Window->SkipInteractions(Number);
-			return;
+			break;
 		case 'N':
 		case 'n':
 			this->Window->EnableNormalMap();
-			return;
+			break;
 
 		case 'x':
 		case 'X':
@@ -141,93 +193,19 @@ public:
 				this->Window->SetInputEdges (0);
 			}
 			this->Window->Render ();
-			return;
+			break;
 		case 'I':
 		case 'i':
 			this->Window->SwitchDisplayIds ();
-			return;
+			break;
 		case 'a':
 			this->Window->Render();
-			return;
+			break;
 		case 'O':
 		case 'o':
 			this->Window->SwitchOrientation();
 			this->Window->Render();
-			return;
-		case '5':
-		{
-			char name[100];
-			cout<<"Save Camera (.view)"<<endl;
-			cout<<"Enter name  : ";
-			cin>>name;
-
-			this->Window->SaveCamera(name);
-
-			return;
-		}
-		case '6':
-		{
-			char name[100];
-			int flag;
-			cout<<"Load Camera"<<endl;
-			cout<<"Enter name  : ";
-			cin>>name;
-
-			flag = this->Window->LoadCamera(name);
-			this->Window->Render();
-
-			if(flag==1)
-			cout<<"Load "<<name<<"	->	[OK]"<<endl;
-			else
-			cout<<"Load"<<name<<"	->	[BUG]"<<endl;
-
-			return;
-		}
-		case '7':
-		{
-			vtkPolyDataWriter * SWriter = vtkPolyDataWriter::New ();
-			SWriter->SetInputData (this->Window->GetInput ());
-			SWriter->SetFileName ("mesh.vtk");
-			SWriter->Write ();
-			SWriter->Delete ();
-			return;
-		}
-		case '8':
-		{
-			vtkOBJExporter * SWriter = vtkOBJExporter::New ();
-			SWriter->SetInput (this->Window->GetvtkRenderWindow());
-			SWriter->SetFilePrefix ("mesh");
-			SWriter->Write ();
-			SWriter->Delete ();
-			return;
-		}
-		case '9':
-		{
-			vtkSTLWriter * SWriter = vtkSTLWriter::New ();
-			SWriter->SetInputData (this->Window->GetInput ());
-			SWriter->SetFileName ("mesh.stl");
-			SWriter->Write ();
-			SWriter->Delete ();
-			return;
-		}
-		case '0':
-		{
-			vtkPLYWriter * Writer = vtkPLYWriter::New ();
-			Writer->SetInputData (this->Window->GetInput ());
-			Writer->SetFileName ("mesh.ply");
-			Writer->Write ();
-			Writer->Delete ();
-			return;
-		}
-		case '_':
-		{
-			vtkVRMLExporter * Writer = vtkVRMLExporter::New ();
-			Writer->SetInput (this->Window->GetvtkRenderWindow());
-			Writer->SetFileName ("mesh.wrl");
-			Writer->Write ();
-			Writer->Delete ();
-			return;
-		}
+			break;
 		case '+':
 		{
 			if (this->Window->GetEdgesActor())
@@ -236,7 +214,6 @@ public:
 					this->Window->GetEdgesActor()->GetProperty()->GetLineWidth()+1);
 				this->Window->Render();
 			}
-			return;
 		}
 		case '-':
 		{
@@ -246,7 +223,6 @@ public:
 					this->Window->GetEdgesActor()->GetProperty()->GetLineWidth()-1);
 				this->Window->Render();
 			}
-			return;
 		}
 		case 'v':
 		{
@@ -282,7 +258,6 @@ public:
 			}
 			cout<<endl;
 			*/
-			return;
 		}
 		case 't':
 		{
