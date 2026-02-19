@@ -419,7 +419,7 @@ RenderWindow::AddText (char *text, float x, float y, float z, float R,
 
 	Actor->SetMapper (Mapper);
 	Mapper->Delete();
-	this->GetMeshRenderer()->AddActor2D (Actor);
+	this->GetMeshRenderer()->AddViewProp (Actor);
 }
 
 void
@@ -970,11 +970,10 @@ RenderWindow::GetEdgesVisibilityArray()
 void
 RenderWindow::SwitchDisplayIds ()
 {
-	vtkActor2DCollection *Actors = this->GetMeshRenderer()->GetActors2D ();
+	auto *Actors = this->GetMeshRenderer()->GetViewProps ();
 
-	vtkActor2D *Actor;
 	Actors->InitTraversal ();
-	Actor = Actors->GetNextActor2D ();
+	auto Actor = Actors->GetNextProp ();
 
 	while (Actor)
 	{
@@ -984,7 +983,7 @@ RenderWindow::SwitchDisplayIds ()
 			this->SetDisplayIdsOff ();
 			return;
 		}
-		Actor = Actors->GetNextActor2D ();
+		Actor = Actors->GetNextProp ();
 
 	}
 
