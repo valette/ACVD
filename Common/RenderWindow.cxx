@@ -1112,9 +1112,9 @@ RenderWindow::SetDisplayIdsOn ()
 		cellLabels->SetMapper (cellMapper);
 	}
 
-	Renderer->AddActor2D (rectActor);
-	Renderer->AddActor2D (pointLabels);
-	Renderer->AddActor2D (cellLabels);
+	Renderer->AddViewProp (rectActor);
+	Renderer->AddViewProp (pointLabels);
+	Renderer->AddViewProp (cellLabels);
 
 
 	renWin->Render ();
