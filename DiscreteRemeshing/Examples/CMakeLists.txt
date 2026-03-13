@@ -24,6 +24,7 @@ endif (OPENMP_FOUND)
 
 foreach(loop_var ${DISCRETEREMESHING_EXAMPLES})
   add_executable(${loop_var} ${loop_var}.cxx)
+  vtk_module_autoinit(TARGETS ${loop_var} MODULES "${VTK_LIBRARIES}")
   target_link_libraries(${loop_var} vtkSurface ${VTK_LIBRARIES} )
 endforeach(loop_var)
 

@@ -28,6 +28,7 @@ set(COMMON_EXAMPLES
 
 foreach(loop_var ${COMMON_EXAMPLES})
   add_executable(${loop_var} ${loop_var}.cxx)
+  vtk_module_autoinit(TARGETS ${loop_var} MODULES "${VTK_LIBRARIES}")
   target_link_libraries(${loop_var} vtkSurface ${VTK_LIBRARIES})
 endforeach(loop_var)
 
