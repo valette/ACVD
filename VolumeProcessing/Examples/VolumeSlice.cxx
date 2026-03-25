@@ -48,6 +48,7 @@ public:
 	double Shift;
 	bool userdefinedscale;
 	int Format;
+	bool charPNG;
 	double Range[2];
 	int NumberOfSlices;
 	int xyzOrientation;
@@ -66,6 +67,7 @@ public:
 		Shift = 0;
 		Scale = 1;
 		Format = 1;
+		charPNG = false;
 		xyzOrientation = 0;
 	}
 
@@ -78,7 +80,7 @@ VTK_THREAD_RETURN_TYPE ThreadedImageSlice (void *arg) {
 	MyThreaderHelperClass *Helper = (MyThreaderHelperClass *) Info->UserData;
 	int MyId = Info->ThreadID;
 	int NumberOfThreads = Info->NumberOfThreads;
-	
+
 	vtkImageData *Image = Helper->Images[MyId];
 
 	vtkImageReslice *Slicer = Helper->Slicers[MyId];
@@ -172,7 +174,7 @@ VTK_THREAD_RETURN_TYPE ThreadedImageSlice (void *arg) {
 		Suffix << ".png";
 		PNGSlice = vtkImageData::New();
 		PNGSlice->SetDimensions(Dimensions);
-		PNGSlice->AllocateScalars(VTK_UNSIGNED_CHAR, NumComponents);		
+		PNGSlice->AllocateScalars(VTK_UNSIGNED_CHAR, NumComponents);
 	} else if ( ( Helper->Format == 0 ) && ( Image->GetNumberOfScalarComponents() == 3 ) ) {
 		Cast->SetOutputScalarTypeToUnsignedChar ();
 		Writer = vtkPNGWriter::New();
@@ -182,8 +184,14 @@ VTK_THREAD_RETURN_TYPE ThreadedImageSlice (void *arg) {
 		PNGSlice->AllocateScalars(VTK_UNSIGNED_CHAR, 3);
 	} else {
 		Cast->SetOutputScalarTypeToUnsignedChar ();
-		Writer = (vtkImageWriter *) vtkJPEGWriter::New();
-		Suffix << ".jpg";
+		if ( !Helper->charPNG ) {
+			Writer = (vtkImageWriter *) vtkJPEGWriter::New();
+			Suffix << ".jpg";
+		} else {
+			Writer = (vtkImageWriter *) vtkPNGWriter::New();
+			Suffix << ".png";
+		}
+
 		if (!Helper->userdefinedscale) {
 			Cast->SetShift(-Helper->Range[0]);
 			Cast->SetScale(255 / (Helper->Range[1] - Helper->Range[0]));
@@ -267,7 +275,7 @@ int main( int argc, char *argv[] )
 		cout<<"-orientation : set the axe used for the orientation of the slice (0 : z; 1 : x; 2 : y) default : 0"<<endl;
 		exit(1);
 	}
-	
+
 	// Load Volume
 	cout << "load : " << argv[1] << endl;
 	vtkRobustImageReader *Reader = vtkRobustImageReader::New();
@@ -276,9 +284,9 @@ int main( int argc, char *argv[] )
 	vtkImageData *Image = Reader->GetOutput();
 	Image->GetScalarRange(Helper.Range);
 	cout << "Range : " << Helper.Range[0] << "   " << Helper.Range[1] << endl;
-	
+
 	Helper.Image=Image;
-	
+
 	bool matrixFound = false;
 	bool anOrientation = false;
 	std::string matrixPrefix;
@@ -331,6 +339,10 @@ int main( int argc, char *argv[] )
 			Helper.userdefinedscale=true;
 		}
 
+		if (strcmp(argv[ArgumentsIndex], "--png") == 0) {
+			Helper.charPNG = atoi(argv[ArgumentsIndex + 1]);;
+		}
+
 		if (strcmp(argv[ArgumentsIndex], "-sh") == 0) {
 			double Shift = atof(argv[ArgumentsIndex + 1]);
 			cout << "Shift=" << Shift << endl;
@@ -347,13 +359,13 @@ int main( int argc, char *argv[] )
 			strcpy (Helper.directory, argv[ArgumentsIndex + 1]);
 			cout << "Output directory : " << Helper.directory << endl;
 		}
-		
+
 		if (strcmp(argv[ArgumentsIndex], "-orientation")==0) {
 			int tempVal = atoi(argv[ArgumentsIndex+1]);
 			if((0 <= tempVal) && (tempVal < 3))
 				Helper.xyzOrientation = tempVal;
 		}
-		
+
 		if (strcmp(argv[ArgumentsIndex],"-uc") == 0) {
 			int tempVal = atoi(argv[ArgumentsIndex+1]);
 			if(tempVal == 1) {
@@ -386,7 +398,7 @@ int main( int argc, char *argv[] )
 
 	int Dimensions[3];
 	Image->GetDimensions(Dimensions);
-	
+
 	cout << "Dimensions : " << Dimensions[0] << " " <<
 		Dimensions[1] << " " << Dimensions[2] << endl;
 
@@ -484,7 +496,7 @@ int main( int argc, char *argv[] )
 		XMLAnOr->SetCharacterData (Helper.anatomicalOrientation, strlen(Helper.anatomicalOrientation)+1);
 		Root->AddNestedElement(XMLAnOr);
 	}
-	
+
 	vtkXMLDataElement *Slices = vtkXMLDataElement::New ();
 	Slices->SetIntAttribute ("orientation", Helper.xyzOrientation);
 	Slices->SetIntAttribute ("offset", Helper.offset);
