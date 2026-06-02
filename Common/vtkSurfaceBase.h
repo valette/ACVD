@@ -453,8 +453,14 @@ vtkIdType &NumberOfVertices, vtkIdType* &Vertices)
 inline void vtkSurfaceBase::GetFaceVertices(const vtkIdType& face,
 vtkIdType &NumberOfVertices, vtkIdType* &Vertices)
 {
+	#if ( (VTK_MAJOR_VERSION == 9) and (VTK_MINOR_VERSION < 1))
+	auto connectivity = this->Polys->GetConnectivityArray64();
+	auto offsets = this->Polys->GetOffsetsArray64();
+	#else
 	auto connectivity = this->Polys->GetConnectivityAOSArray64();
 	auto offsets = this->Polys->GetOffsetsAOSArray64();
+	#endif
+
 	auto offset1 = offsets->GetValue( face );
 	auto offset2 = offsets->GetValue( face + 1 );
 	NumberOfVertices = offset2 - offset1;
