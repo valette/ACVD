@@ -1371,7 +1371,7 @@ void vtkSurfaceBase::Init(int numPoints, int numFaces, int numEdges)
 	#if ( (VTK_MAJOR_VERSION < 9))
 	CellsArray1->Allocate(4*numFaces,numFaces);
 	#else
-	CellsArray1->Allocate(3*numFaces,numFaces);
+	CellsArray1->AllocateExact(3*numFaces,numFaces);
 	#endif
 	this->SetPolys(CellsArray1);
 	CellsArray1->Delete();

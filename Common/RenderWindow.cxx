@@ -143,7 +143,7 @@ public:
 			SWriter->Delete ();
 		} else if ( key == "F8" ) {
 			vtkOBJExporter * SWriter = vtkOBJExporter::New ();
-			SWriter->SetInput (this->Window->GetvtkRenderWindow());
+			SWriter->SetRenderWindow (this->Window->GetvtkRenderWindow());
 			SWriter->SetFilePrefix ("mesh");
 			SWriter->Write ();
 			SWriter->Delete ();
@@ -161,7 +161,7 @@ public:
 			Writer->Delete ();
 		} else if ( key == "F11" ) {
 			vtkVRMLExporter * Writer = vtkVRMLExporter::New ();
-			Writer->SetInput (this->Window->GetvtkRenderWindow());
+			Writer->SetRenderWindow (this->Window->GetvtkRenderWindow());
 			Writer->SetFileName ("mesh.wrl");
 			Writer->Write ();
 			Writer->Delete ();

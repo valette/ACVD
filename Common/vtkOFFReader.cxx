@@ -146,7 +146,7 @@ int vtkOFFReader::RequestData(vtkInformation* vtkNotUsed(request),
 #endif
 
 		// allocation memoire pour les cellules que nous allons lire
-		temp_cells->Allocate(NumberOfCells);
+		temp_cells->AllocateExact(NumberOfCells, 3);
 
 		// lecture de la ligne d info : nombre d'arretes
 		UnusedResult=fscanf( stream, "%d", &buffer );

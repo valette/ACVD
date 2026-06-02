@@ -72,7 +72,7 @@ int main( int argc, char *argv[] )
 	Window->Interact();
 
 	vtkOBJExporter *Export=vtkOBJExporter::New();
-	Export->SetInput(Window->GetvtkRenderWindow());
+	Export->SetRenderWindow(Window->GetvtkRenderWindow());
 	Export->SetFilePrefix("export");
 	Export->Write();
 

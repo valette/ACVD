@@ -5,7 +5,7 @@
   Language:  C++
   Date:      2002/05
   Auteur:    Sebastien VALETTE
-  
+
 =========================================================================*/
 
 /* ---------------------------------------------------------------------
@@ -13,22 +13,22 @@
 * Copyright (c) CREATIS-LRMN (Centre de Recherche en Imagerie Medicale)
 * Author : Sebastien Valette
 *
-*  This software is governed by the CeCILL-B license under French law and 
-*  abiding by the rules of distribution of free software. You can  use, 
-*  modify and/ or redistribute the software under the terms of the CeCILL-B 
-*  license as circulated by CEA, CNRS and INRIA at the following URL 
-*  http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.html 
+*  This software is governed by the CeCILL-B license under French law and
+*  abiding by the rules of distribution of free software. You can  use,
+*  modify and/ or redistribute the software under the terms of the CeCILL-B
+*  license as circulated by CEA, CNRS and INRIA at the following URL
+*  http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.html
 *  or in the file LICENSE.txt.
 *
 *  As a counterpart to the access to the source code and  rights to copy,
 *  modify and redistribute granted by the license, users are provided only
 *  with a limited warranty  and the software's author,  the holder of the
 *  economic rights,  and the successive licensors  have only  limited
-*  liability. 
+*  liability.
 *
 *  The fact that you are presently reading this means that you have had
 *  knowledge of the CeCILL-B license and that you accept its terms.
-* ------------------------------------------------------------------------ */  
+* ------------------------------------------------------------------------ */
 
 #ifndef __vtkSurfaceBase_h
 #define __vtkSurfaceBase_h
@@ -39,7 +39,7 @@
 #include <vtkIntArray.h>
 #include <vtkIdTypeArray.h>
 #include <vtkBitArray.h>
-#include <vtkPolyData.h> 
+#include <vtkPolyData.h>
 #include <vtkCell.h>
 #include <vtkCommand.h>
 #include <vtkCellArray.h>
@@ -66,18 +66,18 @@ public:
 	/// The Constructor vtkSurfaceBase::New();
 	static vtkSurfaceBase *New();
 	vtkTypeMacro(vtkSurfaceBase,vtkPolyData);
-	
+
 	/// Create a similar type object.
 	vtkDataObject *MakeObject()
 	{return vtkSurfaceBase::New();};
-	
+
 	/// Embeds a vtkPolyData into a vtkSurfaceBase object.
 	void CreateFromPolyData(vtkPolyData *input);
-	
+
 	/// Set memory allocation in the vtkSurfaceBase object for further Cells
 	/// and points insertion (this is not mandatory, and maybe useless)
 	void Init (int numPoints, int numFaces, int numEdges);
-	
+
 	/// Set memory allocation in the vtkSurfaceBase object, which is assumed to
 	/// be as large as the *mesh vtkSurfaceBase
 	void Init (vtkSurfaceBase *mesh);
@@ -102,7 +102,7 @@ public:
 
 	/// Flips the edge. If the flip was performed, return -1. Otherwise, the edge already existing is returned.
 	vtkIdType FlipEdge(vtkIdType edge);
-	
+
 	/// Flips the edge. If the resulting edge already exists, it is flipped (an so on). Returns -1 in case of success
 	vtkIdType FlipEdgeSure(vtkIdType edge);
 
@@ -112,7 +112,7 @@ public:
 	/// Call this function if you want the surface to be oriented.
 	/// By default, the surface is oriented.
 	void SetOrientationOn();
-	
+
 	/// Call this function if you do not want the surface to be oriented.
 	/// By default, the surface is oriented.
 	void SetOrientationOff();
@@ -156,36 +156,36 @@ public:
 
 	/// Returns the number of edges in the vtkSurfaceBase Object
 	int GetNumberOfEdges() {return this->Edges.size();};
-	
-	/// Returns v1 and v2 as the vertices bounding the edge 
+
+	/// Returns v1 and v2 as the vertices bounding the edge
 	void GetEdgeVertices(const vtkIdType& edge, vtkIdType &v1, vtkIdType &v2);
 
 	// returns the number of faces adjacvent to the input edge
 	int GetEdgeNumberOfAdjacentFaces(const vtkIdType &e);
-	
+
 	/// Returns the vertices v1, v2 and v3 bounding the face
 	void GetFaceVertices(const vtkIdType& face,
 		vtkIdType &v1, vtkIdType &v2, vtkIdType &v3);
 
-	/// Returns the number of vertices and a pointer to them for the face 
+	/// Returns the number of vertices and a pointer to them for the face
 	void GetFaceVertices(const vtkIdType& face, vtkIdType &NumberOfVertices,
 vtkIdType* &Vertices);
-	
+
 	/// Returns the coordinates of Point
 	void GetPointCoordinates(vtkIdType Point, double *x);
-	
+
 	/// Returns the valence of the Point V1 i.e. its number of adjacent Points
 	int GetValence(const vtkIdType& v1);
-	
+
 	/// Returns the number of boundaries at Point v1
 	int GetNumberOfBoundaries(const vtkIdType &v1);
-	
-	/// Conquer from a triangle f1 through the edge bounded by v1 and v2. 
-	/// f2 is the conquered triangle and v3 its third vertex 
+
+	/// Conquer from a triangle f1 through the edge bounded by v1 and v2.
+	/// f2 is the conquered triangle and v3 its third vertex
 	/// (v1 and v2 are the first and second vertices)
 	void Conquer(const vtkIdType& f1,const vtkIdType& v1, const vtkIdType& v2,
 		vtkIdType &f2, vtkIdType &v3);
-	
+
 	/// Returns f1 and f2 as the faces adjacent to the edge.
 	/// WARNING : if the edge is a boundary edge, f2=-1 (it has only
 	///           1 adjacent face)
@@ -193,22 +193,22 @@ vtkIdType* &Vertices);
 
 	/// Returns the faces adjacent to the edge as an IdList
 	void GetEdgeFaces(vtkIdType e1, vtkIdList *Flist);
-	
+
 	/// Returns true if the edge is a Manifold one (2 adjacent polygons)
 	bool IsEdgeManifold(const vtkIdType& e);
 
 	/// returns true if the vertex is manifold.
     bool IsVertexManifold( const vtkIdType& iV);
-	
-	/// Returns the List of Points adjacent to the point v1	
+
+	/// Returns the List of Points adjacent to the point v1
 	void GetVertexNeighbours(vtkIdType v1, vtkIdList *Output);
-	
-	/// Returns the List of Faces adjacent to the Face	
+
+	/// Returns the List of Faces adjacent to the Face
 	void GetFaceNeighbours(vtkIdType Face,vtkIdList *FList);
 
-	/// Returns the List of Faces adjacent to the Face	
+	/// Returns the List of Faces adjacent to the Face
 	void GetFaceNeighbours(vtkIdType Face,vtkIdListCollection *FList);
-	
+
 	/// Returns the list of edges adjacent to the point v1
 	void GetVertexNeighbourEdges(vtkIdType v1, vtkIdList *Output);
 
@@ -220,53 +220,53 @@ vtkIdType* &Edges);
 
 	/// Returns the list of faces adjacent to the point v1
 	void GetVertexNeighbourFaces(const vtkIdType &v1, vtkIdList *Output);
-	
+
 	/// Returns the list of vertices adjacent to the list of vertices *Input.
 	/// Usefull for constructing n-rings
 	void GetNeighbours(vtkIdList *Input, vtkIdList *Output);
-	
+
 	/// Returns the Id of the face having v1, v2 and v3 for vertices.
 	/// Returns -1 if the face doesn't exist.
 	vtkIdType IsFace(const vtkIdType &v1, const vtkIdType &v2, const vtkIdType &v3);
-	
+
 	/// Returns the Id of the edge (v1,v2).
 	/// Returns -1 if the edge doesn't exist.
 	vtkIdType IsEdge(const vtkIdType &v1, const vtkIdType &v2);
-	
+
 	/// Returns the Id of the edge between the faces f1 and f2
 	/// Returns -1 if the edge doesn't exist
 	vtkIdType IsEdgeBetweenFaces(const vtkIdType &f1, const vtkIdType &f2);
-	
-	/// Returns the third Point of the face f1 (the two first Points are v1 and v2) 
+
+	/// Returns the third Point of the face f1 (the two first Points are v1 and v2)
 	vtkIdType GetThirdPoint(const vtkIdType& f1,const vtkIdType& v1,const vtkIdType& v2);
-	
+
 	/// Sets the coordinates of Point
 	void SetPointCoordinates(const vtkIdType &Point, double *x);
 
 	/// Returns the first edge in the ring of v1
 	vtkIdType GetFirstEdge(const vtkIdType& v1);
-	
+
 	/// Returns a boundary edge in the ring of v1. If there is no boundary edge, any given edge is returned
 	vtkIdType GetBoundaryEdge(const vtkIdType& v1);
 
 	/// Returns the entropy of the valences of the mesh
 	double GetValenceEntropy();
-	
+
 	/// writes a text file containing an histogram of the vertices valence distribution
 	void GetValenceTab(char *FileName);
 
 	/// switches the cells orientation (usefull when the mesh is displayed all black...)
 	void SwitchOrientation();
-	
+
 	/// returns 1 if Vertex is actually used to store a polygon (not deleted). Returns 0 otherwise
 	int IsVertexActive(const vtkIdType &Vertex) {return (this->ActiveVertices->GetValue(Vertex));};
 
 	/// returns 1 if Face is actually used to store a polygon (not deleted). Returns 0 otherwise
 	int IsFaceActive(const vtkIdType &Face) {return (this->ActivePolygons->GetValue(Face));};
 
-	/// returns 1 if Edge is actually used to store an edge (not deleted). Returns 0 otherwise	
+	/// returns 1 if Edge is actually used to store an edge (not deleted). Returns 0 otherwise
 	int IsEdgeActive(const vtkIdType &e) {return this->Edges[e].Active;};
-	
+
 	/// Checks the integrity of the structure. Returns true if the structure is OK
 	bool CheckStructure();
 
@@ -276,7 +276,7 @@ vtkIdType* &Edges);
 protected:
 
 	/// the constructor
-	vtkSurfaceBase(); 
+	vtkSurfaceBase();
 
 	/// the desctructor
 	~vtkSurfaceBase();
@@ -453,8 +453,8 @@ vtkIdType &NumberOfVertices, vtkIdType* &Vertices)
 inline void vtkSurfaceBase::GetFaceVertices(const vtkIdType& face,
 vtkIdType &NumberOfVertices, vtkIdType* &Vertices)
 {
-	auto connectivity = this->Polys->GetConnectivityArray64();
-	auto offsets = this->Polys->GetOffsetsArray64();
+	auto connectivity = this->Polys->GetConnectivityAOSArray64();
+	auto offsets = this->Polys->GetOffsetsAOSArray64();
 	auto offset1 = offsets->GetValue( face );
 	auto offset2 = offsets->GetValue( face + 1 );
 	NumberOfVertices = offset2 - offset1;
@@ -505,7 +505,7 @@ inline void vtkSurfaceBase::GetPointCoordinates(vtkIdType Point, double *x)
 	this->Points->GetPoint(Point,x);
 }
 
-inline void vtkSurfaceBase::GetEdgeFaces(const vtkIdType& e1, vtkIdType &f1, vtkIdType &f2) 
+inline void vtkSurfaceBase::GetEdgeFaces(const vtkIdType& e1, vtkIdType &f1, vtkIdType &f2)
 {
 	Edge &e = Edges[ e1 ];
 	f1=e.Poly1;
