@@ -346,8 +346,11 @@ VTK_THREAD_RETURN_TYPE ThreadedSurfaceExtraction (void *arg)
 			Helper->Lock->unlock();
 		}
 
-		std::cout<< Name.str() << std::endl;
-		WritePolyDataToFile(Mesh, Name.str().c_str(), Helper->GetOutputFormat());
+		{
+			std::lock_guard<std::mutex> WriteLock(*Helper->Lock);
+			std::cout<< Name.str() << std::endl;
+			WritePolyDataToFile(Mesh, Name.str().c_str(), Helper->GetOutputFormat());
+		}
 		Timer->StopTimer();
 
 		Helper->Lock->lock();
