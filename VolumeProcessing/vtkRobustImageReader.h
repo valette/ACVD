@@ -11,6 +11,7 @@
 #include <vtkMatrix4x4.h>
 #include <vtkMetaImageReader.h>
 #include <vtkNIFTIImageReader.h>
+#include <vtkNrrdReader.h>
 #include <vtkObjectFactory.h>
 
 using std::cout;
@@ -41,6 +42,8 @@ public :
 		imageReaderFactory->RegisterReader(metaImageReader);
 		vtkNIFTIImageReader *niftiiImageReader = vtkNIFTIImageReader::New();
 		imageReaderFactory->RegisterReader(niftiiImageReader);
+		vtkNrrdReader *nrrdImageReader = vtkNrrdReader::New();
+		imageReaderFactory->RegisterReader(nrrdImageReader);
 
 		// Create a reader for image and try to load it
 		vtkImageReader2* Reader = imageReaderFactory->CreateImageReader2(FileName) ;

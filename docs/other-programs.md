@@ -7,11 +7,14 @@ The ACVD repository contains auxiliary executables beyond the main remeshing too
 ## 1. Volume Processing Programs
 
 ### `VolumeAnalysis`
-Generates surface meshes from 3D label volume segmentations (e.g. MetaImage `.mhd` files). Extracts surfaces for each label using marching cubes and simplifies them using ACVD or quadric methods.
+Generates surface meshes from 3D label volume segmentations. Reads MetaImage `.mhd`/`.mha`, NIFTI `.nii`, and NRRD `.nrrd`/`.nhdr` files (via `vtkRobustImageReader`), and extracts surfaces for each label using marching cubes, then simplifies them using ACVD or quadric methods.
 
 **Usage:**
 ```bash
 ./build/bin/VolumeAnalysis file.mhd [options]
+# NRRD and NIFTI volumes are also supported:
+./build/bin/VolumeAnalysis file.nrrd [options]
+./build/bin/VolumeAnalysis file.nii [options]
 ```
 
 **Options:**
