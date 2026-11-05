@@ -368,6 +368,7 @@ public:
 		this->ActiveConstraints = 1;
 		this->Object = vtkObject::New();
 		this->QuadricsOptimizationLevel = 3;
+		this->Items = 0;
 
 	};
 
@@ -375,6 +376,7 @@ public:
 
 		this->Object->Delete();
 		if ( this->CustomWeights ) this->CustomWeights->Delete();
+		delete [] this->Items;
 
 	};
 

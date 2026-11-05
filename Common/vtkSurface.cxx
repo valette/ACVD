@@ -1974,6 +1974,7 @@ void vtkSurface::WriteToFile (const char *FileName)
 #endif
 		Writer->SetFileName(FileName);
 		Writer->Write();
+		Writer->Delete();
 	}
 
 	if (strstr(filename,".ply") != NULL) {
@@ -1981,6 +1982,7 @@ void vtkSurface::WriteToFile (const char *FileName)
 		Writer->SetInputData(this);
 		Writer->SetFileName(FileName);
 		Writer->Write();
+		Writer->Delete();
 	}
 
 	if (strstr(filename,".stl") != NULL) {
@@ -1988,6 +1990,7 @@ void vtkSurface::WriteToFile (const char *FileName)
 		Writer->SetInputData(this);
 		Writer->SetFileName(FileName);
 		Writer->Write();
+		Writer->Delete();
 	}
 
 	if (strstr(filename,".vtp") != NULL) {
@@ -1995,6 +1998,7 @@ void vtkSurface::WriteToFile (const char *FileName)
 		Writer->SetInputData(this);
 		Writer->SetFileName(FileName);
 		Writer->Write();
+		Writer->Delete();
 	}
 
 	if (strstr(filename,".off") != NULL) {
@@ -2002,6 +2006,7 @@ void vtkSurface::WriteToFile (const char *FileName)
 		Writer->SetInputData(this);
 		Writer->SetFileName(FileName);
 		Writer->Write();
+		Writer->Delete();
 	}
 
 	if (strstr(filename,".obj") != NULL) {
@@ -2009,6 +2014,7 @@ void vtkSurface::WriteToFile (const char *FileName)
 		Writer->SetInputData(this);
 		Writer->SetFileName(FileName);
 		Writer->Write();
+		Writer->Delete();
 	}
 }
 

@@ -141,7 +141,7 @@ private:
 		for (i = 0; i < Size; i++)
 		{
 			VandermondeMatrix[i] = new double[6];
-			SecondMember[i]= new double;
+			SecondMember[i]= new double[1];
 		}
 
 		this->MatricesSize=Size;

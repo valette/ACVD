@@ -47,6 +47,7 @@ Auteur:    Sebastien VALETTE
 #include <vtkTimerLog.h>
 #include <algorithm>
 #include <deque>
+#include <utility>
 #include <vector>
 
 #include "vtkUniformClustering.h"
@@ -811,7 +812,7 @@ template < class Metric, class Derived > void vtkThreadedClustering < Metric, De
 	int I1;
 	int NumberOfProblems = 0;
 	int i, j;
-	int *EdgesLayout = new int[this->GetNumberOfEdges ()];
+	std::vector<int> EdgesLayout (this->GetNumberOfEdges ());
 
 	this->RegionNeighbours.assign (this->PoolSize - 1, std::vector<int> ());
 	vtkIdList *VList = vtkIdList::New ();
@@ -860,7 +861,7 @@ template < class Metric, class Derived > void vtkThreadedClustering < Metric, De
 		cout << "Partitionning for multithreading: " << NumberOfProblems <<
 			" Items with no good association..." << endl;
 	VList->Delete ();
-	this->EdgesProcess = std::vector<int>( EdgesLayout, EdgesLayout+this->GetNumberOfEdges());
+	this->EdgesProcess = std::move (EdgesLayout);
 	Timer->StopTimer();
 	cout<<"Multithreading layout computed in :"<<Timer->GetElapsedTime()<<" seconds"<<endl;
 	Timer->Delete();
