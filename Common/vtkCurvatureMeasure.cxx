@@ -34,6 +34,7 @@ email                :
 #include <vtkCellData.h>
 #include <vtkPriorityQueue.h>
 #include <vtkMultiThreader.h>
+#include <vector>
 
 #include "vtkCurvatureMeasure.h"
 #include "vtkNeighbourhoodComputation.h"
@@ -92,7 +93,7 @@ protected:
 		this->AllocateMatrices(100);
 
 		for (i = 0; i < 6; i++)
-			Quadric[i] = new double;
+			Quadric[i] = &QuadricValues[i];
 
 		A = new double *[2];
 		A[0] = new double[2];
@@ -109,11 +110,6 @@ protected:
 
 	~vtkSinglePolynomialMeasure ()
 	{
-		for (i = 0; i < 6; i++)
-			delete Quadric[i];
-
-		this->FreeMatrices();
-
 		delete[]A[0];
 		delete[]A[1];
 		delete[]A;
@@ -131,41 +127,32 @@ private:
 	/// The input vtkSurface;
 	vtkSurface * Input;
 
+	// The matrices are stored contiguously; the row pointers index into the
+	// storage for SolveLeastSquares, which takes double ** like vtkMath.
 	void AllocateMatrices(int Size)
 	{
-		this->FreeMatrices();
-
-		SecondMember = new double * [Size];
-		VandermondeMatrix = new double * [Size];
+		VandermondeValues.resize(6 * Size);
+		SecondMemberValues.resize(Size);
+		VandermondeRows.resize(Size);
+		SecondMemberRows.resize(Size);
 		for (i = 0; i < Size; i++)
 		{
-			VandermondeMatrix[i] = new double[6];
-			SecondMember[i]= new double;
+			VandermondeRows[i] = &VandermondeValues[6 * i];
+			SecondMemberRows[i] = &SecondMemberValues[i];
 		}
+		VandermondeMatrix = VandermondeRows.data();
+		SecondMember = SecondMemberRows.data();
 
 		this->MatricesSize=Size;
 	}
 
-	void FreeMatrices()
-	{
-		if (this->MatricesSize==0)
-			return;
-
-		for (i = 0; i < this->MatricesSize; i++)
-		{
-			delete [] VandermondeMatrix[i];
-			delete [] SecondMember[i];
-		}
-
-		delete [] VandermondeMatrix;
-		delete [] SecondMember;
-		this->MatricesSize=0;
-	}
-
 	int MatricesSize;
 
+	std::vector<double> VandermondeValues, SecondMemberValues;
+	std::vector<double *> VandermondeRows, SecondMemberRows;
 	double **VandermondeMatrix;
 	double **SecondMember;
+	double QuadricValues[6];
 	double *Quadric[6];
 	double **A, **B;
 	double Barycenter[3];

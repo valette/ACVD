@@ -38,6 +38,8 @@ Auteur:    Sebastien VALETTE
 #include <vtkMultiThreader.h>
 #include <vtkPriorityQueue.h>
 #include <mutex>
+#include <utility>
+#include <vector>
 
 #include "vtkUniformClustering.h"
 
@@ -854,7 +856,7 @@ template <class Metric> void vtkThreadedClustering<Metric>::ComputeEdgesLayout (
 	int I1;
 	int NumberOfProblems = 0;
 	int i, j;
-	int *EdgesLayout = new int[this->GetNumberOfEdges ()];
+	std::vector<int> EdgesLayout (this->GetNumberOfEdges ());
 
 	vtkIdList *VList = vtkIdList::New ();
 	for (i = 0; i < this->GetNumberOfEdges (); i++)
@@ -880,7 +882,7 @@ template <class Metric> void vtkThreadedClustering<Metric>::ComputeEdgesLayout (
 		cout << "Partitionning for multithreading: " << NumberOfProblems <<
 			" Items with no good association..." << endl;
 	VList->Delete ();
-	this->EdgesProcess = std::vector<int>( EdgesLayout, EdgesLayout+this->GetNumberOfEdges());
+	this->EdgesProcess = std::move (EdgesLayout);
 	Timer->StopTimer();
 	cout<<"Multithreading layout computed in :"<<Timer->GetElapsedTime()<<" seconds"<<endl;
 	Timer->Delete();
