@@ -37,7 +37,8 @@ email                :
 #include "vtkVerticesProcessing.h"
 #include "vtkQuadricAnisotropicMetricForClustering.h"
 
-typedef vtkDiscreteRemeshing<vtkQuadricAnisotropicMetricForClustering> QuadricAnisotropicRemeshing;
+class vtkAnisotropicDiscreteRemeshing;
+typedef vtkDiscreteRemeshing<vtkQuadricAnisotropicMetricForClustering, vtkAnisotropicDiscreteRemeshing> QuadricAnisotropicRemeshing;
 
 /**
  * A Class to process anisotropic coarsening of vtkSurface PolyData.

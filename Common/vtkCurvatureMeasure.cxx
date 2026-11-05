@@ -33,12 +33,13 @@ email                :
 #include <vtkTriangle.h>
 #include <vtkCellData.h>
 #include <vtkPriorityQueue.h>
-#include <vtkMultiThreader.h>
+#include <vtkSMPThreadLocal.h>
+#include <vtkSMPTools.h>
+#include <vtkSmartPointer.h>
 
 #include "vtkCurvatureMeasure.h"
 #include "vtkNeighbourhoodComputation.h"
 
-#define DISPLAYINTERVAL 10000
 
 using std::cout;
 using std::endl;
@@ -140,7 +141,7 @@ private:
 		for (i = 0; i < Size; i++)
 		{
 			VandermondeMatrix[i] = new double[6];
-			SecondMember[i]= new double;
+			SecondMember[i]= new double[1];
 		}
 
 		this->MatricesSize=Size;
@@ -622,100 +623,82 @@ vtkSinglePolynomialMeasure::SolveLeastSquares (int numberOfSamples,
 	return 1;
 }
 
-VTK_THREAD_RETURN_TYPE
-vtkCurvatureMeasure::ThreadedCurvatureComputation (void *arg)
+// One neighbourhood and one fitting per thread; every element writes only its
+// own values, and Reduce sums the integer statistics.
+class vtkCurvatureMeasure::CurvatureWorker
 {
-	vtkMultiThreader::ThreadInfo *Info = (vtkMultiThreader::ThreadInfo*) arg;
-
-	vtkCurvatureMeasure *CurvatureMeasure = (vtkCurvatureMeasure *) Info->UserData;
-	int MyId = Info->ThreadID;
-	int NumberOfThreads=Info->NumberOfThreads;
-
-	int Cell;
-	int RingSize;
-	double DistanceMax;
-	int NeighbourhoodComputationMethod;
-	vtkIdList *FList = vtkIdList::New ();
-
-	int NumberOfCells;
-	if (CurvatureMeasure->ElementsType == 0)
-		NumberOfCells = CurvatureMeasure->Input->GetNumberOfCells ();
-	else
-		NumberOfCells = CurvatureMeasure->Input->GetNumberOfPoints ();
-
-
-	vtkNeighbourhoodComputation *Neighbourhood =
-		vtkNeighbourhoodComputation::New ();
-	Neighbourhood->SetCellType (CurvatureMeasure->ElementsType);
-	Neighbourhood->SetInputData (CurvatureMeasure->Input);
-
-	vtkSinglePolynomialMeasure *Measure =
-		vtkSinglePolynomialMeasure::New ();
-	Measure->SetInputData (CurvatureMeasure->Input);
-
-	RingSize = CurvatureMeasure->RingSize;
-	DistanceMax = CurvatureMeasure->NeighbourhoodSize;
-	NeighbourhoodComputationMethod = CurvatureMeasure->NeighbourhoodComputationMethod;
-	double StartTime = CurvatureMeasure->StartTime;
-	double ElapsedTime;
-	double TotalTimeEstimated;
-
-
-	for (Cell=MyId;Cell<NumberOfCells;Cell+=NumberOfThreads)
+public:
+	struct Local
 	{
-		// Compute the neighbour cells of the cell i and stores the cells in the FList vtkIdList
-		if (NeighbourhoodComputationMethod == 1)
-		{
-			Neighbourhood->ComputeDistanceRingCells (Cell,
-								 DistanceMax,
-								 FList);
-		}
-		else
-		{
-			// Compute the neighbourhood in the n-ring;
-			Neighbourhood->ComputeNRingCells (Cell, RingSize,
-							  FList);
-		}
+		vtkSmartPointer<vtkIdList> FList;
+		vtkSmartPointer<vtkNeighbourhoodComputation> Neighbourhood;
+		vtkSmartPointer<vtkSinglePolynomialMeasure> Measure;
+	};
 
-		if (CurvatureMeasure->CellsCurvatureInfo)
-		{
-			// We have to store the curvature infos (principal curvatures and directions)
-			double CurvatureInfo[6];
-			CurvatureMeasure->CellsCurvatureIndicator->SetValue (Cell,Measure->ComputeFitting(FList,CurvatureInfo));
-			int i;
-			for (i = 0; i < 6; i++)
-				CurvatureMeasure->CellsCurvatureInfo->SetValue (6 *Cell+i,CurvatureInfo[i]);
-		}
-		else
-			CurvatureMeasure->CellsCurvatureIndicator->SetValue (Cell,Measure->ComputeFitting(FList));
+	vtkCurvatureMeasure *CurvatureMeasure;
+	vtkSMPThreadLocal<Local> Locals;
 
+	explicit CurvatureWorker (vtkCurvatureMeasure *Curvature) : CurvatureMeasure (Curvature) {}
 
-		if ((Cell % DISPLAYINTERVAL == 0) && (Cell != 0))
+	void Initialize ()
+	{
+		Local &L = this->Locals.Local ();
+		L.FList = vtkSmartPointer<vtkIdList>::New ();
+		L.Neighbourhood = vtkSmartPointer<vtkNeighbourhoodComputation>::New ();
+		L.Neighbourhood->SetCellType (this->CurvatureMeasure->ElementsType);
+		L.Neighbourhood->SetInputData (this->CurvatureMeasure->Input);
+		L.Measure = vtkSmartPointer<vtkSinglePolynomialMeasure>::New ();
+		L.Measure->SetInputData (this->CurvatureMeasure->Input);
+	}
+
+	void operator() (vtkIdType Begin, vtkIdType End)
+	{
+		Local &L = this->Locals.Local ();
+		vtkCurvatureMeasure *CurvatureMeasure = this->CurvatureMeasure;
+		int RingSize = CurvatureMeasure->RingSize;
+		double DistanceMax = CurvatureMeasure->NeighbourhoodSize;
+		int NeighbourhoodComputationMethod = CurvatureMeasure->NeighbourhoodComputationMethod;
+
+		for (vtkIdType Cell = Begin; Cell < End; Cell++)
 		{
-			char CarriageReturn = 13;
-#if ( (VTK_MAJOR_VERSION >= 5))
-			ElapsedTime =CurvatureMeasure->Timer->GetUniversalTime () -StartTime;
-#else
-			ElapsedTime =CurvatureMeasure->Timer->GetCurrentTime () - StartTime;
-#endif
-			TotalTimeEstimated =ElapsedTime * NumberOfCells / Cell;
-			cout << CarriageReturn << (int) (TotalTimeEstimated -ElapsedTime) <<
-				" s remaining." << " Total time: " << (int)
-				TotalTimeEstimated << " s. " << Cell /
-				ElapsedTime << " Cells/second          " <<
-				std::flush;
+			// Compute the neighbour cells of the cell i and stores the cells in the FList vtkIdList
+			if (NeighbourhoodComputationMethod == 1)
+			{
+				L.Neighbourhood->ComputeDistanceRingCells (Cell,
+									 DistanceMax,
+									 L.FList);
+			}
+			else
+			{
+				// Compute the neighbourhood in the n-ring;
+				L.Neighbourhood->ComputeNRingCells (Cell, RingSize,
+								  L.FList);
+			}
+
+			if (CurvatureMeasure->CellsCurvatureInfo)
+			{
+				// We have to store the curvature infos (principal curvatures and directions)
+				double CurvatureInfo[6];
+				CurvatureMeasure->CellsCurvatureIndicator->SetValue (Cell,L.Measure->ComputeFitting(L.FList,CurvatureInfo));
+				int i;
+				for (i = 0; i < 6; i++)
+					CurvatureMeasure->CellsCurvatureInfo->SetValue (6 *Cell+i,CurvatureInfo[i]);
+			}
+			else
+				CurvatureMeasure->CellsCurvatureIndicator->SetValue (Cell,L.Measure->ComputeFitting(L.FList));
 		}
 	}
-	CurvatureMeasure->StatisticsLock->lock ();
-	CurvatureMeasure->NumberOfBadMatrices += Measure->NumberOfBadMatrices;
-	CurvatureMeasure->NumberOfCellsWithSmallNeighbourhood +=
-		Measure->NumberOfCellsWithSmallNeighbourhood;
-	CurvatureMeasure->StatisticsLock->unlock ();
-	FList->Delete ();
-	Neighbourhood->Delete ();
-	Measure->Delete ();
-	return (VTK_THREAD_RETURN_VALUE);
-}
+
+	void Reduce ()
+	{
+		for (Local &L : this->Locals)
+		{
+			this->CurvatureMeasure->NumberOfBadMatrices += L.Measure->NumberOfBadMatrices;
+			this->CurvatureMeasure->NumberOfCellsWithSmallNeighbourhood +=
+				L.Measure->NumberOfCellsWithSmallNeighbourhood;
+		}
+	}
+};
 
 vtkDataArrayCollection *
 vtkCurvatureMeasure::GetCurvatureIndicator ()
@@ -951,15 +934,8 @@ vtkCurvatureMeasure::ComputeCurvatureIndicatorWithPolynomialFitting ()
 #else
 	this->StartTime = this->Timer->GetCurrentTime ();
 #endif
-	vtkMultiThreader *Threader=vtkMultiThreader::New();
-
-	Threader->SetSingleMethod (ThreadedCurvatureComputation, (void *) this);
-	if (this->NumberOfThreads)
-		Threader->SetNumberOfThreads (this->NumberOfThreads);
-	Threader->SingleMethodExecute ();
-	cout << (char) 13;
-
-	Threader->Delete();
+	CurvatureWorker Worker (this);
+	vtkSMPTools::For (0, NumberOfElements, Worker);
 
 	if (NumberOfBadMatrices > 0)
 	{
@@ -1180,7 +1156,6 @@ vtkCurvatureMeasure::vtkCurvatureMeasure ()
 	this->NeighbourhoodComputationMethod = 0;
 	this->RingSize = 3;
 	this->NeighbourhoodSize = 0.01;
-	this->NumberOfThreads = 0;
 	this->Display = 0;
 
 	this->ElementsType = 0;
@@ -1189,7 +1164,6 @@ vtkCurvatureMeasure::vtkCurvatureMeasure ()
 	this->ComputeCurvatureInfoFlag = 1;
 	this->CellsCurvatureInfo = 0;
 
-	this->StatisticsLock = new std::mutex();
 	this->Timer = vtkTimerLog::New ();
 	this->NumberOfBadMatrices = 0;
 	this->NumberOfCellsWithSmallNeighbourhood = 0;
@@ -1197,7 +1171,6 @@ vtkCurvatureMeasure::vtkCurvatureMeasure ()
 
 vtkCurvatureMeasure::~vtkCurvatureMeasure ()
 {
-	delete this->StatisticsLock;
 	this->Timer->Delete ();
 
 	if (this->CurvatureCollection)

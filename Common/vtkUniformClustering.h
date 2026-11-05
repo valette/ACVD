@@ -39,6 +39,7 @@
 #include <vtkCommand.h>
 #include <vtkMath.h>
 #include <vtkCellData.h>
+#include <vtkSMPTools.h>
 #include <vtkTimerLog.h>
 #include "RenderWindow.h"
 
@@ -391,15 +392,17 @@ void vtkUniformClustering<Metric,EdgeType>::ReComputeStatistics()
 		}
 	}
 
-	#pragma omp parallel for
-	for	(vtkIdType i=0;i!=this->NumberOfClusters;i++)
+	vtkSMPTools::For(0, this->NumberOfClusters, [this](vtkIdType Begin, vtkIdType End)
 	{
+		for	(vtkIdType i=Begin;i!=End;i++)
+		{
 
-		Cluster *Cluster = GetCluster( i );
-		this->MetricContext.ComputeClusterCentroid(Cluster);
-		this->MetricContext.ComputeClusterEnergy(Cluster);
+			Cluster *Cluster = GetCluster( i );
+			this->MetricContext.ComputeClusterCentroid(Cluster);
+			this->MetricContext.ComputeClusterEnergy(Cluster);
 
-	}
+		}
+	});
 }
 
 template <class Metric, class EdgeType>

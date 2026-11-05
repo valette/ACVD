@@ -28,6 +28,8 @@ email                :
 *  knowledge of the CeCILL-B license and that you accept its terms.
 * ------------------------------------------------------------------------ */  
 
+// Each remesher passes itself as vtkDiscreteRemeshing's Derived.
+
 #ifndef _VTKISOTROPICDISCRETEREMESHING_H_
 #define _VTKISOTROPICDISCRETEREMESHING_H_
 
@@ -39,7 +41,8 @@ email                :
 #include "vtkIsotropicMetricForClustering.h"
 #include "vtkQEMetricForClustering.h"
 
-typedef vtkDiscreteRemeshing<vtkIsotropicMetricForClustering> IsotropicRemeshing;
+class vtkIsotropicDiscreteRemeshing;
+typedef vtkDiscreteRemeshing<vtkIsotropicMetricForClustering, vtkIsotropicDiscreteRemeshing> IsotropicRemeshing;
 
 /**
  * A Class to process coarsening of vtkSurface PolyData.
@@ -76,7 +79,8 @@ protected:
 	~vtkIsotropicDiscreteRemeshing() {};
 };
 
-typedef vtkDiscreteRemeshing<vtkQEMetricForClustering> TempQERemeshing;
+class vtkQIsotropicDiscreteRemeshing;
+typedef vtkDiscreteRemeshing<vtkQEMetricForClustering, vtkQIsotropicDiscreteRemeshing> TempQERemeshing;
 class VTK_EXPORT vtkQIsotropicDiscreteRemeshing : public vtkVerticesProcessing<TempQERemeshing>
 {
 public:

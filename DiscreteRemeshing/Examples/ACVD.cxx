@@ -35,6 +35,7 @@ Author:   Sebastien Valette
 
 #include <stdio.h>
 #include <string>
+#include <vtkSMPTools.h>
 #include <stdlib.h>
 #include <iostream>
 
@@ -56,6 +57,8 @@ using namespace std;
 
 int main( int argc, char *argv[] )
 {
+	// VTK builds default to the Sequential SMP backend; STDThread is always available
+	vtkSMPTools::SetBackend("STDThread");
 
 	int Display=0;				// defines whether there will be a graphic display (0: No, 1: yes)
 
@@ -133,7 +136,7 @@ int main( int argc, char *argv[] )
 		if (strcmp(key, "-np") == 0) {
 			int NumberOfThreads = atoi(value);
 			cout << "Number of threads=" << NumberOfThreads << endl;
-			Remesh->SetNumberOfThreads(NumberOfThreads);
+			vtkSMPTools::Initialize(NumberOfThreads);
 		}
 #endif
 

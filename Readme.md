@@ -74,7 +74,7 @@ Executables will be placed in `build/bin/` (or `bin/`).
 - `-of <filename>`: Custom output filename (default: `simplification.ply`).
 - `-b <0|1>`: Boundary vertex fixing (`1` = fixed, `0` = free).
 - `-q <0|1|2|3>`: Quadric optimization level (default: `3`).
-- `-np <n_threads>`: Set number of OpenMP threads for parallel executables (`ACVDP`, `ACVDQP`).
+- `-np <n_threads>`: Set number of threads (vtkSMPTools) for parallel executables (`ACVDP`, `ACVDQP`).
 
 ---
 
@@ -89,6 +89,7 @@ Executables will be placed in `build/bin/` (or `bin/`).
 - `-fv <file>`: Text file containing IDs of fixed vertices.
 - `-ft <file>`: Text file containing IDs of fixed triangles.
 - `-np <n_threads>`: Set number of threads for `ACVDQP`.
+- `-ipr <n_items>`: Set the minimum number of items per parallel region for `ACVDQP` (default 512). The result does not depend on the number of threads.
 
 ---
 

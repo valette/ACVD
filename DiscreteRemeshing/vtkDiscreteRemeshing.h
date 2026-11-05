@@ -52,7 +52,7 @@ using std::cin;
 // This class adds meshing features to the clustering class, as proposed in :
 // " Approximated Centroidal Voronoi Diagrams for Uniform Polygonal Mesh Coarsening", Valette & Chassery, Eurographics 2004
 
-template < class Metric > class vtkDiscreteRemeshing:public vtkSurfaceClustering <Metric >
+template < class Metric, class Derived > class vtkDiscreteRemeshing:public vtkSurfaceClustering <Metric, Derived>
 
 {
     public:
@@ -162,8 +162,8 @@ protected:
 
 };
 
-template < class Metric >
-int vtkDiscreteRemeshing < Metric >::DetectNonManifoldOutputVertices() {
+template < class Metric, class Derived >
+int vtkDiscreteRemeshing < Metric, Derived >::DetectNonManifoldOutputVertices() {
 
 	cout << "Starting detection of non-manifold vertices" << endl;
 
@@ -382,8 +382,8 @@ int vtkDiscreteRemeshing < Metric >::DetectNonManifoldOutputVertices() {
 	return NumberOfTopologyIssues;
 }
 
-template < class Metric >
-	void vtkDiscreteRemeshing < Metric >::FixClusteringToVoronoi ()
+template < class Metric, class Derived >
+	void vtkDiscreteRemeshing < Metric, Derived >::FixClusteringToVoronoi ()
 {
 /*
 	int i,j;
@@ -422,8 +422,8 @@ template < class Metric >
 	*/
 
 }
-template < class Metric >
-	bool vtkDiscreteRemeshing < Metric >::FixMeshBoundaries ()
+template < class Metric, class Derived >
+	bool vtkDiscreteRemeshing < Metric, Derived >::FixMeshBoundaries ()
 {
 	// until now, this method works only when clustering vertices
 	if (this->ClusteringType == 0) return false;
@@ -579,8 +579,8 @@ template < class Metric >
 }
 
 
-template < class Metric >
-void vtkDiscreteRemeshing < Metric >::SamplingPreProcessing () {
+template < class Metric, class Derived >
+void vtkDiscreteRemeshing < Metric, Derived >::SamplingPreProcessing () {
 
 	int i;
 	int Compute = 0;
@@ -837,8 +837,8 @@ void vtkDiscreteRemeshing < Metric >::SamplingPreProcessing () {
 	CustomIndicatorColors->Delete();
 }
 
-template < class Metric >
-void vtkDiscreteRemeshing < Metric >::CheckSubsamplingRatio () {
+template < class Metric, class Derived >
+void vtkDiscreteRemeshing < Metric, Derived >::CheckSubsamplingRatio () {
 
 	vtkSurface *Levels[ 100 ];
 	Levels[ 0 ] = this->Input;
@@ -874,7 +874,7 @@ void vtkDiscreteRemeshing < Metric >::CheckSubsamplingRatio () {
 
 }
 
-template < class Metric > void vtkDiscreteRemeshing < Metric >::Remesh ()
+template < class Metric, class Derived > void vtkDiscreteRemeshing < Metric, Derived >::Remesh ()
 {
 	int Compute = 1;
 	this->CheckSubsamplingRatio ();
@@ -952,8 +952,8 @@ template < class Metric > void vtkDiscreteRemeshing < Metric >::Remesh ()
 	if ( this->FixMeshBoundaries() && this->ConsoleOutput ) this->Output->DisplayMeshProperties();
 
 }
-template < class Metric >
-void vtkDiscreteRemeshing <Metric >::GetDualItemNeighbourClusters ( vtkIdType item,vtkIdList * List ) {
+template < class Metric, class Derived >
+void vtkDiscreteRemeshing < Metric, Derived >::GetDualItemNeighbourClusters ( vtkIdType item,vtkIdList * List ) {
 
 	if (this->ClusteringType == 0) {
 
@@ -989,8 +989,8 @@ void vtkDiscreteRemeshing <Metric >::GetDualItemNeighbourClusters ( vtkIdType it
 
 }
 
-template < class Metric >
-vtkIdType vtkDiscreteRemeshing < Metric >::AddFace( vtkIdType v1, vtkIdType v2, vtkIdType v3) {
+template < class Metric, class Derived >
+vtkIdType vtkDiscreteRemeshing < Metric, Derived >::AddFace( vtkIdType v1, vtkIdType v2, vtkIdType v3) {
 
 	if ( ( v1 == v2 ) || ( v1 == v3 ) || ( v2 == v3 ) ) return (-1);
 	if ( this->Output->IsFace( v1, v2, v3 ) < 0 )
@@ -999,8 +999,8 @@ vtkIdType vtkDiscreteRemeshing < Metric >::AddFace( vtkIdType v1, vtkIdType v2, 
 
 }
 
-template < class Metric >
-void vtkDiscreteRemeshing < Metric >::BuildDelaunayTriangulation () {
+template < class Metric, class Derived >
+void vtkDiscreteRemeshing < Metric, Derived >::BuildDelaunayTriangulation () {
 
 	double P[3];
 	vtkIdList *CList = vtkIdList::New ();
@@ -1151,8 +1151,8 @@ void vtkDiscreteRemeshing < Metric >::BuildDelaunayTriangulation () {
 
 }
 
-template < class Metric >
-void vtkDiscreteRemeshing < Metric >::AdjustRemeshedGeometry() {
+template < class Metric, class Derived >
+void vtkDiscreteRemeshing < Metric, Derived >::AdjustRemeshedGeometry() {
 
 	int i, Cluster;
 	vtkMath *Math = vtkMath::New ();
@@ -1186,8 +1186,8 @@ void vtkDiscreteRemeshing < Metric >::AdjustRemeshedGeometry() {
 
 }
 
-template < class Metric >
-vtkDiscreteRemeshing < Metric >::vtkDiscreteRemeshing () {
+template < class Metric, class Derived >
+vtkDiscreteRemeshing < Metric, Derived >::vtkDiscreteRemeshing () {
 
 	this->BoundaryFixing = 0;
 	this->EdgeOptimization = 0;
@@ -1209,8 +1209,8 @@ vtkDiscreteRemeshing < Metric >::vtkDiscreteRemeshing () {
 
 }
 
-template < class Metric >
-	vtkDiscreteRemeshing < Metric >::~vtkDiscreteRemeshing ()
+template < class Metric, class Derived >
+	vtkDiscreteRemeshing < Metric, Derived >::~vtkDiscreteRemeshing ()
 {
 	if (this->OriginalInput)
 		this->OriginalInput->Delete();

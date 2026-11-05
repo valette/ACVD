@@ -33,6 +33,7 @@ Auteur:   Sebastien Valette,
 // .SECTION Description
 #include <sstream>
 #include <string>
+#include <vtkSMPTools.h>
 #include <vtkPLYWriter.h>
 #include <vtkSTLWriter.h>
 #include <vtkCellData.h>
@@ -73,6 +74,8 @@ Auteur:   Sebastien Valette,
 /////////////////////////////////////////////////////////////////////////////////////////
 
 int main( int argc, char *argv[] ) {
+	// VTK builds default to the Sequential SMP backend; STDThread is always available
+	vtkSMPTools::SetBackend("STDThread");
 
 	//******************************************************************************************
 	// Input parameters:
@@ -116,6 +119,7 @@ int main( int argc, char *argv[] ) {
 		cout<<"-m 0/1 : enforce a manifold output ON/OFF (default : 0)"<<endl;
 #ifdef DOmultithread
 		cout<<"-np number : set the number of threads (default : number of cores)"<<endl;
+		cout<<"-ipr number : set the minimum number of items per parallel region (default : 512, ACVDQP only)"<<endl;
 #endif
 		return 0;
 
@@ -178,7 +182,7 @@ int main( int argc, char *argv[] ) {
 		{
 			int NumberOfThreads = atoi( value );
 			cout << "Number of threads=" << NumberOfThreads << endl;
-			remesh->SetNumberOfThreads( NumberOfThreads );
+			vtkSMPTools::Initialize(NumberOfThreads);
 		}
 #endif
 		if ( strcmp( key, "-o" ) == 0 ) {
@@ -205,10 +209,10 @@ int main( int argc, char *argv[] ) {
 		}
 
 #ifdef DOmultithread
-		if ( strcmp( key, "-p" ) == 0 ) {
+		if ( strcmp( key, "-ipr" ) == 0 ) {
 
-			cout << "Thread pooling ratio: " << atoi( value ) << endl;
-			remesh->SetPoolingRatio( atoi( value ) );
+			cout << "Items per region: " << atoi( value ) << endl;
+			remesh->SetItemsPerRegion( atoi( value ) );
 
 		}
 #endif
