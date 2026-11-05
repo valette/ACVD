@@ -30,6 +30,10 @@
 *  knowledge of the CeCILL-B license and that you accept its terms.
 * ------------------------------------------------------------------------ */  
 
+// vtkThreadedClustering calls the item accessors statically
+// (friend), and they read the Input member instead of the virtual GetInput().
+// The threaded connexity scratch is one per process instead of one per thread.
+
 #ifndef _VTKVERTICESPROCESSING_H_
 #define _VTKVERTICESPROCESSING_H_
 
@@ -42,6 +46,8 @@
 template <class Processing> class  vtkVerticesProcessing : public Processing
 
 {
+	template < class, class > friend class vtkThreadedClustering;
+
 public:
 
 	static vtkVerticesProcessing *New()
@@ -57,7 +63,7 @@ public:
 
 	int GetNumberOfItems ()
 	{
-		return (this->GetInput()->GetNumberOfPoints());
+		return (this->Input->GetNumberOfPoints());
 	};
 
 protected:
@@ -77,7 +83,7 @@ protected:
 #ifdef DOmultithread
 		if (VLists!=0)
 		{
-			for (int i=0;i<this->NumberOfThreads+1;i++)
+			for (int i=0;i<this->PoolSize;i++)
 				VLists[i]->Delete();
 			delete [] VQueues;
 			delete [] VLists;
@@ -87,12 +93,12 @@ protected:
 
 	void GetItemCoordinates(vtkIdType Item, double *P)
 	{
-		this->GetInput()->GetPointCoordinates(Item,P);
+		this->Input->GetPointCoordinates(Item,P);
 	}
 	
 	double GetItemArea(vtkIdType Item)
 	{
-		return (this->GetInput()->GetVertexArea(Item));
+		return (this->Input->GetVertexArea(Item));
 	}
 
 	int GetNumberOfDualItems(){return (this->Input->GetNumberOfCells());};
@@ -102,21 +108,22 @@ protected:
 	vtkIdList **VLists;
 	std::queue<vtkIdType> *VQueues;
 
+	// one connexity scratch per process; Processing::Init sets PoolSize
 	void Init()
 	{
-		VLists=new vtkIdList*[this->NumberOfThreads+1];
-		
-		for (int i=0;i<this->NumberOfThreads+1;i++)
-			VLists[i]=vtkIdList::New();
-		VQueues=new std::queue<vtkIdType>[this->NumberOfThreads+1];
-	
 		this->Processing::Init();
+
+		VLists=new vtkIdList*[this->PoolSize];
+		
+		for (int i=0;i<this->PoolSize;i++)
+			VLists[i]=vtkIdList::New();
+		VQueues=new std::queue<vtkIdType>[this->PoolSize];
 	};
 
 	void AddItemRingToProcess(vtkIdType Item,int ProcessId)
 	{
 		vtkIdType NumberOfEdges,*Edges,i;
-		this->GetInput()->GetVertexNeighbourEdges(Item,NumberOfEdges,Edges);
+		this->Input->GetVertexNeighbourEdges(Item,NumberOfEdges,Edges);
 		for (i=0;i<NumberOfEdges;i++)
 			this->AddEdgeToProcess(Edges[i],ProcessId);
 	};
@@ -136,20 +143,20 @@ private:
 
 	void GetItemNeighbours (vtkIdType Item, vtkIdList *IList)
 	{
-		this->GetInput()->GetVertexNeighbours(Item,IList); 
+		this->Input->GetVertexNeighbours(Item,IList); 
 	};
 
 	void AddItemRingToProcess(vtkIdType Item)
 	{
 		vtkIdType NumberOfEdges,*Edges,i;
-		this->GetInput()->GetVertexNeighbourEdges(Item,NumberOfEdges,Edges);
+		this->Input->GetVertexNeighbourEdges(Item,NumberOfEdges,Edges);
 		for (i=0;i<NumberOfEdges;i++)
 			this->EdgeQueue.push(Edges[i]);
 	};
 
 	void GetEdgeItems(vtkIdType Item, vtkIdType &I1,vtkIdType &I2)
 	{
-		this->GetInput()->GetEdgeVertices(Item,I1,I2);
+		this->Input->GetEdgeVertices(Item,I1,I2);
 	};
 
 	void GetItemEdges(vtkIdType Item, vtkIdList *EList)
@@ -178,7 +185,7 @@ Cluster, vtkIdList *VList, std::queue<vtkIdType> &VQueue)
 		vtkIdType v1,v2,v3,i,j,Cluster1,Cluster2;
 		vtkIdType NumberOfEdges,*Edges;
 
-		this->GetInput()->GetVertexNeighbourEdges(Item,NumberOfEdges,Edges);
+		this->Input->GetVertexNeighbourEdges(Item,NumberOfEdges,Edges);
 		for (i=0;i<NumberOfEdges;i++)
 		{
 			this->Input->GetEdgeVertices(Edges[i],v1,v2);
@@ -204,7 +211,7 @@ Cluster, vtkIdList *VList, std::queue<vtkIdType> &VQueue)
 		{
 			v1=VQueue.front();
 			VQueue.pop();
-			this->GetInput()->GetVertexNeighbourEdges(v1,NumberOfEdges,Edges);
+			this->Input->GetVertexNeighbourEdges(v1,NumberOfEdges,Edges);
 			for (i=0;i<NumberOfEdges;i++)
 			{
                 this->Input->GetEdgeVertices(Edges[i],v2,v3);

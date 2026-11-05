@@ -10,6 +10,7 @@ Auteur:   Sebastien Valette,
 // .NAME AnisotropicRemeshingQ 
 // .SECTION Description
 #include <sstream>
+#include <vtkSMPTools.h>
 #include <vtkPLYWriter.h>
 #include <vtkSTLWriter.h>
 #include <vtkCellData.h>
@@ -24,6 +25,14 @@ Auteur:   Sebastien Valette,
 
 #include "vtkTrianglesProcessing.h"
 #include "vtkVerticesProcessing.h"
+
+// the remesher passes itself to vtkDiscreteRemeshing as its most-derived class
+template < class Metric > class VerticesRemeshing :
+	public vtkVerticesProcessing < vtkDiscreteRemeshing < Metric, VerticesRemeshing < Metric > > >
+{
+public:
+	static VerticesRemeshing *New() { return new VerticesRemeshing; }
+};
 
 //#include "vtkSubdivisionRemeshing.h"
 
@@ -50,6 +59,8 @@ Auteur:   Sebastien Valette,
 
 int main( int argc, char *argv[] )
 {
+	// VTK builds default to the Sequential SMP backend; STDThread is always available
+	vtkSMPTools::SetBackend("STDThread");
 
 //******************************************************************************************
 	// Inside input parameters:
@@ -71,17 +82,16 @@ int main( int argc, char *argv[] )
 
 	vtkSurface *Mesh=vtkSurface::New();
 
-	typedef vtkDiscreteRemeshing<vtkIsotropicMetricForClustering> IsotropicRemeshing;
+	typedef VerticesRemeshing<vtkIsotropicMetricForClustering> IsotropicRemeshing;
 
-	typedef vtkDiscreteRemeshing<vtkQEMetricForClustering> QEMRemeshing;
+	typedef VerticesRemeshing<vtkQEMetricForClustering> QEMRemeshing;
 
-//	typedef vtkDiscreteRemeshing<vtkL21MetricForClustering> L21Remeshing;
+//	typedef VerticesRemeshing<vtkL21MetricForClustering> L21Remeshing;
 
-	typedef vtkDiscreteRemeshing<vtkQuadricAnisotropicMetricForClustering> QuadricAnisotropicRemeshing;
+	typedef VerticesRemeshing<vtkQuadricAnisotropicMetricForClustering> QuadricAnisotropicRemeshing;
 
 
-	vtkVerticesProcessing<QuadricAnisotropicRemeshing> *Remesh=
-		vtkVerticesProcessing<QuadricAnisotropicRemeshing>::New();
+	QuadricAnisotropicRemeshing *Remesh=QuadricAnisotropicRemeshing::New();
 
 	if(argc>1)
 	{
@@ -169,7 +179,7 @@ int main( int argc, char *argv[] )
 		{
 			int NumberOfThreads=atoi(argv[ArgumentsIndex+1]);
 			cout<<"Number of threads="<<NumberOfThreads<<endl;
-			Remesh->SetNumberOfThreads(NumberOfThreads);
+			vtkSMPTools::Initialize(NumberOfThreads);
 		}
 #endif
 

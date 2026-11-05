@@ -1413,20 +1413,20 @@ void vtkSurfaceBase::CreateFromPolyData(vtkPolyData *input)
 	// just copy the polydata in input
 	this->ShallowCopy(input);
 
+	// The polygons are edited in place through GetFaceVertices() (e.g. the
+	// orientation fix in CheckNormals()), so they are copied: the shallow copy
+	// above shares them with the input, which must stay untouched.
+	vtkCellArray *Polys = vtkCellArray::New();
+	Polys->DeepCopy(this->GetPolys());
 	#if ( (VTK_MAJOR_VERSION >= 9))
 	// GetFaceVertices() hands out raw pointers into the polygon connectivity and
 	// therefore requires 64-bit AOS cell storage. The input may carry another
-	// layout (32-bit or fixed-size, e.g. from vtkSurfaceNets3D), so copy its
-	// polygons into 64-bit storage instead of converting the shared array in place.
-	if (!this->GetPolys()->IsStorage64Bit())
-	{
-		vtkCellArray *Polys64 = vtkCellArray::New();
-		Polys64->DeepCopy(this->GetPolys());
-		Polys64->ConvertTo64BitStorage();
-		this->SetPolys(Polys64);
-		Polys64->Delete();
-	}
+	// layout (32-bit or fixed-size, e.g. from vtkSurfaceNets3D).
+	if (!Polys->IsStorage64Bit())
+		Polys->ConvertTo64BitStorage();
 	#endif
+	this->SetPolys(Polys);
+	Polys->Delete();
 
 	// Delete the cells that are not polygons
 	vtkCellArray *VerticesCells=this->GetVerts();

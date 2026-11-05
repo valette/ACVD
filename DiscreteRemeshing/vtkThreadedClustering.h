@@ -30,64 +30,50 @@ Auteur:    Sebastien VALETTE
 *  knowledge of the CeCILL-B license and that you accept its terms.
 * ------------------------------------------------------------------------ */
 
+// The template parameter Derived (the most-derived
+// clustering class, CRTP) makes the per-edge calls of ExecuteProcess and
+// ExecuteProcessWithDistances static instead of virtual.
+// Each loop runs the regions in conflict-free rounds
+// (vtkSMPTools) instead of a vtkMultiThreader pool ordered by measured run
+// times with per-cluster mutexes, so the clustering is repeatable and does not
+// depend on the number of threads. The region count follows from
+// ItemsPerRegion and the cluster size, not from the number of threads.
+
 #ifndef _VTKTHREADEDCLUSTERING_H_
 #define _VTKTHREADEDCLUSTERING_H_
 
 #include <vtkMath.h>
+#include <vtkSMPTools.h>
 #include <vtkTimerLog.h>
-#include <vtkMultiThreader.h>
-#include <vtkPriorityQueue.h>
-#include <mutex>
+#include <algorithm>
+#include <deque>
+#include <vector>
 
 #include "vtkUniformClustering.h"
 
 // Class derived from vtkUniformClustering
 
-
-// this switch enables/disable the use of mutexes to ensure thread safety
-// although the risk of collision is very low when processing large meshes with a low number of threads,
-// this switch should be ALWAYS ON
-#define THREADSAFECLUSTERING
-
-template < class Metric > class vtkThreadedClustering:public vtkUniformClustering <	Metric >
+template < class Metric, class Derived > class vtkThreadedClustering:public vtkUniformClustering <	Metric >
 {
 public:
 
-	/// Sets the number of desired threads for multithreading.
-	/// by default, the number of threads is the number of CPUS
-	void SetNumberOfThreads (int N)
+	/// Sets the least number of items of a region (one parallel job). A region
+	/// is also at least RegionClusterWidth clusters large. The result depends
+	/// on it; the number of threads only changes the speed.
+	void SetItemsPerRegion (int N)
 	{
-		this->NumberOfThreads=N;
+		this->ItemsPerRegion=N;
 	};
 
-	/// returns the number of threads used for the clustering.
-	int GetNumberOfThreads ()
+	int GetItemsPerRegion ()
 	{
-		return (this->NumberOfThreads);
-	};
-
-	/// sets the pooling ratio (the number of pool jobs will be equal to NumberOfThreads*PoolingRatio+1
-	/// default value : 5
-	void SetPoolingRatio (int Ratio)
-	{
-		this->PoolingRatio=Ratio;
-	};
-
-	virtual vtkIntArray *ProcessClustering(vtkIdList *List=0)
-	{
-		this->vtkUniformClustering<Metric>::ProcessClustering();
-		int NumberOfLockingCollisions=0;
-		for (int i=0;i<this->NumberOfThreads+1;i++)
-			NumberOfLockingCollisions+=this->threadInfos[ i ].NumberOfLockingCollisions;
-
-		if (NumberOfLockingCollisions!=0)
-		cout<<NumberOfLockingCollisions<<" locking collisions detected"<<endl;
-			else
-		cout<<"No locking collision detected"<<endl;
-		return (this->Clustering);
+		return (this->ItemsPerRegion);
 	};
 
 protected:
+
+	// the most-derived object, for the statically dispatched per-edge calls
+	Derived* Self() { return static_cast<Derived*>(this); }
 
 	// the constructor
 	vtkThreadedClustering ();
@@ -95,20 +81,25 @@ protected:
 	// the destructor
 	~vtkThreadedClustering ();
 
-	// Executes one process from the Thread pool
-	void ExecuteProcess (int Process, int Thread);
-	void ExecuteProcessWithDistances (int Process,int Thread);
+	// Executes one process (a region, or the edges between regions)
+	void ExecuteProcess (int Process);
+	void ExecuteProcessWithDistances (int Process);
+	void ExecuteRegion (int Process);
 
-	// The static function used for clustering
-	static VTK_THREAD_RETURN_TYPE MyMainForClustering (void *arg);
+	// collects in RegionClusters[Region] the clusters Region can touch in this loop
+	void CollectRegionClusters (int Region);
 
-	// virtual function. Might be implemented in derived classes for speed issues
+	// splits the regions into Rounds whose regions touch disjoint clusters and are not adjacent
+	void ComputeRounds ();
+
+	// virtual function. Might be implemented in derived classes for speed issues.
+	// Thread is the scratch slot, one per process.
 	virtual void AddItemRingToProcess (vtkIdType Item, int ProcessId, int Thread)
 	{
-		vtkIdList *EList=this->threadInfos[Thread].itemList;
-		this->GetItemEdges(Item,EList);
+		vtkIdList *EList=this->ProcessInfos[Thread].itemList;
+		this->Self()->Derived::GetItemEdges(Item,EList);
 		for (int i=0;i<EList->GetNumberOfIds();i++)
-			this->AddEdgeToProcess(EList->GetId(i),ProcessId);
+			this->vtkThreadedClustering::AddEdgeToProcess (EList->GetId(i),ProcessId);
 	};
 
 	// virtual function. Might be implemented in derived classes for speed issues
@@ -134,17 +125,17 @@ protected:
 	virtual void AddEdgeToProcess (vtkIdType Edge, int ProcessId)
 	{
 		this->ProcessesPushQueues[this->
-					  EdgesProcess[Edge]][ProcessId].push (Edge);
+					  EdgesProcess[Edge]][ProcessId].push_back (Edge);
 	};
 
-	/// The number of threads
-	int NumberOfThreads;
-
-	/// The size of the pool
+	/// The number of processes: the regions plus the one for the edges between them
 	int PoolSize;
 
-	// Parameter defining the number of thread jobs : NThreadJobs=NumberOfThreads*PoolingRatio+1
-	int PoolingRatio;
+	/// The least number of items of a region
+	int ItemsPerRegion;
+
+	/// The least size of a region in clusters, so that clusters rarely span non-adjacent regions
+	static constexpr int RegionClusterWidth = 8;
 
 	/// The method used to compute the edges layout
 	int EdgesLayoutComputingType;
@@ -165,60 +156,53 @@ protected:
 	// *******************************************
 	std::vector<int> EdgesProcess;
 
-	class ThreadData {
+	// the regions sharing an edge with each region (sorted)
+	std::vector< std::vector<int> > RegionNeighbours;
+
+	class ProcessData {
 		public:
 		int PreviousNumberOfIterations;
 		int NumberOfIterations;
 		int NumberOfModifications;
-		int NumberOfLockingCollisions;
 		double StartTime;
 		double StopTime;
 		vtkIdList *itemList;
-		ThreadData() { itemList = vtkIdList::New(); };
-		~ThreadData() { itemList->Delete(); };
+		ProcessData() { itemList = vtkIdList::New(); };
+		~ProcessData() { itemList->Delete(); };
 	};
 
-	std::vector< ThreadData > threadInfos;
+	std::vector< ProcessData > ProcessInfos;
 
-#ifdef THREADSAFECLUSTERING
-	// one mutex for each cluster to ensure thread-safety
-	std::vector < std::mutex > ClustersLocks;
-#endif
-
-	// Context used to allocate processes in the pool
+	// Schedule of one loop
 	// **********************************************
-	std::mutex PoolAllocationLock,PoolAllocationLock2;
-	vtkPriorityQueue *PoolQueue1,*PoolQueue2;
+	std::vector< std::vector<vtkIdType> > RegionClusters;
+	std::vector<int> ClusterRound;
+	std::vector<int> RegionRound;
+	std::vector< std::vector<int> > Rounds;
 
-	// The push and pop queues used to track the edges laying between different clusters
-	std::queue <int>**ProcessesQueues1;
-	std::queue <int>**ProcessesQueues2;
+	// The push and pop queues used to track the edges laying between different clusters.
+	// Queue [target process][pushing process]: each process pushes into its own column.
+	std::deque <int>**ProcessesQueues1;
+	std::deque <int>**ProcessesQueues2;
 
-	std::queue <int>**ProcessesPushQueues;
-	std::queue <int>**ProcessesPopQueues;
+	std::deque <int>**ProcessesPushQueues;
+	std::deque <int>**ProcessesPopQueues;
 
 	// this method swaps the pop queues with the push queues.
 	void SwapQueues ();
 };
 
-template < class Metric > void vtkThreadedClustering < Metric >::FillQueuesFromClustering ()
+template < class Metric, class Derived > void vtkThreadedClustering < Metric, Derived >::FillQueuesFromClustering ()
 {
 	int i, j;
 	vtkIdType I1, I2;
-	std::queue < int >*PQueue;
-	vtkIdType Edge;
 
 	// empty the pushing queues
 	for (i = 0; i < this->PoolSize; i++)
 	{
 		for (j = 0; j < this->PoolSize; j++)
 		{
-			PQueue = &this->ProcessesPushQueues[i][j];
-			while (PQueue->size () != 0)
-			{
-				Edge = PQueue->front ();
-				PQueue->pop ();
-			}
+			this->ProcessesPushQueues[i][j].clear ();
 		}
 	}
 
@@ -231,59 +215,91 @@ template < class Metric > void vtkThreadedClustering < Metric >::FillQueuesFromC
 			if (this->Clustering->GetValue (I1) !=this->Clustering->GetValue (I2))
 			{
 				this->ProcessesPushQueues[this->EdgesProcess[i]]
-					[this->EdgesProcess[i]].push (i);
+					[this->EdgesProcess[i]].push_back (i);
 			}
 		}
 	}
-
-	// fill the thread pool queue
-	for (i=0;i<this->PoolSize-1;i++)
-		this->PoolQueue1->Insert(i,i);
 }
 
-
-template < class Metric >	VTK_THREAD_RETURN_TYPE vtkThreadedClustering
-<Metric >::MyMainForClustering (void *arg)
+// A region writes only its own items, and moves an item only into the cluster
+// of the other end of an edge it processes. So the clusters it touches in a
+// loop are those of the ends of its queued edges whose clusters differ at loop
+// start (an edge that is uniform at start can differ later only after one of
+// its ends moved, which touched that cluster already).
+template < class Metric, class Derived > void vtkThreadedClustering < Metric, Derived >::CollectRegionClusters (int Region)
 {
-	vtkMultiThreader::ThreadInfo * Info =
-		(vtkMultiThreader::ThreadInfo *) arg;
-
-	vtkThreadedClustering < Metric > *Clustering =
-		(vtkThreadedClustering < Metric > *)Info->UserData;
-
-	int MyId = Info->ThreadID;
-	ThreadData &data = Clustering->threadInfos[ MyId ];
-
-	data.StartTime = Clustering->Timer->GetUniversalTime ();
-
-	while (1)
+	std::vector<vtkIdType> &Clusters = this->RegionClusters[Region];
+	Clusters.clear ();
+	for (int CurrentQueue = 0; CurrentQueue < this->PoolSize; CurrentQueue++)
 	{
-		Clustering->PoolAllocationLock.lock();
-		int Process=Clustering->PoolQueue1->Pop();
-		Clustering->PoolAllocationLock.unlock();
-
-		if ((Process<0))
-			break;
-
-		double Time;
-
-		Time = Clustering->Timer->GetUniversalTime ();
-		if (Clustering->MinimizeUsingEnergy)
-			Clustering->ExecuteProcess (Process,MyId);
-		else
-			Clustering->ExecuteProcessWithDistances (Process,MyId);
-		Time = Clustering->Timer->GetUniversalTime ()-Time;
-		Clustering->PoolAllocationLock2.lock();
-		Clustering->PoolQueue2->Insert (-Time,Process);
-		Clustering->PoolAllocationLock2.unlock();
+		for (int Edge : this->ProcessesPopQueues[Region][CurrentQueue])
+		{
+			vtkIdType I1, I2;
+			this->Self()->Derived::GetEdgeItems (Edge, I1, I2);
+			if (I2 < 0) continue;
+			vtkIdType Val1 = this->Clustering->GetValue (I1);
+			vtkIdType Val2 = this->Clustering->GetValue (I2);
+			if (Val1 == Val2) continue;
+			// NumberOfClusters marks an unassigned item, it is no cluster state
+			if (Val1 != this->NumberOfClusters) Clusters.push_back (Val1);
+			if (Val2 != this->NumberOfClusters) Clusters.push_back (Val2);
+		}
 	}
-
-	data.StopTime = Clustering->Timer->GetUniversalTime ();
-	return VTK_THREAD_RETURN_VALUE;
 }
 
-template < class Metric > void
-	vtkThreadedClustering < Metric >::ExecuteProcess (int Process,int Thread)
+// Greedy in region order: a region joins the first round in which it shares no
+// cluster and no edge with a region already there. Adjacent regions are kept
+// apart because the connexity test reads the clusters of an item's ring.
+template < class Metric, class Derived > void vtkThreadedClustering < Metric, Derived >::ComputeRounds ()
+{
+	const int NumberOfRegions = this->PoolSize - 1;
+	this->ClusterRound.assign (this->NumberOfClusters, -1);
+	this->RegionRound.assign (NumberOfRegions, -1);
+	this->Rounds.clear ();
+
+	std::vector<int> Pending (NumberOfRegions), Deferred;
+	for (int Region = 0; Region < NumberOfRegions; Region++) Pending[Region] = Region;
+
+	while (!Pending.empty ())
+	{
+		const int Round = static_cast<int> (this->Rounds.size ());
+		this->Rounds.emplace_back ();
+		Deferred.clear ();
+		for (int Region : Pending)
+		{
+			bool Free = true;
+			for (int Neighbour : this->RegionNeighbours[Region])
+				if (this->RegionRound[Neighbour] == Round) { Free = false; break; }
+			if (Free)
+				for (vtkIdType Cluster : this->RegionClusters[Region])
+					if (this->ClusterRound[Cluster] == Round) { Free = false; break; }
+			if (!Free)
+			{
+				Deferred.push_back (Region);
+				continue;
+			}
+			this->RegionRound[Region] = Round;
+			for (vtkIdType Cluster : this->RegionClusters[Region])
+				this->ClusterRound[Cluster] = Round;
+			this->Rounds.back ().push_back (Region);
+		}
+		Pending.swap (Deferred);
+	}
+}
+
+template < class Metric, class Derived > void vtkThreadedClustering < Metric, Derived >::ExecuteRegion (int Process)
+{
+	ProcessData &data = this->ProcessInfos[ Process ];
+	data.StartTime = vtkTimerLog::GetUniversalTime ();
+	if (this->MinimizeUsingEnergy)
+		this->ExecuteProcess (Process);
+	else
+		this->ExecuteProcessWithDistances (Process);
+	data.StopTime = vtkTimerLog::GetUniversalTime ();
+}
+
+template < class Metric, class Derived > void
+	vtkThreadedClustering < Metric, Derived >::ExecuteProcess (int Process)
 {
 	vtkIdType Edge, I1, I2;
 	int Val1, Val2, *Size1, *Size2;
@@ -300,9 +316,9 @@ template < class Metric > void
 	Cluster22 = new typename Metric::Cluster;
 	Cluster31 = new typename Metric::Cluster;
 	Cluster32 = new typename Metric::Cluster;
-	ThreadData &data = this->threadInfos[ Thread ];
+	ProcessData &data = this->ProcessInfos[ Process ];
 
-	std::queue < int > *Queue;
+	std::deque < int > *Queue;
 	for (int CurrentQueue=0;CurrentQueue<this->PoolSize;CurrentQueue++)
 	{
 		Queue = &this->ProcessesPopQueues[Process][CurrentQueue];
@@ -310,44 +326,14 @@ template < class Metric > void
 		{
 			// the queue is not empty : let's use it
 			Edge = Queue->front ();
-			Queue->pop ();
-			this->GetEdgeItems (Edge, I1, I2);
+			Queue->pop_front ();
+			this->Self()->Derived::GetEdgeItems (Edge, I1, I2);
 
 			if ((this->EdgesLastLoop[Edge] ==this->RelativeNumberOfLoops) || (I2 < 0)) continue;
 			this->EdgesLastLoop[Edge] = this->RelativeNumberOfLoops;
 			Val1 = this->Clustering-> GetValue (I1);
 			Val2 = this->Clustering-> GetValue (I2);
 			if (Val2==Val1) continue;
-#ifdef THREADSAFECLUSTERING
-			// get the lock on the clusters
-			if (Val1<Val2)
-			{
-				if (!this->ClustersLocks[Val1].try_lock())
-				{
-					data.NumberOfLockingCollisions++;
-					this->ClustersLocks[Val1].lock();
-				}
-				if (!this->ClustersLocks[Val2].try_lock())
-				{
-					data.NumberOfLockingCollisions++;
-					this->ClustersLocks[Val2].lock();
-				}
-			}
-			else
-			{
-				if (!this->ClustersLocks[Val2].try_lock())
-				{
-					data.NumberOfLockingCollisions++;
-					this->ClustersLocks[Val2].lock();
-				}
-				if (!this->ClustersLocks[Val1].try_lock())
-				{
-					data.NumberOfLockingCollisions++;
-					this->ClustersLocks[Val1].lock();
-				}
-			}
-
-#endif
 
 			data.NumberOfIterations++;
 			if (Val1 == this->NumberOfClusters)
@@ -357,7 +343,7 @@ template < class Metric > void
 				this->MetricContext.ComputeClusterCentroid(&this->Clusters[Val2]);
 				this->MetricContext.ComputeClusterEnergy(&this->Clusters[Val2]);
 				(*this->ClustersSizes->GetPointer (Val2))++;
-				this->AddItemRingToProcess (I1,Process, Thread);
+				this->vtkThreadedClustering::AddItemRingToProcess (I1,Process, Process);
 				this->Clustering->SetValue (I1,Val2);
 				data.NumberOfModifications++;
 			}
@@ -368,7 +354,7 @@ template < class Metric > void
 				this->MetricContext.ComputeClusterCentroid(&this->Clusters[Val1]);
 				this->MetricContext.ComputeClusterEnergy(&this->Clusters[Val1]);
 				(*this->ClustersSizes->GetPointer (Val1))++;
-				this->AddItemRingToProcess (I2,Process,Thread);
+				this->vtkThreadedClustering::AddItemRingToProcess (I2,Process,Process);
 				this->Clustering->SetValue (I2,Val1);
 				data.NumberOfModifications++;
 			}
@@ -397,7 +383,7 @@ template < class Metric > void
 
 					// Compute the energy when setting
 					// I1 to the same cluster as I2;
-					if ((*Size1 == 1)||(this->ThreadedConnexityConstraintProblem(I1,Edge,Val1,Val2,Thread)==1))
+					if ((*Size1 == 1)||(this->Self()->Derived::ThreadedConnexityConstraintProblem(I1,Edge,Val1,Val2,Process)==1))
 						Try2 = 100000000.0;
 					else
 					{
@@ -417,7 +403,7 @@ template < class Metric > void
 
 					// Compute the energy when setting
 					// I2 to the same cluster as I1;
-					if ((*Size2 == 1) || (this->ThreadedConnexityConstraintProblem (I2, Edge, Val2, Val1, Thread) == 1))
+					if ((*Size2 == 1) || (this->Self()->Derived::ThreadedConnexityConstraintProblem(I2, Edge, Val2, Val1, Process) == 1))
 						Try3 = 1000000000.0;
 					else
 					{
@@ -450,7 +436,7 @@ template < class Metric > void
 				{
 				case (1):
 					// Don't do anything!
-					this->AddEdgeToProcess (Edge, Process);
+					this->vtkThreadedClustering::AddEdgeToProcess (Edge, Process);
 					break;
 
 				case (2):
@@ -460,7 +446,7 @@ template < class Metric > void
 					(*Size1)--;
 					this->MetricContext.DeepCopy (Cluster21, Cluster1);
 					this->MetricContext.DeepCopy (Cluster22, Cluster2);
-					this->AddItemRingToProcess (I1, Process, Thread);
+					this->vtkThreadedClustering::AddItemRingToProcess (I1, Process, Process);
 					data.NumberOfModifications++;
 					this->ClustersLastModification[Val1] = this->NumberOfLoops;
 					this->ClustersLastModification[Val2] = this->NumberOfLoops;
@@ -473,17 +459,12 @@ template < class Metric > void
 					(*Size2)--;
 					this->MetricContext.DeepCopy (Cluster31, Cluster1);
 					this->MetricContext.DeepCopy (Cluster32, Cluster2);
-					this->AddItemRingToProcess (I2, Process, Thread);
+					this->vtkThreadedClustering::AddItemRingToProcess (I2, Process, Process);
 					data.NumberOfModifications++;
 					this->ClustersLastModification[Val1] = this->NumberOfLoops;
 					this->ClustersLastModification[Val2] = this->NumberOfLoops;
 				}
 			}
-#ifdef THREADSAFECLUSTERING
-		// release the lock on the clusters
-		this->ClustersLocks[Val1].unlock();
-		this->ClustersLocks[Val2].unlock();
-#endif
 		}
 	}
 	delete Cluster21;
@@ -492,15 +473,15 @@ template < class Metric > void
 	delete Cluster32;
 }
 
-template < class Metric > void
-	vtkThreadedClustering < Metric >::ExecuteProcessWithDistances (int Process,int Thread)
+template < class Metric, class Derived > void
+	vtkThreadedClustering < Metric, Derived >::ExecuteProcessWithDistances (int Process)
 {
 	vtkIdType Edge, I1, I2;
 	int Val1, Val2, *Size1, *Size2;
-	ThreadData &data = this->threadInfos[ Thread ];
+	ProcessData &data = this->ProcessInfos[ Process ];
 
 	typename Metric::Cluster *Cluster1, *Cluster2;
-	std::queue < int > *Queue;
+	std::deque < int > *Queue;
 	for (int CurrentQueue=0;CurrentQueue<this->PoolSize;CurrentQueue++)
 	{
 		Queue = &this->ProcessesPopQueues[Process][CurrentQueue];
@@ -508,8 +489,8 @@ template < class Metric > void
 		{
 			// the queue is not empty : let's use it
 			Edge = Queue->front ();
-			Queue->pop ();
-			this->GetEdgeItems (Edge, I1, I2);
+			Queue->pop_front ();
+			this->Self()->Derived::GetEdgeItems (Edge, I1, I2);
 
 			if ((this->EdgesLastLoop[Edge] !=this->RelativeNumberOfLoops) && (I2 >= 0))
 			{
@@ -518,36 +499,6 @@ template < class Metric > void
 				Val2 = this->Clustering-> GetValue (I2);
 				if (Val2!=Val1)
 				{
-#ifdef THREADSAFECLUSTERING
-					// get the lock on the clusters
-					if (Val1<Val2)
-					{
-						if (!this->ClustersLocks[Val1].try_lock())
-						{
-							data.NumberOfLockingCollisions++;
-							this->ClustersLocks[Val1].lock();
-						}
-						if (!this->ClustersLocks[Val2].try_lock())
-						{
-							data.NumberOfLockingCollisions++;
-							this->ClustersLocks[Val2].lock();
-						}
-					}
-					else
-					{
-						if (!this->ClustersLocks[Val2].try_lock())
-						{
-							data.NumberOfLockingCollisions++;
-							this->ClustersLocks[Val2].lock();
-						}
-						if (!this->ClustersLocks[Val1].try_lock())
-						{
-							data.NumberOfLockingCollisions++;
-							this->ClustersLocks[Val1].lock();
-						}
-					}
-
-#endif
 
 					data.NumberOfIterations++;
 					if (Val1 == this->NumberOfClusters)
@@ -558,7 +509,7 @@ template < class Metric > void
 						this->MetricContext.ComputeClusterEnergy(&this->Clusters[Val2]);
 
 						(*this->ClustersSizes->GetPointer (Val2))++;
-						this->AddItemRingToProcess (I1,Process, Thread);
+						this->vtkThreadedClustering::AddItemRingToProcess (I1,Process, Process);
 						this->Clustering->SetValue (I1,Val2);
 						data.NumberOfModifications++;
 					}
@@ -569,7 +520,7 @@ template < class Metric > void
 						this->MetricContext.ComputeClusterCentroid(&this->Clusters[Val1]);
 						this->MetricContext.ComputeClusterEnergy(&this->Clusters[Val1]);
 						(*this->ClustersSizes->GetPointer (Val1))++;
-						this->AddItemRingToProcess (I2,Process,Thread);
+						this->vtkThreadedClustering::AddItemRingToProcess (I2,Process,Process);
 						this->Clustering->SetValue (I2,Val1);
 						data.NumberOfModifications++;
 					}
@@ -598,10 +549,10 @@ template < class Metric > void
 
 							double P[3];
 							// Compute the energy when setting I1 to the same cluster as I2;
-							if ((*Size1!=1)&&(this->ThreadedConnexityConstraintProblem(I1,Edge,Val1,Val2,Thread)==0))
+							if ((*Size1!=1)&&(this->Self()->Derived::ThreadedConnexityConstraintProblem(I1,Edge,Val1,Val2,Process)==0))
 							{
 						//		this->MetricContext.GetItemCoordinates(I1,P);
-								this->GetItemCoordinates(I1,P);
+								this->Self()->Derived::GetItemCoordinates(I1,P);
 								if (vtkMath::Distance2BetweenPoints(P,C1)>
 									vtkMath::Distance2BetweenPoints(P,C2))
 								{
@@ -611,18 +562,18 @@ template < class Metric > void
 									(*Size1)--;
 									this->MetricContext.AddItemToCluster(I1,Cluster2);
 									this->MetricContext.SubstractItemFromCluster(I1,Cluster1);
-									this->AddItemRingToProcess (I1, Process, Thread);
+									this->vtkThreadedClustering::AddItemRingToProcess (I1, Process, Process);
 									data.NumberOfModifications++;
 									this->ClustersLastModification[Val1]=this->NumberOfLoops;
 									this->ClustersLastModification[Val2]=this->NumberOfLoops;
 								}
 							}
-							if ((*Size2!=1)&&(this->ThreadedConnexityConstraintProblem (I2, Edge, Val2, Val1, Thread)==0)
+							if ((*Size2!=1)&&(this->Self()->Derived::ThreadedConnexityConstraintProblem(I2, Edge, Val2, Val1, Process)==0)
 							&& (Result!=2))
 							{
 							// Compute the energy when setting I2 to the same cluster as I1;
 							//	this->MetricContext.GetItemCoordinates(I2,P);
-								this->GetItemCoordinates(I2,P);
+								this->Self()->Derived::GetItemCoordinates(I2,P);
 								if (vtkMath::Distance2BetweenPoints(P,C1)<
 									vtkMath::Distance2BetweenPoints(P,C2))
 								{
@@ -632,7 +583,7 @@ template < class Metric > void
 									(*Size1)++;
 									this->MetricContext.AddItemToCluster(I2,Cluster1);
 									this->MetricContext.SubstractItemFromCluster(I2,Cluster2);
-									this->AddItemRingToProcess (I2, Process, Thread);
+									this->vtkThreadedClustering::AddItemRingToProcess (I2, Process, Process);
 									data.NumberOfModifications++;
 									this->ClustersLastModification[Val1]=this->NumberOfLoops;
 									this->ClustersLastModification[Val2]=this->NumberOfLoops;
@@ -645,13 +596,8 @@ template < class Metric > void
 						}
 
 						if (Result==1)
-							this->AddEdgeToProcess (Edge, Process);
+							this->vtkThreadedClustering::AddEdgeToProcess (Edge, Process);
 					}
-#ifdef THREADSAFECLUSTERING
-				// release the lock on the clusters
-				this->ClustersLocks[Val1].unlock();
-				this->ClustersLocks[Val2].unlock();
-#endif
 				}
 			}
 		}
@@ -659,49 +605,56 @@ template < class Metric > void
 }
 
 
-template < class Metric >
-int	vtkThreadedClustering < Metric >::ProcessOneLoop ()
+template < class Metric, class Derived >
+int	vtkThreadedClustering < Metric, Derived >::ProcessOneLoop ()
 {
 
-#ifdef THREADSAFECLUSTERING
-	if ( this->ClustersLocks.size() != ( this->NumberOfClusters+1 ) )
-		this->ClustersLocks=std::vector< std::mutex >(this->NumberOfClusters+1);
-#endif
+	const int NumberOfRegions = this->PoolSize - 1;
+	this->RegionClusters.resize (NumberOfRegions);
+	vtkSMPTools::For (0, NumberOfRegions, 1, [this] (vtkIdType Begin, vtkIdType End)
+	{
+		for (vtkIdType Region = Begin; Region < End; Region++)
+			this->CollectRegionClusters (static_cast<int> (Region));
+	});
+	this->ComputeRounds ();
 
-	vtkMultiThreader *Threader=vtkMultiThreader::New();
-	Threader->SetSingleMethod (MyMainForClustering, (void *) this);
-	Threader->SetNumberOfThreads (this->NumberOfThreads);
+	for ( auto &info : this->ProcessInfos ) info.NumberOfModifications=0;
 
-	for ( auto &info : this->threadInfos ) info.NumberOfModifications=0;
-	Threader->SingleMethodExecute ();
+	// the regions of a round share no state, so their order does not matter
+	for (const std::vector<int> &Round : this->Rounds)
+	{
+		vtkSMPTools::For (0, static_cast<vtkIdType> (Round.size ()), 1,
+			[this, &Round] (vtkIdType Begin, vtkIdType End)
+		{
+			for (vtkIdType i = Begin; i < End; i++)
+				this->ExecuteRegion (Round[i]);
+		});
+	}
 
-	this->threadInfos[this->NumberOfThreads].StartTime = this->Timer->GetUniversalTime ();
-	this->ExecuteProcess (this->PoolSize - 1,this->NumberOfThreads);
-	this->threadInfos[this->NumberOfThreads].StopTime = this->Timer->GetUniversalTime ();
-
-	vtkPriorityQueue *Queue=this->PoolQueue1;
-	this->PoolQueue1=this->PoolQueue2;
-	this->PoolQueue2=Queue;
-	Threader->Delete();
+	// the edges between regions, alone
+	ProcessData &data = this->ProcessInfos[this->PoolSize - 1];
+	data.StartTime = vtkTimerLog::GetUniversalTime ();
+	this->ExecuteProcess (this->PoolSize - 1);
+	data.StopTime = vtkTimerLog::GetUniversalTime ();
 
 	int NumberOfModifications=0;
-	for ( auto &info : this->threadInfos )
+	for ( auto &info : this->ProcessInfos )
 		NumberOfModifications+=info.NumberOfModifications;
 
 	this->DisplayThreadsTimings();
 	return (NumberOfModifications);
 }
 
-template < class Metric > void vtkThreadedClustering < Metric >::DisplayThreadsTimings()
+template < class Metric, class Derived > void vtkThreadedClustering < Metric, Derived >::DisplayThreadsTimings()
 {
 	if (this->DisplayThreadsTimingsFlag)
 	{
-		ThreadData &firstData = this->threadInfos[0];
+		ProcessData &firstData = this->ProcessInfos[0];
 		double EarliestStart = firstData.StartTime;
 		double LatestStop = firstData.StopTime;
 		double MeasuredTime;
 		double GlobalDuration;
-		for (auto &info : this->threadInfos) {
+		for (auto &info : this->ProcessInfos) {
 			MeasuredTime = info.StartTime;
 			if (MeasuredTime < EarliestStart)
 				EarliestStart = MeasuredTime;
@@ -710,20 +663,20 @@ template < class Metric > void vtkThreadedClustering < Metric >::DisplayThreadsT
 				LatestStop = MeasuredTime;
 		}
 		GlobalDuration = LatestStop - EarliestStart;
-		cout << "Threads duration:" << GlobalDuration <<" seconds"<<endl;
+		cout << "Processes duration:" << GlobalDuration <<" seconds"<<endl;
 
 		cout << "Starts    (relative):";
-		for (auto &info : this->threadInfos)
+		for (auto &info : this->ProcessInfos)
 			cout << (int) (100.0 *(info.StartTime -EarliestStart) /GlobalDuration) << " ";
 
 		cout << endl;
 		cout << "Duration  (relative):";
-		for (auto &info : this->threadInfos)
+		for (auto &info : this->ProcessInfos)
 			cout << (int) (100.0 *(info.StopTime - info.StartTime)/GlobalDuration) << " ";
 
 		cout << endl;
 		cout << "Stops     (relative):";
-		for (auto &info : this->threadInfos)
+		for (auto &info : this->ProcessInfos)
 			cout << (int) (100.0 * (info.StopTime -	EarliestStart) / GlobalDuration) << " ";
 		cout << endl;
 
@@ -734,7 +687,7 @@ template < class Metric > void vtkThreadedClustering < Metric >::DisplayThreadsT
 			firstData.NumberOfIterations - firstData.PreviousNumberOfIterations;
 		int InstantNumber;
 		int InstantNumberOfIeration = 0;
-		for (auto &info : this->threadInfos) {
+		for (auto &info : this->ProcessInfos) {
 			InstantNumber =info.NumberOfIterations-info.PreviousNumberOfIterations;
 			if (InstantNumber >MaxInstantNumberofIterations)
 				MaxInstantNumberofIterations =InstantNumber;
@@ -743,58 +696,62 @@ template < class Metric > void vtkThreadedClustering < Metric >::DisplayThreadsT
 		if (1)
 		{
 			cout << "Iterations(relative):";
-			for (auto &info : this->threadInfos)
+			for (auto &info : this->ProcessInfos)
 				cout << (int) (100.0 * ((double) (info.NumberOfIterations-info.PreviousNumberOfIterations)/((double)InstantNumberOfIeration)))<< " ";
 			cout << endl;
 			cout << "Iterations          :";
-			for (auto &info : this->threadInfos)
+			for (auto &info : this->ProcessInfos)
 				cout << info.NumberOfIterations<<" ";
 			cout << endl;
 			cout << "Modifications       :";
-			for (auto &info : this->threadInfos)
+			for (auto &info : this->ProcessInfos)
 				cout << info.NumberOfModifications<<" ";
 			cout << endl;
 		}
 
-		for (auto &info : this->threadInfos)
+		for (auto &info : this->ProcessInfos)
 			info.PreviousNumberOfIterations = info.NumberOfIterations;
 
 	}
 }
 
-template < class Metric > void vtkThreadedClustering < Metric >::SwapQueues ()
+template < class Metric, class Derived > void vtkThreadedClustering < Metric, Derived >::SwapQueues ()
 {
-	std::queue < int >** Temp=this->ProcessesPopQueues;
+	std::deque < int >** Temp=this->ProcessesPopQueues;
 	this->ProcessesPopQueues=this->ProcessesPushQueues;
 	this->ProcessesPushQueues=Temp;
 };
 
 
-template < class Metric > void vtkThreadedClustering < Metric >::Init ()
+template < class Metric, class Derived > void vtkThreadedClustering < Metric, Derived >::Init ()
 {
 	vtkUniformClustering < Metric >::Init ();
 	int i;
 
-	this->PoolSize=this->PoolingRatio*NumberOfThreads+1;
+	// regions of at least ItemsPerRegion items and RegionClusterWidth clusters
+	const vtkIdType NumberOfItems = this->GetNumberOfItems ();
+	const vtkIdType ClusterSize = NumberOfItems / std::max (this->NumberOfClusters, 1);
+	const vtkIdType RegionSize = std::max<vtkIdType> (
+		{ this->ItemsPerRegion, RegionClusterWidth * ClusterSize, 1 });
+	this->PoolSize = static_cast<int> (std::max<vtkIdType> (NumberOfItems / RegionSize, 1)) + 1;
 	this->ComputeEdgesLayout ();
 
 	// allocate statistics arrays
-	this->threadInfos.resize(this->NumberOfThreads+1);
+	this->ProcessInfos.resize(this->PoolSize);
 
-	for ( auto &info : this->threadInfos ) {
+	for ( auto &info : this->ProcessInfos ) {
 		info.NumberOfIterations = 0;
 		info.PreviousNumberOfIterations = 0;
 		info.NumberOfModifications = 0;
-		info.NumberOfLockingCollisions = 0;
 	}
 
 	// allocate queues
-	this->ProcessesQueues1=new std::queue<int>*[this->PoolSize];
-	this->ProcessesQueues2=new std::queue<int>*[this->PoolSize];
+	this->ProcessesQueues1=new std::deque<int>*[this->PoolSize];
+	this->ProcessesQueues2=new std::deque<int>*[this->PoolSize];
 	for (i = 0; i < this->PoolSize; i++)
 	{
-		this->ProcessesQueues1[i]=new std::queue<int>[this->PoolSize];
-		this->ProcessesQueues2[i]=new std::queue<int>[this->PoolSize];
+		this->ProcessesQueues1[i]=new std::deque<int>[this->PoolSize];
+		this->ProcessesQueues2[i]=new std::deque<int>[this->PoolSize];
 	}
 
 	// set initial queues state
@@ -803,7 +760,7 @@ template < class Metric > void vtkThreadedClustering < Metric >::Init ()
 
 }
 
-template <class Metric> void vtkThreadedClustering<Metric>::ComputeEdgesLayout ()
+template < class Metric, class Derived > void vtkThreadedClustering < Metric, Derived >::ComputeEdgesLayout ()
 {
 	vtkIntArray *TempClustering=0;
 	vtkTimerLog *Timer=vtkTimerLog::New();
@@ -856,6 +813,7 @@ template <class Metric> void vtkThreadedClustering<Metric>::ComputeEdgesLayout (
 	int i, j;
 	int *EdgesLayout = new int[this->GetNumberOfEdges ()];
 
+	this->RegionNeighbours.assign (this->PoolSize - 1, std::vector<int> ());
 	vtkIdList *VList = vtkIdList::New ();
 	for (i = 0; i < this->GetNumberOfEdges (); i++)
 	{
@@ -875,6 +833,28 @@ template <class Metric> void vtkThreadedClustering<Metric>::ComputeEdgesLayout (
 			}
 		}
 		EdgesLayout[i] = C1;
+
+		// the regions an edge between regions joins are adjacent
+		if (C1 == this->PoolSize - 1)
+		{
+			for (j = 0; j < VList->GetNumberOfIds (); j++)
+			{
+				int R1 = TempClustering->GetValue (VList->GetId (j));
+				if ((R1 < 0) || (R1 >= this->PoolSize - 1)) continue;
+				for (int k = j + 1; k < VList->GetNumberOfIds (); k++)
+				{
+					int R2 = TempClustering->GetValue (VList->GetId (k));
+					if ((R2 < 0) || (R2 >= this->PoolSize - 1) || (R2 == R1)) continue;
+					this->RegionNeighbours[R1].push_back (R2);
+					this->RegionNeighbours[R2].push_back (R1);
+				}
+			}
+		}
+	}
+	for (std::vector<int> &Neighbours : this->RegionNeighbours)
+	{
+		std::sort (Neighbours.begin (), Neighbours.end ());
+		Neighbours.erase (std::unique (Neighbours.begin (), Neighbours.end ()), Neighbours.end ());
 	}
 	if (NumberOfProblems != 0)
 		cout << "Partitionning for multithreading: " << NumberOfProblems <<
@@ -888,8 +868,8 @@ template <class Metric> void vtkThreadedClustering<Metric>::ComputeEdgesLayout (
 }
 
 
-template <class Metric>
-void vtkThreadedClustering<Metric>::ComputeMeshSlices (int NumberOfSlices,vtkIntArray * Clustering)
+template < class Metric, class Derived >
+void vtkThreadedClustering < Metric, Derived >::ComputeMeshSlices (int NumberOfSlices,vtkIntArray * Clustering)
 {
 	int i,j;
 	int Granularity = 10000;
@@ -987,23 +967,15 @@ void vtkThreadedClustering<Metric>::ComputeMeshSlices (int NumberOfSlices,vtkInt
 }
 
 
-template < class Metric >
-	vtkThreadedClustering < Metric >::vtkThreadedClustering ()
+template < class Metric, class Derived >
+	vtkThreadedClustering < Metric, Derived >::vtkThreadedClustering ()
 {
 	this->EdgesLayoutComputingType = 1;
 	this->DisplayThreadsTimingsFlag = 0;
 
 	this->Timer = vtkTimerLog::New ();
 
-	// autoset the number of threads depending on the number of processors
-	vtkMultiThreader *Threader=vtkMultiThreader::New();
-	this->SetNumberOfThreads(Threader->GetNumberOfThreads());
-	Threader->Delete();
-
-	this->PoolingRatio=5;
-
-	this->PoolQueue1=vtkPriorityQueue::New();
-	this->PoolQueue2=vtkPriorityQueue::New();
+	this->ItemsPerRegion = 512;
 
 	this->ProcessesQueues1=0;
 	this->ProcessesQueues2=0;
@@ -1011,12 +983,10 @@ template < class Metric >
 	this->NumberOfClusters=0;
 }
 
-template < class Metric >
-	vtkThreadedClustering < Metric >::~vtkThreadedClustering ()
+template < class Metric, class Derived >
+	vtkThreadedClustering < Metric, Derived >::~vtkThreadedClustering ()
 {
 	this->Timer->Delete ();
-	this->PoolQueue1->Delete();
-	this->PoolQueue2->Delete();
 
 	if (this->ProcessesQueues1)
 	{

@@ -42,12 +42,12 @@
  */
 
 #ifdef DOmultithread
-template < class Metric > class vtkSurfaceClustering:public vtkThreadedClustering <Metric>
+template < class Metric, class Derived > class vtkSurfaceClustering:public vtkThreadedClustering <Metric, Derived>
 #else
 #ifdef DOLloydClustering
-template < class Metric > class vtkSurfaceClustering:public vtkLloydClustering <Metric>
+template < class Metric, class Derived > class vtkSurfaceClustering:public vtkLloydClustering <Metric>
 #else
-template < class Metric > class vtkSurfaceClustering:public vtkUniformClustering <Metric>
+template < class Metric, class Derived > class vtkSurfaceClustering:public vtkUniformClustering <Metric>
 #endif
 #endif
 {
@@ -102,16 +102,16 @@ protected:
 
 
 
-template <class Metric>
-void vtkSurfaceClustering<Metric>::BuildMetric()
+template < class Metric, class Derived >
+void vtkSurfaceClustering < Metric, Derived >::BuildMetric()
 {
 
 	this->MetricContext.BuildMetric( this->Input, this->ClusteringType );
 
 }
 
-template <class Metric>
-void vtkSurfaceClustering<Metric>::CreateWindows()
+template < class Metric, class Derived >
+void vtkSurfaceClustering < Metric, Derived >::CreateWindows()
 {
 	if (this->Display)
 	{
@@ -149,8 +149,8 @@ void vtkSurfaceClustering<Metric>::CreateWindows()
 	}
 }
 
-template <class Metric>
-void vtkSurfaceClustering<Metric>::Snapshot()
+template < class Metric, class Derived >
+void vtkSurfaceClustering < Metric, Derived >::Snapshot()
 {
 	if (this->Display)
 	{
@@ -164,8 +164,8 @@ void vtkSurfaceClustering<Metric>::Snapshot()
 		}		
 	}
 }
-template <class Metric>
-void vtkSurfaceClustering<Metric>::InteractWithClusteringWindow()
+template < class Metric, class Derived >
+void vtkSurfaceClustering < Metric, Derived >::InteractWithClusteringWindow()
 {
 	if (this->Display)
 	{
@@ -175,8 +175,8 @@ void vtkSurfaceClustering<Metric>::InteractWithClusteringWindow()
 }
 
 
-template <class Metric>
-void vtkSurfaceClustering<Metric>::SetInput(vtkSurface *Input)
+template < class Metric, class Derived >
+void vtkSurfaceClustering < Metric, Derived >::SetInput(vtkSurface *Input)
 {
 	if (this->Input)
 		this->Input->UnRegister(this);
@@ -211,14 +211,14 @@ void vtkSurfaceClustering<Metric>::SetInput(vtkSurface *Input)
 };
 
 
-template <class Metric> vtkSurfaceClustering<Metric>::vtkSurfaceClustering ()
+template < class Metric, class Derived > vtkSurfaceClustering < Metric, Derived >::vtkSurfaceClustering ()
 {
 	this->AnchorRenderWindow=0;
 	this->Input=0;
 	this->Window=0;
 }
 
-template <class Metric> vtkSurfaceClustering<Metric>::~vtkSurfaceClustering ()
+template < class Metric, class Derived > vtkSurfaceClustering < Metric, Derived >::~vtkSurfaceClustering ()
 {
 	if (this->Input)
 		this->Input->Delete();

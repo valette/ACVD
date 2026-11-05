@@ -33,8 +33,6 @@
 #include <vtkObjectFactory.h>
 #include <vtkDataArrayCollection.h>
 #include <vtkFloatArray.h>
-#include <vtkMultiThreader.h>
-#include <mutex>
 #include "vtkSurface.h"
 #include "RenderWindow.h"
 class VTK_EXPORT vtkCurvatureMeasure : public vtkObject
@@ -82,17 +80,13 @@ public:
 	vtkGetMacro(NeighbourhoodSize,double);
 
 	void SetDisplay(int D) {this->Display=D;};
-	void SetNumberOfThreads(int N) {this->NumberOfThreads=N;};
-
 protected:
 
 	/// Timer for performances measures
 	vtkTimerLog *Timer;
 	double StartTime;
 
-	// This Mutex is used for the gathering of statistics for the curvature measure
-	// Statistics are the number of matrices with bad conditionment and the number of cells with too small neighbourhood
-	std::mutex *StatisticsLock;
+	// Statistics: the number of matrices with bad conditionment and the number of cells with too small neighbourhood
 	int NumberOfBadMatrices;
 	int NumberOfCellsWithSmallNeighbourhood;
 
@@ -148,15 +142,11 @@ private:
 	/// The input vtkSurface;
 	vtkSurface *Input;
 
-	// the number of threads used for the computation (used only when computing polynomial fitting)
-	// Default value is set to the number of processors
-	int NumberOfThreads;
-
 	// parameter defining whether the curvature indicator will be displayed or not
 	int Display;
 
-	// the threaded method to compute the curvature
-	static VTK_THREAD_RETURN_TYPE ThreadedCurvatureComputation (void *arg);
+	// the vtkSMPTools functor computing the polynomial fitting
+	class CurvatureWorker;
 
 };
 
