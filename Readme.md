@@ -136,7 +136,9 @@ gunzip xyzrgb_statuette.ply.gz
 
 ---
 
-## 7. Python Port
+## 7. Ports
+
+ACVD and ACVDQ have been ported to the CGAL (www.cgal.org) library ([post](https://www.cgal.org/2025/05/22/Surface_remeshing/))
 
 A Python wrapper and PyVista port of ACVD is available at [pyacvd](https://github.com/pyvista/pyacvd).
 
